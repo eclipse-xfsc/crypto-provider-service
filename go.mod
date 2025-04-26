@@ -1,11 +1,10 @@
 module github.com/eclipse-xfsc/crypto-provider-service
 
 go 1.21.4
-
-toolchain go1.21.7
+toolchain go1.24.1
 
 require (
-	github.com/cloudevents/sdk-go/v2 v2.15.2
+	github.com/cloudevents/sdk-go/v2 v2.16.0
 	github.com/google/uuid v1.6.0
 	github.com/hyperledger/aries-framework-go v0.3.2
 	github.com/hyperledger/aries-framework-go/component/kmscrypto v0.0.0-20230427134832-0c9969493bd3
@@ -14,7 +13,7 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.0.21
 	github.com/piprate/json-gold v0.5.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core v1.2.0
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1
 	gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4
@@ -24,7 +23,7 @@ require (
 	go.uber.org/zap v1.27.0
 	goa.design/goa/v3 v3.12.3
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.8.0
 )
 
 require (
