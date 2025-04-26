@@ -326,10 +326,10 @@ gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1 h1:pGE/D4VjeS3x+KLnc
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1/go.mod h1:rljyPrL3QvUGuErGgVYZCOaXwdjwCqR3V5MEgSjifQk=
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4 h1:95rgvbvLBEQYMZPeY/kIXd5Aq9AJzbUhwR3tHnWVVNc=
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4/go.mod h1:UdoA3qxEYoBWleNI/oAtp3LTU6tJa1UOovMR/K9h9lM=
-gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2 h1:wzZ3GSZWFSoLbqVIMyHpWE8tIWarcldzvv7hFQGxMhw=
-gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2/go.mod h1:zEswN6WqrvXbxgiKmP9nY+TyTsGLuun/ED41QbMFFp8=
-gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.10.0 h1:v+f13ZgLkJNIeRc1gcePzBgwkV6UAq0lbqC7jF8kLkM=
-gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.10.0/go.mod h1:6Vy3010QU4RJvEOwxF+idncvK4kWVVQaetAfqx6D7ek=
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v1.3.4 h1:Ot60sOH24tzFRLRB6xMBVMPtAcNkPGJZ1qaVdxYiYIo=
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v1.3.4/go.mod h1:zEswN6WqrvXbxgiKmP9nY+TyTsGLuun/ED41QbMFFp8=
+gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.12.0 h1:FQLozgN87j5rd0iP+ALsyzGlmv966tT/krK1mhzkzBY=
+gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.12.0/go.mod h1:ZMzh/UFpH2sLHPMTM/3FlNDg3BLWYkoB6TCq+wb4BTY=
 gitlab.eclipse.org/eclipse/xfsc/train/trusted-content-resolver/clients/go v0.0.0-20240202152216-f1a0d50c3e8b h1:20QDlzSS/82mXJFlGJLfIysjv8Ltpb2B5Iwzl5U8XFA=
 gitlab.eclipse.org/eclipse/xfsc/train/trusted-content-resolver/clients/go v0.0.0-20240202152216-f1a0d50c3e8b/go.mod h1:I5gShljA7TRqRGJ2x19inWv9KiqHXyv6blK0KsjsfyI=
 gitlab.eclipse.org/eclipse/xfsc/tsa/golib v1.3.2 h1:RqufFX3PjM6PFAOBRyfgXKSjPAqdQS7EtoA2dK47hMQ=

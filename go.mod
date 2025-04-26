@@ -18,7 +18,7 @@ require (
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core v1.2.0
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1
 	gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4
-	gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.10.0
+	gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.12.0
 	gitlab.eclipse.org/eclipse/xfsc/train/trusted-content-resolver/clients/go v0.0.0-20240202152216-f1a0d50c3e8b
 	gitlab.eclipse.org/eclipse/xfsc/tsa/golib v1.3.2
 	go.uber.org/zap v1.27.0
@@ -123,7 +123,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea // indirect
-	gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2 // indirect
+	gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v1.3.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect

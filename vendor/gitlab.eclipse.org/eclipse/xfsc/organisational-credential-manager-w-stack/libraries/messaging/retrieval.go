@@ -34,4 +34,5 @@ type RetrievalAcceptanceNotification struct {
 	HolderKey       string `json:"holderKey`
 	HolderNamespace string `json:"holderNamespace`
 	HolderGroup     string `json:"holderGroup`
+	TxCode          string `json:"tx_code`
 }
