@@ -584,13 +584,17 @@ github.com/zach-klippenstein/goregen
 ## explicit; go 1.21.3
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types
-# gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1
+# gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.1.0
 ## explicit; go 1.21.3
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt/types
 # gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4
 ## explicit; go 1.21
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider
+# gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core v0.0.0-20231111104828-469416951f96
+## explicit; go 1.21.1
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core/types
 # gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2
 ## explicit; go 1.21.3
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/config
