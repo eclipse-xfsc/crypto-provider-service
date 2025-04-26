@@ -1,0 +1,102 @@
+version: '3.9'
+networks:
+    internal:
+      driver: bridge
+services:
+  vault:
+    image: hashicorp/vault
+    ports:
+      - 8200:8200
+    networks:
+      - internal
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=test
+  init-secretengine:
+    image: curlimages/curl:latest
+    depends_on:
+      - vault
+    networks:
+      - internal
+    volumes:
+      - ./test.pem:/usr/local/bin/test.pem
+      - ./vault-init.sh:/usr/local/bin/vault-init.sh
+    entrypoint: ["sh", "-c", "
+      sleep 5 && /usr/local/bin/vault-init.sh"]
+  signer-service:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/signer:main
+    ports:
+      - 8080:8080
+    networks:
+      - internal
+    environment:
+      - VAULT_ADRESS=http://vault:8200
+      - VAULT_TOKEN=test
+      - NATS_HOST=nats:4222
+      - NATS_TOPIC=signer-topic
+      - NATS_STATUS_TOPIC=status.data.create
+      - NATS_STATUS_VERIFY_TOPIC=status.data.verify
+      - CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL=nats
+      - CLOUDEVENTPROVIDER_MESSAGING_NATS_URL=localhost:4222
+      - ENGINE_PATH=/opt/plugins/hashicorp-vault-provider.so
+  status:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack/status-list-service:main
+    networks:
+      - internal
+    ports:
+      - 8081:8080
+    environment:
+      - STATUSLIST_DATABASE_PARAMS=sslmode:disable
+      - STATUSLIST_DATABASE_HOST=postgres
+      - STATUSLIST_NATS_URL=nats://nats:4222
+      - STATUSLIST_SIGNER_TOPIC=signer
+      - STATUSLIST_SIGNER_URL=signer-service:8080
+  postgres:
+    image: postgres:14-alpine
+    networks:
+      - internal
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+  nats:
+    image: nats:2.10.10
+    networks:
+      - internal
+    ports:
+      - 4222:4222
+  sdjwt:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services/sdjwt-service
+    ports: 
+      - 8082:3000
+    networks:
+      - internal
+    environment:
+      - PORT=3000
+      - SIGNER_SIGN_URL=http://host.docker.internal:8080/v1/sign
+      - RESOLVER_URL=http://resolver:8080/1.0/identifiers/
+  resolver:
+    image: transmute/restricted-resolver:latest
+    networks:
+      - internal
+    ports:
+      - 8083:8080
+  policy:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/policy:latest
+    networks:
+      - internal
+    ports:
+      - 8084:8080
+    environment:
+      - POLICY_REPO_FOLDER=Policies
+      - POLICY_REPOSITORY_CLONE_URL=https://gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/deployment.git
+      - OCM_ADDR=
+      - SIGNER_ADDR=http://host.docker.internal:8080/v1/sign
+      - DID_RESOLVER_ADDR=http://resolver:8080/1.0/identifiers/
+      - TASK_ADDR=
+      - CACHE_ADDR=
+      - NATS_SUBJECT=policy
+      - NATS_ADDR=nats://nats:4222

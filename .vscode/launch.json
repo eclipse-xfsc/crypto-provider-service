@@ -1,0 +1,28 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Package",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "cmd/signer/main.go",
+            "env": {
+                "VAULT_ADRESS": "http://localhost:8200",
+                "VAULT_TOKEN": "test",
+                "NATS_HOST": "localhost:4222",
+                "NATS_TOPIC": "signer-topic",
+                "NATS_STATUS_TOPIC": "status.data.create",
+                "NATS_STATUS_VERIFY_TOPIC":"status.data.verify",
+                "CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL":"nats",
+                "CLOUDEVENTPROVIDER_MESSAGING_NATS_URL":"localhost:4222",
+                "PROFILE":"DEBUG:VAULT",
+                "SDJWT_SERVICE_URL":"http://localhost:8082",
+                "VERSION": "0.26.0"
+            }
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    /// remove -l for debugging
+    "go.testFlags": ["-gcflags=all=-N"],
+    "go.testEnvVars": {
+        "VAULT_ADRESS": "http://localhost:8200",
+        "VAULT_TOKEN": "test",
+        "NATS_HOST": "localhost:4222",
+        "NATS_TOPIC": "signer-topic",
+        "NATS_STATUS_TOPIC": "status.data.create",
+        "NATS_STATUS_VERIFY_TOPIC":"status.data.verify",
+        "CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL":"nats",
+        "CLOUDEVENTPROVIDER_MESSAGING_NATS_URL":"localhost:4222",
+        "PROFILE":"DEBUG:VAULT",
+        "SDJWT_SERVICE_URL":"http://localhost:8082",
+        "TERMSOFUSE_POLICY":"http://localhost:8084/policy/deployment/Policies/termsOfUse/1.0/evaluation",
+        "SERVICE_POLICY":"http://localhost:8084/policy/deployment/Policies/didProvisioning/1.0/evaluation",
+        "EVIDENCE_POLICY":"http://localhost:8084/policy/deployment/Policies/didDoc/1.0/evaluation"
+    }
+}

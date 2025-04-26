@@ -1,0 +1,335 @@
+{
+	"info": {
+		"_postman_id": "6af475c0-d9cc-4fdf-936a-94f976250fdf",
+		"name": "Signer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Credential With Provenance",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-origin",
+						"value": "http://localhost:8081",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"namespace\" :\"transit\",\n    \"group\" : \"\",\n    \"key\":\"eckey\",\n    \"status\":true,\n  \"credentialSubject\": {\n\t\"!disclose:testdata\": {\"!disclose:hello\":\"world\", \"testXY\":\"1234\"},\n    \"provenanceProof\": {\n    \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://w3id.org/security/suites/jws-2020/v1\",\n        \"https://schema.org\"\n    ],\n    \"credentialSubject\": {\n        \"!disclose:testdata\": {\n            \"!disclose:hello\": \"world\",\n            \"testXY\": \"1234\"\n        }\n    },\n    \"issuanceDate\": \"2024-02-05T19:10:28.871407+01:00\",\n    \"issuer\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==\",\n    \"proof\": {\n        \"created\": \"2024-02-05T19:10:28.924861+01:00\",\n        \"jws\": \"eyJhbGciOiIiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..MEYCIQDoLgKHlEsl7LyJS-TiRPusTsTNv0LGGYp02wZA-gddKQIhAKbLMGnltpI3AZNwTel0CqPLlAooIwYvSPEJOamB6K6Z\",\n        \"proofPurpose\": \"assertionMethod\",\n        \"type\": \"JsonWebSignature2020\",\n        \"verificationMethod\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==#test\"\n    },\n    \"type\": \"VerifiableCredential\"\n}\n  },\n  \"issuanceDate\": \"2022-06-02T17:24:05.032533+03:00\",\n  \"type\": \"VerifiableCredential\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/credential",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"credential"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Credential With LDPVC",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-origin",
+						"value": "http://localhost:8081/v1/tenants/transit",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"namespace\" :\"transit\",\n    \"signatureType\":\"ed25519signature2020\",\n    \"group\" : \"\",\n    \"key\":\"edkey\",\n    \"status\":false,\n  \"credentialSubject\": {\n\t\"!disclose:testdata\": {\"!disclose:hello\":\"world\", \"testXY\":\"1234\"}\n  },\n  \"issuanceDate\": \"2022-06-02T17:24:05.032533+03:00\",\n  \"type\": \"VerifiableCredential\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/credential",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"credential"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Credential With SDJWT",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-origin",
+						"value": "http://localhost:8081",
+						"type": "default"
+					},
+					{
+						"key": "x-namespace",
+						"value": "transit",
+						"type": "default",
+						"disabled": true
+					},
+					{
+						"key": "x-group",
+						"value": "",
+						"type": "default",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"namespace\" :\"transit\",\n    \"group\" : \"\",\n    \"key\":\"eckey\",\n    \"status\":false,\n    \"format\":\"vc+sd-jwt\",\n  \"credentialSubject\": {\n\t\"!disclose:testdata\": {\"!disclose:hello\":\"world\", \"testXY\":\"1234\"}\n  },\n  \"issuanceDate\": \"2022-06-02T17:24:05.032533+03:00\",\n  \"type\": \"VerifiableCredential\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/credential",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"credential"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Verify Credential",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-format",
+						"value": "vc+sd-jwt",
+						"type": "default",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://w3id.org/security/suites/jws-2020/v1\",\n        \"https://schema.org\"\n    ],\n    \"credentialSubject\": {\n        \"!disclose:testdata\": {\n            \"!disclose:hello\": \"world\",\n            \"testXY\": \"1234\"\n        },\n        \"provenanceProof\": {\n            \"@context\": [\n                \"https://www.w3.org/2018/credentials/v1\",\n                \"https://w3id.org/security/suites/jws-2020/v1\",\n                \"https://schema.org\"\n            ],\n            \"credentialSubject\": {\n                \"!disclose:testdata\": {\n                    \"!disclose:hello\": \"world\",\n                    \"testXY\": \"1234\"\n                }\n            },\n            \"issuanceDate\": \"2024-02-05T19:10:28.871407+01:00\",\n            \"issuer\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==\",\n            \"proof\": {\n                \"created\": \"2024-02-05T19:10:28.924861+01:00\",\n                \"jws\": \"eyJhbGciOiIiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..MEYCIQDoLgKHlEsl7LyJS-TiRPusTsTNv0LGGYp02wZA-gddKQIhAKbLMGnltpI3AZNwTel0CqPLlAooIwYvSPEJOamB6K6Z\",\n                \"proofPurpose\": \"assertionMethod\",\n                \"type\": \"JsonWebSignature2020\",\n                \"verificationMethod\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==#test\"\n            },\n            \"type\": \"VerifiableCredential\"\n        }\n    },\n    \"issuanceDate\": \"2024-02-05T19:11:12.32895+01:00\",\n    \"issuer\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==\",\n    \"proof\": {\n        \"created\": \"2024-02-05T19:11:12.360685+01:00\",\n        \"jws\": \"eyJhbGciOiIiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdfQ..MEUCIQD-hn0EXD21p2fFy-5ASL1pLlUAe0C7EtBb_vF75LQmVAIgEzf-lkaZ34BQnN8btS86SQQbsYCZegB2GjugeB0KdhQ\",\n        \"proofPurpose\": \"assertionMethod\",\n        \"type\": \"JsonWebSignature2020\",\n        \"verificationMethod\": \"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6InRlc3QiLCJrdHkiOiJFQyIsIngiOiJaZ1Z3UXdyUC1yTy1OM25mbHZsVUpLZjhlLTJoeWhSZmdSekotTkxlTWFNIiwieSI6IjlVWEl5bE1PX0NaZ0M0aGxHN1hGQVU0b1dYSVkyZkRMT0RSalRqSWZEOGMifQ==#test\"\n    },\n    \"type\": \"VerifiableCredential\"\n}",
+					"options": {
+						"raw": {
+							"language": "text"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/credential/verify",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"credential",
+						"verify"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DID Configuration",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-origin",
+						"value": "test",
+						"type": "default"
+					},
+					{
+						"key": "x-group",
+						"value": "",
+						"type": "default",
+						"disabled": true
+					},
+					{
+						"key": "x-namespace",
+						"value": "transit",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/v1/did/configuration",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"did",
+						"configuration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Did Doc",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-namespace",
+						"value": "transit",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/v1/did/document",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"did",
+						"document"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Namespaces",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-engine",
+						"value": "transit;kv",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/v1/namespaces",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"namespaces"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Proof",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"presentation\":{\n  \"@context\": [\n    \"https://www.w3.org/2018/credentials/v1\",\n    \"https://www.w3.org/2018/credentials/examples/v1\"\n  ],\n  \"id\": \"did:123\",\n  \"type\": \"VerifiablePresentation\",\n  \"verifiableCredential\": [\n    {\n      \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://www.w3.org/2018/credentials/examples/v1\",\n\t\t\"https://schema.org\"\n      ],\n      \"credentialSubject\": {\n        \"allow\": true,\n        \"taskID\": \"0123456789abcdef\"\n      },\n      \"issuanceDate\": \"2022-06-14T08:43:22.78309334Z\",\n      \"issuer\": \"https://example.com\",\n      \"type\": \"VerifiableCredential\"\n    },\n    {\n      \"@context\": [\n        \"https://www.w3.org/2018/credentials/v1\",\n        \"https://www.w3.org/2018/credentials/examples/v1\",\n\t\t\"https://schema.org\"\n      ],\n      \"credentialSubject\": {\n        \"result\": {\n          \"hello\": \"world\"\n        }\n      },\n      \"issuanceDate\": \"2022-06-14T08:43:22.783102173Z\",\n      \"issuer\": \"https://example.com\",\n      \"type\": \"VerifiableCredential\"\n    }\n  ]\n},\n\"namespace\":\"transit\",\n\"key\": \"eckey\",\n\"group\":\"\",\n\"issuer\":\"did:jwk:eyJjcnYiOiJQLTI1NiIsImtpZCI6ImVja2V5Iiwia3R5IjoiRUMiLCJ4IjoiYncyYkRuaUJBcEFSNlR0UjNYczFwWWNWOFgtd28yckNvekxKWUdOVXphcyIsInkiOiI2aEJMalh5Y2RqU2Njb3ZNRHJuaFlxalhWREZDS2hhaV8yMmV2Z2R3Vm93In0\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/v1/presentation/proof",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"presentation",
+						"proof"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Presentation Verify",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Get JWKS",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "DID List",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "x-namespace",
+						"value": "secret",
+						"type": "default"
+					},
+					{
+						"key": "x-engine",
+						"value": "kv",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "localhost:8080/v1/did/list",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"did",
+						"list"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						},
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
