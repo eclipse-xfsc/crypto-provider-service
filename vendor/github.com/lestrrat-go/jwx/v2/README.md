@@ -1,4 +1,4 @@
-# github.com/lestrrat-go/jwx/v2 ![](https://github.com/lestrrat-go/jwx/workflows/CI/badge.svg?branch=v2) [![Go Reference](https://pkg.go.dev/badge/github.com/lestrrat-go/jwx/v2.svg)](https://pkg.go.dev/github.com/lestrrat-go/jwx/v2) [![codecov.io](https://codecov.io/github/lestrrat-go/jwx/coverage.svg?branch=v2)](https://codecov.io/github/lestrrat-go/jwx?branch=v2)
+# github.com/lestrrat-go/jwx/v2 ![](https://github.com/lestrrat-go/jwx/workflows/CI/badge.svg?branch=develop/v2) [![Go Reference](https://pkg.go.dev/badge/github.com/lestrrat-go/jwx/v2.svg)](https://pkg.go.dev/github.com/lestrrat-go/jwx/v2) [![codecov.io](https://codecov.io/github/lestrrat-go/jwx/coverage.svg?branch=v2)](https://codecov.io/github/lestrrat-go/jwx?branch=v2)
 
 Go module implementing various JWx (JWA/JWE/JWK/JWS/JWT, otherwise known as JOSE) technologies.
 
@@ -15,7 +15,7 @@ If you are using this module in your product or your company, please add  your p
 * Opinionated, but very uniform API. Everything is symmetric, and follows a standard convention
   * jws.Parse/Verify/Sign
   * jwe.Parse/Encrypt/Decrypt
-  * Arguments are organized as explicit required paramters and optional WithXXXX() style options.
+  * Arguments are organized as explicit required parameters and optional WithXXXX() style options.
 * Extra utilities
   * `jwk.Cache` to always keep a JWKS up-to-date
   * [bazel](https://bazel.build)-ready
@@ -45,7 +45,7 @@ import (
   "github.com/lestrrat-go/jwx/v2/jwt"
 )
 
-func ExampleJWX() {
+func Example_jwx_readme() {
   // Parse, serialize, slice and dice JWKs!
   privkey, err := jwk.ParseKey(jsonRSAPrivateKey)
   if err != nil {
@@ -226,7 +226,7 @@ For either bug reports or feature requests, failing tests are even better.
 
 ## Pull Requests
 
-Please make sure to include tests that excercise the changes you made.
+Please make sure to include tests that exercise the changes you made.
 
 If you are editing auto-generated files (those files with the `_gen.go` suffix, please make sure that you do the following:
 
@@ -240,7 +240,7 @@ Please try [discussions](https://github.com/lestrrat-go/jwx/tree/v2/discussions)
 
 # Related Modules
 
-* [github.com/lestrrat-go/echo-middileware-jwx](https://github.com/lestrrat-go/echo-middleware-jwx) - Sample Echo middleware
+* [github.com/lestrrat-go/echo-middleware-jwx](https://github.com/lestrrat-go/echo-middleware-jwx) - Sample Echo middleware
 * [github.com/jwx-go/crypto-signer/gcp](https://github.com/jwx-go/crypto-signer/tree/main/gcp) - GCP KMS wrapper that implements [`crypto.Signer`](https://pkg.go.dev/crypto#Signer)
 * [github.com/jwx-go/crypto-signer/aws](https://github.com/jwx-go/crypto-signer/tree/main/aws) - AWS KMS wrapper that implements [`crypto.Signer`](https://pkg.go.dev/crypto#Signer)
 

@@ -221,8 +221,8 @@ func Sign(payload []byte, options ...SignOption) ([]byte, error) {
 
 	// Design note: while we could have easily set format = fmtJSON when
 	// lsigner > 1, I believe the decision to change serialization formats
-	// must be explicitly stated by the caller. Otherwise I'm pretty sure
-	// there would be people filing issues saying "I get JSON when I expcted
+	// must be explicitly stated by the caller. Otherwise, I'm pretty sure
+	// there would be people filing issues saying "I get JSON when I expected
 	// compact serialization".
 	//
 	// Therefore, instead of making implicit format conversions, we force the
@@ -309,8 +309,8 @@ var allowNoneWhitelist = jwk.WhitelistFunc(func(string) bool {
 //
 // Because the use of "none" (jwa.NoSignature) algorithm is strongly discouraged,
 // this function DOES NOT consider it a success when `{"alg":"none"}` is
-// encountered in the message (it would also be counter intuitive when the code says
-// you _verified_ something when in fact it did no such thing). If you want to
+// encountered in the message (it would also be counterintuitive when the code says
+// it _verified_ something when in fact it did no such thing). If you want to
 // accept messages with "none" signature algorithm, use `jws.Parse` to get the
 // raw JWS message.
 func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
@@ -345,6 +345,7 @@ func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
 		case identKeyUsed{}:
 			keyUsed = option.Value()
 		case identContext{}:
+			//nolint:fatcontext
 			ctx = option.Value().(context.Context)
 		case identValidateKey{}:
 			validateKey = option.Value().(bool)
@@ -417,7 +418,7 @@ func Verify(buf []byte, options ...VerifyOption) ([]byte, error) {
 			for _, pair := range sink.list {
 				// alg is converted here because pair.alg is of type jwa.KeyAlgorithm.
 				// this may seem ugly, but we're trying to avoid declaring separate
-				// structs for `alg jwa.KeyAlgorithm` and `alg jwa.SignatureAlgorithm`
+				// structs for `alg jwa.KeyEncryptionAlgorithm` and `alg jwa.SignatureAlgorithm`
 				//nolint:forcetypeassert
 				alg := pair.alg.(jwa.SignatureAlgorithm)
 				key := pair.key
@@ -549,7 +550,7 @@ func Parse(src []byte, options ...ParseOption) (*Message, error) {
 
 	// if format is 0 or both JSON/Compact, auto detect
 	if v := formats & (fmtJSON | fmtCompact); v == 0 || v == fmtJSON|fmtCompact {
-		for i := 0; i < len(src); i++ {
+		for i := range src {
 			r := rune(src[i])
 			if r >= utf8.RuneSelf {
 				r, _ = utf8.DecodeRune(src)
@@ -634,20 +635,22 @@ func parseJSON(data []byte) (result *Message, err error) {
 // SplitCompact splits a JWT and returns its three parts
 // separately: protected headers, payload and signature.
 func SplitCompact(src []byte) ([]byte, []byte, []byte, error) {
-	parts := bytes.Split(src, []byte("."))
-	if len(parts) < 3 {
+	// Three parts is two separators
+	if bytes.Count(src, []byte(".")) != 2 {
 		return nil, nil, nil, fmt.Errorf(`invalid number of segments`)
 	}
+	parts := bytes.SplitN(src, []byte("."), 3)
 	return parts[0], parts[1], parts[2], nil
 }
 
 // SplitCompactString splits a JWT and returns its three parts
 // separately: protected headers, payload and signature.
 func SplitCompactString(src string) ([]byte, []byte, []byte, error) {
-	parts := strings.Split(src, ".")
-	if len(parts) < 3 {
+	// Three parts is two separators
+	if strings.Count(src, ".") != 2 {
 		return nil, nil, nil, fmt.Errorf(`invalid number of segments`)
 	}
+	parts := strings.SplitN(src, ".", 3)
 	return []byte(parts[0]), []byte(parts[1]), []byte(parts[2]), nil
 }
 

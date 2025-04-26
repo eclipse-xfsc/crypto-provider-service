@@ -48,11 +48,13 @@ func Validate(t Token, options ...ValidateOption) error {
 
 	var clock Clock = ClockFunc(time.Now)
 	var skew time.Duration
-	var validators = []Validator{
+	var baseValidators = []Validator{
 		IsIssuedAtValid(),
 		IsExpirationValid(),
 		IsNbfValid(),
 	}
+	var extraValidators []Validator
+	var resetValidators bool
 	for _, o := range options {
 		//nolint:forcetypeassert
 		switch o.Ident() {
@@ -63,7 +65,10 @@ func Validate(t Token, options ...ValidateOption) error {
 		case identTruncation{}:
 			trunc = o.Value().(time.Duration)
 		case identContext{}:
+			//nolint:fatcontext
 			ctx = o.Value().(context.Context)
+		case identResetValidators{}:
+			resetValidators = o.Value().(bool)
 		case identValidator{}:
 			v := o.Value().(Validator)
 			switch v := v.(type) {
@@ -72,22 +77,33 @@ func Validate(t Token, options ...ValidateOption) error {
 					if err := isSupportedTimeClaim(v.c1); err != nil {
 						return err
 					}
-					validators = append(validators, IsRequired(v.c1))
+					extraValidators = append(extraValidators, IsRequired(v.c1))
 				}
 				if v.c2 != "" {
 					if err := isSupportedTimeClaim(v.c2); err != nil {
 						return err
 					}
-					validators = append(validators, IsRequired(v.c2))
+					extraValidators = append(extraValidators, IsRequired(v.c2))
 				}
 			}
-			validators = append(validators, v)
+			extraValidators = append(extraValidators, v)
 		}
 	}
 
 	ctx = SetValidationCtxSkew(ctx, skew)
 	ctx = SetValidationCtxClock(ctx, clock)
 	ctx = SetValidationCtxTruncation(ctx, trunc)
+
+	var validators []Validator
+	if !resetValidators {
+		validators = append(baseValidators, extraValidators...)
+	} else {
+		if len(extraValidators) == 0 {
+			return fmt.Errorf(`no validators specified: jwt.WithResetValidators(true) and no jwt.WithValidator() specified`)
+		}
+		validators = extraValidators
+	}
+
 	for _, v := range validators {
 		if err := v.Validate(ctx, t); err != nil {
 			return err
@@ -438,8 +454,8 @@ type claimContainsString struct {
 }
 
 // ClaimContainsString can be used to check if the claim called `name`, which is
-// expected to be a list of strings, contains `value`. Currently because of the
-// implementation this will probably only work for `aud` fields.
+// expected to be a list of strings, contains `value`. Currently, because of the
+// implementation, this will probably only work for `aud` fields.
 func ClaimContainsString(name, value string) Validator {
 	return claimContainsString{
 		name:    name,

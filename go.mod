@@ -1,8 +1,7 @@
 module github.com/eclipse-xfsc/crypto-provider-service
 
 go 1.21.4
-
-toolchain go1.21.7
+toolchain go1.24.1
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
@@ -11,10 +10,10 @@ require (
 	github.com/hyperledger/aries-framework-go/component/kmscrypto v0.0.0-20230427134832-0c9969493bd3
 	github.com/hyperledger/aries-framework-go/component/models v0.0.0-20230501135648-a9a7ad029347
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/lestrrat-go/jwx/v2 v2.0.21
+	github.com/lestrrat-go/jwx/v2 v2.1.5
 	github.com/piprate/json-gold v0.5.0
 	github.com/prometheus/client_golang v1.16.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core v1.2.0
 	gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1
 	gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4
@@ -24,7 +23,7 @@ require (
 	go.uber.org/zap v1.27.0
 	goa.design/goa/v3 v3.12.3
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.10.0
 )
 
 require (
@@ -41,7 +40,7 @@ require (
 	github.com/cloudevents/sdk-go/protocol/nats/v2 v2.15.2 // indirect
 	github.com/cloudevents/sdk-go/protocol/nats_jetstream/v2 v2.15.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dimfeld/httppath v0.0.0-20170720192232-ee938bf73598 // indirect
 	github.com/dimfeld/httptreemux/v5 v5.5.0 // indirect
 	github.com/eapache/go-resiliency v1.6.0 // indirect
@@ -73,9 +72,9 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kilic/bls12-381 v0.1.1-0.20210503002446-7b7597926c69 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
-	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.3 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
-	github.com/lestrrat-go/httprc v1.0.5 // indirect
+	github.com/lestrrat-go/httprc v1.0.6 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -125,12 +124,12 @@ require (
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea // indirect
 	gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/text v0.15.0 // indirect
-	golang.org/x/tools v0.21.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -390,7 +390,7 @@ func (kw ECDHESDecrypt) Decrypt(enckey []byte) ([]byte, error) {
 // NewRSAOAEPEncrypt creates a new key encrypter using RSA OAEP
 func NewRSAOAEPEncrypt(alg jwa.KeyEncryptionAlgorithm, pubkey *rsa.PublicKey) (*RSAOAEPEncrypt, error) {
 	switch alg {
-	case jwa.RSA_OAEP, jwa.RSA_OAEP_256:
+	case jwa.RSA_OAEP, jwa.RSA_OAEP_256, jwa.RSA_OAEP_384, jwa.RSA_OAEP_512:
 	default:
 		return nil, fmt.Errorf("invalid RSA OAEP encrypt algorithm (%s)", alg)
 	}
@@ -462,8 +462,12 @@ func (e RSAOAEPEncrypt) EncryptKey(cek []byte) (keygen.ByteSource, error) {
 		hash = sha1.New()
 	case jwa.RSA_OAEP_256:
 		hash = sha256.New()
+	case jwa.RSA_OAEP_384:
+		hash = sha512.New384()
+	case jwa.RSA_OAEP_512:
+		hash = sha512.New()
 	default:
-		return nil, fmt.Errorf(`failed to generate key encrypter for RSA-OAEP: RSA_OAEP/RSA_OAEP_256 required`)
+		return nil, fmt.Errorf(`failed to generate key encrypter for RSA-OAEP: RSA_OAEP/RSA_OAEP_256/RSA_OAEP_384/RSA_OAEP_512 required`)
 	}
 	encrypted, err := rsa.EncryptOAEP(hash, rand.Reader, e.pubkey, cek, []byte{})
 	if err != nil {
@@ -536,7 +540,7 @@ func (d RSAPKCS15Decrypt) Decrypt(enckey []byte) ([]byte, error) {
 // NewRSAOAEPDecrypt creates a new key decrypter using RSA OAEP
 func NewRSAOAEPDecrypt(alg jwa.KeyEncryptionAlgorithm, privkey *rsa.PrivateKey) (*RSAOAEPDecrypt, error) {
 	switch alg {
-	case jwa.RSA_OAEP, jwa.RSA_OAEP_256:
+	case jwa.RSA_OAEP, jwa.RSA_OAEP_256, jwa.RSA_OAEP_384, jwa.RSA_OAEP_512:
 	default:
 		return nil, fmt.Errorf("invalid RSA OAEP decrypt algorithm (%s)", alg)
 	}
@@ -560,8 +564,12 @@ func (d RSAOAEPDecrypt) Decrypt(enckey []byte) ([]byte, error) {
 		hash = sha1.New()
 	case jwa.RSA_OAEP_256:
 		hash = sha256.New()
+	case jwa.RSA_OAEP_384:
+		hash = sha512.New384()
+	case jwa.RSA_OAEP_512:
+		hash = sha512.New()
 	default:
-		return nil, fmt.Errorf(`failed to generate key encrypter for RSA-OAEP: RSA_OAEP/RSA_OAEP_256 required`)
+		return nil, fmt.Errorf(`failed to generate key encrypter for RSA-OAEP: RSA_OAEP/RSA_OAEP_256/RSA_OAEP_384/RSA_OAEP_512 required`)
 	}
 	return rsa.DecryptOAEP(hash, rand.Reader, d.privkey, enckey, []byte{})
 }
@@ -586,7 +594,7 @@ func Wrap(kek cipher.Block, cek []byte) ([]byte, error) {
 	n := len(cek) / keywrapChunkLen
 	r := make([][]byte, n)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		r[i] = make([]byte, keywrapChunkLen)
 		copy(r[i], cek[i*keywrapChunkLen:])
 	}
@@ -595,14 +603,14 @@ func Wrap(kek cipher.Block, cek []byte) ([]byte, error) {
 	tBytes := make([]byte, keywrapChunkLen)
 	copy(buffer, keywrapDefaultIV)
 
-	for t := 0; t < 6*n; t++ {
+	for t := range 6 * n {
 		copy(buffer[keywrapChunkLen:], r[t%n])
 
 		kek.Encrypt(buffer, buffer)
 
 		binary.BigEndian.PutUint64(tBytes, uint64(t+1))
 
-		for i := 0; i < keywrapChunkLen; i++ {
+		for i := range keywrapChunkLen {
 			buffer[i] = buffer[i] ^ tBytes[i]
 		}
 		copy(r[t%n], buffer[keywrapChunkLen:])
@@ -637,7 +645,7 @@ func Unwrap(block cipher.Block, ciphertxt []byte) ([]byte, error) {
 	for t := 6*n - 1; t >= 0; t-- {
 		binary.BigEndian.PutUint64(tBytes, uint64(t+1))
 
-		for i := 0; i < keywrapChunkLen; i++ {
+		for i := range keywrapChunkLen {
 			buffer[i] = buffer[i] ^ tBytes[i]
 		}
 		copy(buffer[keywrapChunkLen:], r[t%n])
