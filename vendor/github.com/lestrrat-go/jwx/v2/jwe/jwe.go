@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
@@ -118,7 +119,7 @@ func (b *recipientBuilder) Build(cek []byte, calg jwa.ContentEncryptionAlgorithm
 				return nil, nil, fmt.Errorf(`failed to create RSA PKCS encrypter: %w`, err)
 			}
 			enc = v
-		case jwa.RSA_OAEP, jwa.RSA_OAEP_256:
+		case jwa.RSA_OAEP, jwa.RSA_OAEP_256, jwa.RSA_OAEP_384, jwa.RSA_OAEP_512:
 			var pubkey rsa.PublicKey
 			if err := keyconv.RSAPublicKey(&pubkey, rawKey); err != nil {
 				return nil, nil, fmt.Errorf(`failed to generate public key from key (%T): %w`, rawKey, err)
@@ -272,7 +273,7 @@ func Encrypt(payload []byte, options ...EncryptOption) ([]byte, error) {
 	return encrypt(payload, nil, options...)
 }
 
-// Encryptstatic is exactly like Encrypt, except it accepts a static
+// EncryptStatic is exactly like Encrypt, except it accepts a static
 // content encryption key (CEK). It is separated out from the main
 // Encrypt function such that the latter does not accidentally use a static
 // CEK.
@@ -289,7 +290,7 @@ func EncryptStatic(payload, cek []byte, options ...EncryptOption) ([]byte, error
 	return encrypt(payload, cek, options...)
 }
 
-// encrypt is separate so it can receive cek from outside.
+// encrypt is separate, so it can receive cek from outside.
 // (but we don't want to receive it in the options slice)
 func encrypt(payload, cek []byte, options ...EncryptOption) ([]byte, error) {
 	// default content encryption algorithm
@@ -624,7 +625,7 @@ func (dctx *decryptCtx) try(ctx context.Context, recipient Recipient, keyUsed in
 			tried++
 			// alg is converted here because pair.alg is of type jwa.KeyAlgorithm.
 			// this may seem ugly, but we're trying to avoid declaring separate
-			// structs for `alg jwa.KeyAlgorithm` and `alg jwa.SignatureAlgorithm`
+			// structs for `alg jwa.KeyEncryptionAlgorithm` and `alg jwa.SignatureAlgorithm`
 			//nolint:forcetypeassert
 			alg := pair.alg.(jwa.KeyEncryptionAlgorithm)
 			key := pair.key
@@ -745,10 +746,28 @@ func (dctx *decryptCtx) decryptContent(ctx context.Context, alg jwa.KeyEncryptio
 		if !ok {
 			return nil, fmt.Errorf(`failed to get 'p2c' field`)
 		}
-		countFlt, ok := count.(float64)
-		if !ok {
-			return nil, fmt.Errorf("unexpected type for 'p2c': %T", count)
+
+		// check if WithUseNumber is effective, because it will change the
+		// type of the underlying value (#1140)
+		var countFlt float64
+		if json.UseNumber() {
+			num, ok := count.(json.Number)
+			if !ok {
+				return nil, fmt.Errorf("unexpected type for 'p2c': %T", count)
+			}
+			v, err := num.Float64()
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert 'p2c' to float64: %w", err)
+			}
+			countFlt = v
+		} else {
+			v, ok := count.(float64)
+			if !ok {
+				return nil, fmt.Errorf("unexpected type for 'p2c': %T", count)
+			}
+			countFlt = v
 		}
+
 		muSettings.RLock()
 		maxCount := maxPBES2Count
 		muSettings.RUnlock()
@@ -828,10 +847,20 @@ func parseJSON(buf []byte, storeProtectedHeaders bool) (*Message, error) {
 }
 
 func parseCompact(buf []byte, storeProtectedHeaders bool) (*Message, error) {
-	parts := bytes.Split(buf, []byte{'.'})
-	if len(parts) != 5 {
-		return nil, fmt.Errorf(`compact JWE format must have five parts (%d)`, len(parts))
+	var parts [5][]byte
+	var ok bool
+
+	for i := range 4 {
+		parts[i], buf, ok = bytes.Cut(buf, []byte{'.'})
+		if !ok {
+			return nil, fmt.Errorf(`compact JWE format must have five parts (%d)`, i+1)
+		}
 	}
+	// Validate that the last part does not contain more dots
+	if bytes.ContainsRune(buf, '.') {
+		return nil, errors.New(`compact JWE format must have five parts, not more`)
+	}
+	parts[4] = buf
 
 	hdrbuf, err := base64.Decode(parts[0])
 	if err != nil {

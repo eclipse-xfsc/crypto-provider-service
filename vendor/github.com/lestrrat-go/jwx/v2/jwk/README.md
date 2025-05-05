@@ -6,7 +6,7 @@ If you are looking to use JWT wit JWKs, look no further than [github.com/lestrra
 * Parse and work with RSA/EC/Symmetric/OKP JWK types
   * Convert to and from JSON
   * Convert to and from raw key types (e.g. *rsa.PrivateKey)
-* Ability to keep a JWKS fresh using *jwk.AutoRefersh
+* Ability to keep a JWKS fresh using *jwk.AutoRefresh
 
 ## Supported key types:
 
@@ -26,7 +26,7 @@ If you are looking to use JWT wit JWKs, look no further than [github.com/lestrra
 Please read the [API reference](https://pkg.go.dev/github.com/lestrrat-go/jwx/v2/jwk), or
 the how-to style documentation on how to use JWK can be found in the [docs directory](../docs/04-jwk.md).
 
-# Auto-Refresh a key during a long running process
+# Auto-Refresh a key during a long-running process
 
 <!-- INCLUDE(examples/jwk_cache_example_test.go) -->
 ```go
@@ -40,8 +40,9 @@ import (
   "github.com/lestrrat-go/jwx/v2/jwk"
 )
 
-func ExampleJWK_Cache() {
+func Example_jwk_cache() {
   ctx, cancel := context.WithCancel(context.Background())
+  defer cancel()
 
   const googleCerts = `https://www.googleapis.com/oauth2/v3/certs`
 
@@ -87,7 +88,7 @@ MAIN:
     // immediately after it has been rotated in the remote source. But it should be close\
     // enough, and should you need to forcefully refresh the token using the `(jwk.Cache).Refresh()` method.
     //
-    // If re-fetching the keyset fails, a cached version will be returned from the previous successful
+    // If refetching the keyset fails, a cached version will be returned from the previous successful
     // fetch upon calling `(jwk.Cache).Fetch()`.
 
     // Do interesting stuff with the keyset... but here, we just
@@ -95,7 +96,7 @@ MAIN:
     time.Sleep(time.Second)
 
     // Because we're a dummy program, we just cancel the loop now.
-    // If this were a real program, you prosumably loop forever
+    // If this were a real program, you presumably loop forever
     cancel()
   }
   // OUTPUT:
@@ -119,7 +120,7 @@ import (
   "github.com/lestrrat-go/jwx/v2/jwk"
 )
 
-func ExampleJWK_Usage() {
+func Example_jwk_usage() {
   // Use jwk.Cache if you intend to keep reuse the JWKS over and over
   set, err := jwk.Fetch(context.Background(), "https://www.googleapis.com/oauth2/v3/certs")
   if err != nil {
@@ -175,7 +176,7 @@ func ExampleJWK_Usage() {
 }
 
 //nolint:govet
-func ExampleJWK_MarshalJSON() {
+func Example_jwk_marshal_json() {
   // JWKs that inherently involve randomness such as RSA and EC keys are
   // not used in this example, because they may produce different results
   // depending on the environment.
