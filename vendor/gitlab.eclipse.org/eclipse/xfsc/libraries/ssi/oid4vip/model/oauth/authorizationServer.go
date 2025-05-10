@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"strings"
+	"time"
 
 	"gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/helper"
 )
@@ -52,19 +53,31 @@ type OpenIdConfiguration struct {
 	Request_Uri_Parameter_Supported                  bool     `json:"request_uri_parameter_supported"`
 }
 
-func (config *OpenIdConfiguration) GetToken(grantType GrantType, options map[string]string) (*Token, error) {
+func (config *OpenIdConfiguration) GetToken(grantType GrantType, options map[string]interface{}) (*Token, error) {
 
 	if grantType == PreAuthorizedCodeGrant {
 
-		pin, ok := options["user_pin"]
+		interval, ok := options["interval"].(int)
+
+		if ok {
+			if interval > 0 && interval < 10 { //be carefull with intervals from outside, can DDOS the system via link
+				time.Sleep(time.Second * time.Duration(interval))
+			} else {
+				if interval > 10 {
+					interval = 5
+				}
+			}
+		}
+
+		tx_code, ok := options["tx_code"].(string)
 
 		formData := url.Values{
 			"grant_type":          {string(grantType)},
-			"pre-authorized_code": {options["code"]},
+			"pre-authorized_code": {options["code"].(string)},
 		}
 
 		if ok {
-			formData.Add("user_pin", pin)
+			formData.Add("tx_code", tx_code)
 		}
 
 		reader := strings.NewReader(formData.Encode())
