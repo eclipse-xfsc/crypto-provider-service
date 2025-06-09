@@ -1,8 +1,6 @@
 module github.com/eclipse-xfsc/crypto-provider-service
 
-go 1.21.4
-
-toolchain go1.21.7
+go 1.23.0
 
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
@@ -24,7 +22,7 @@ require (
 	go.uber.org/zap v1.27.0
 	goa.design/goa/v3 v3.12.3
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
-	golang.org/x/sync v0.7.0
+	golang.org/x/sync v0.15.0
 )
 
 require (
