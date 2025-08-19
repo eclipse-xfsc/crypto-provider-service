@@ -322,10 +322,12 @@ github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea h1:Cyhwe
 github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea/go.mod h1:eNr558nEUjP8acGw8FFjTeWvSgU1stO7FAO6eknhHe4=
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core v1.2.0 h1:OWH/mMZE3EPjasLyHP3O+hYoSWQPoG9xLsd9ErPB7kc=
 gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core v1.2.0/go.mod h1:wvT+bZZmQgHrYqeyoIkY+EaxTZZSbZza2j/gG+Ca+A8=
-gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1 h1:pGE/D4VjeS3x+KLnc0dvRfjZsgbYFmS0pL8LVSwEmkU=
-gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.0.1/go.mod h1:rljyPrL3QvUGuErGgVYZCOaXwdjwCqR3V5MEgSjifQk=
+gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.1.0 h1:ZLU0gLd+3DyjHrsJDcA6AAHsA4py9h5TOvPt/qcOv3Y=
+gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt v1.1.0/go.mod h1:rljyPrL3QvUGuErGgVYZCOaXwdjwCqR3V5MEgSjifQk=
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4 h1:95rgvbvLBEQYMZPeY/kIXd5Aq9AJzbUhwR3tHnWVVNc=
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4/go.mod h1:UdoA3qxEYoBWleNI/oAtp3LTU6tJa1UOovMR/K9h9lM=
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core v0.0.0-20231111104828-469416951f96 h1:AVQi0ah9Z4BgAM4ubFurb8bTgpNxgzioW42+SBdEtpU=
+gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core v0.0.0-20231111104828-469416951f96/go.mod h1:vTI93dopctfVILH9P6li08G/fHo8ddHIn1r5Q1MFd58=
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2 h1:wzZ3GSZWFSoLbqVIMyHpWE8tIWarcldzvv7hFQGxMhw=
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2/go.mod h1:zEswN6WqrvXbxgiKmP9nY+TyTsGLuun/ED41QbMFFp8=
 gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.10.0 h1:v+f13ZgLkJNIeRc1gcePzBgwkV6UAq0lbqC7jF8kLkM=

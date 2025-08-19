@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwe"
@@ -13,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 	cryptoCore "gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
 	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt/types"
+	"gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/did-core"
 )
 
 var fetchers map[string]types.KeyFetcher = make(map[string]types.KeyFetcher)
@@ -79,6 +81,48 @@ func DisableCryptoProvider() {
 		jwa.UnregisterSignatureAlgorithm(jwa.SignatureAlgorithm(jwa.Ed25519))
 	}
 
+}
+
+func Parse(tokenString string, options ...ljwt.ParseOption) (ljwt.Token, error) {
+	if tokenString == "" {
+		return nil, ljwt.ErrInvalidJWT()
+	}
+
+	didKidOption := ljwt.WithKeyProvider(jws.KeyProviderFunc(func(ctx context.Context,
+		ks jws.KeySink,
+		s *jws.Signature,
+		m *jws.Message) error {
+
+		alg := s.ProtectedHeaders().Algorithm()
+
+		kid := s.ProtectedHeaders().KeyID()
+
+		if strings.Contains(kid, "did:") && strings.Contains(kid, "#") {
+			id := strings.Split(kid, "#")
+			document, err := did.Resolve(id[0])
+
+			if err != nil {
+				return nil
+			}
+
+			set := document.GetPublicKeys()
+			key, ok := set.LookupKeyID("#" + id[1])
+
+			if ok {
+				ks.Key(alg, key)
+			} else {
+				key, ok := set.LookupKeyID(kid)
+				if ok {
+					ks.Key(alg, key)
+				}
+			}
+		}
+
+		return nil
+	}))
+
+	options = append(options, didKidOption)
+	return ljwt.Parse([]byte(tokenString), options...)
 }
 
 func ParseSelfSigned(tokenString string, options ...ljwt.ParseOption) (ljwt.Token, error) {
