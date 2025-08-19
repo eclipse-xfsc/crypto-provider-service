@@ -1662,7 +1662,6 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 		Context: []string{
 			"https://www.w3.org/ns/did/v1",
 			"https://w3id.org/security/suites/jws-2020/v1",
-			"https://schema.org",
 		},
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
