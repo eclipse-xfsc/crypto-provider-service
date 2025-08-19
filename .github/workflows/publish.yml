@@ -4,12 +4,18 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+        branch:
+          description: 'Branch to build'
+          required: false
+          default: ''
   
 jobs:
   dockerbuild:
     uses: eclipse-xfsc/dev-ops/.github/workflows/dockerbuild.yml@main
     secrets: inherit
     with: 
+      ref: ${{ inputs.branch }}
       dockerfile: "deployment/docker/Dockerfile"
       harbor_config: "deployment/harbor.config"
       repo_name: signer
