@@ -591,13 +591,13 @@ gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt/types
 # gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider v0.1.4
 ## explicit; go 1.21
 gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider
-# gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v0.1.2
+# gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip v1.3.4
 ## explicit; go 1.21.3
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/config
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/helper
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/model/credential
 gitlab.eclipse.org/eclipse/xfsc/libraries/ssi/oid4vip/model/oauth
-# gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.10.0
+# gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging v1.12.0
 ## explicit; go 1.21.3
 gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging
 gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging/common

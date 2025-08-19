@@ -11,14 +11,21 @@ import (
 )
 
 type Grants struct {
-	AuthorizationCode AuthorizationCode `json:"authorization_code,omitempty"`
-	PreAuthorizedCode PreAuthorizedCode `json:"urn:ietf:params:oauth:grant-type:pre-authorized_code,omitempty"`
+	AuthorizationCode *AuthorizationCode `json:"authorization_code,omitempty"`
+	PreAuthorizedCode *PreAuthorizedCode `json:"urn:ietf:params:oauth:grant-type:pre-authorized_code,omitempty"`
+}
+
+type TxCode struct {
+	InputMode   string `json:"input_mode,omitempty"`
+	Length      int    `json:"length,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type PreAuthorizedCode struct {
-	PreAuthorizationCode string `json:"pre-authorized_code"`
-	UserPinRequired      bool   `json:"user_pin_required"`
-	UserPinDescription   string `json:"user_pin_description,omitempty"`
+	PreAuthorizationCode    string  `json:"pre-authorized_code"`
+	TxCode                  *TxCode `json:"tx_code,omitempty"`
+	Interval                int     `json:"interval,omitempty"`
+	AuthorizationServerHint string  `json:"authorization_server,omitempty"`
 }
 
 type AuthorizationCode struct {
@@ -27,7 +34,7 @@ type AuthorizationCode struct {
 
 type CredentialOfferParameters struct {
 	CredentialIssuer string   `json:"credential_issuer"`
-	Credentials      []string `json:"credentials"`
+	Credentials      []string `json:"credential_configuration_ids"`
 	Grants           Grants   `json:"grants"`
 }
 
@@ -84,7 +91,7 @@ func (offering *CredentialOffer) GetOfferParameters() (*CredentialOfferParameter
 		return nil, fmt.Errorf("error occured while unmarshal credentialOffer: %w", err)
 	}
 
-	return &newCredentialOfferObject, nil
+	return &newCredentialOfferObject, err
 }
 
 func (offerParameter *CredentialOfferParameters) GetIssuerMetadata() (*IssuerMetadata, error) {

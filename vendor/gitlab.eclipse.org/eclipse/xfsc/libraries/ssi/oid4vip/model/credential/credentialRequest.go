@@ -17,9 +17,11 @@ const (
 )
 
 type CredentialRequest struct {
-	Format               string `json:"format"`
-	CredentialIdentifier string `json:"credential_identifier,omitempty"`
-	Proof                *Proof `json:"proof,omitempty"`
+	Format               string                 `json:"format,omitempty"`
+	CredentialIdentifier string                 `json:"credential_identifier,omitempty"`
+	Proof                *Proof                 `json:"proof,omitempty"`
+	Vct                  string                 `json:"vct,omitempty"`
+	Claims               map[string]interface{} `json:"claims,omitempty"`
 }
 
 type Proof struct {

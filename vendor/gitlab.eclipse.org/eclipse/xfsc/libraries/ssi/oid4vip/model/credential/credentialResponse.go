@@ -32,6 +32,7 @@ type CredentialResponse struct {
 	TransactionID   string      `json:"transaction_id,omitempty"`
 	CNonce          string      `json:"c_nonce,omitempty"`
 	CNonceExpiresIn int         `json:"c_nonce_expires_in,omitempty"`
+	NotificationId  string      `json:"notification_id,omitempty"`
 }
 
 type CredentialResponseError struct {
