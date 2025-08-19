@@ -1657,8 +1657,12 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 	}
 
 	var didresponse = &signer.DidResponse{
-		ID:                 req.XDid,
-		Controller:         req.XDid,
+		ID:         req.XDid,
+		Controller: req.XDid,
+		Context: []string{
+			"https://www.w3.org/ns/did/v1",
+			"https://w3id.org/security/suites/jws-2020/v1",
+		},
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
 	}

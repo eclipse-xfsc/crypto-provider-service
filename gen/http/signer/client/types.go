@@ -224,6 +224,8 @@ type SignOKResponseBody struct {
 // DidDocOKResponseBody is the type of the "signer" service "didDoc" endpoint
 // HTTP response body.
 type DidDocOKResponseBody struct {
+	// JSON-LD @context
+	Context []string `json:"@context,omitempty"`
 	// did of the document
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// controler of the document
@@ -299,6 +301,8 @@ type ServiceEndpointResponseBody struct {
 
 // DidDocNotFoundResponseBody is used to define fields on response body types.
 type DidDocNotFoundResponseBody struct {
+	// JSON-LD @context
+	Context []string `json:"@context,omitempty"`
 	// did of the document
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// controler of the document
@@ -312,6 +316,8 @@ type DidDocNotFoundResponseBody struct {
 // DidDocInternalServerErrorResponseBody is used to define fields on response
 // body types.
 type DidDocInternalServerErrorResponseBody struct {
+	// JSON-LD @context
+	Context []string `json:"@context,omitempty"`
 	// did of the document
 	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// controler of the document
@@ -688,6 +694,12 @@ func NewDidDocDidResponseOK(body *DidDocOKResponseBody) *signer.DidResponse {
 	v := &signer.DidResponse{
 		ID:         *body.ID,
 		Controller: *body.Controller,
+	}
+	if body.Context != nil {
+		v.Context = make([]string, len(body.Context))
+		for i, val := range body.Context {
+			v.Context[i] = val
+		}
 	}
 	if body.VerificationMethod != nil {
 		v.VerificationMethod = make([]*signer.DIDVerificationMethod, len(body.VerificationMethod))

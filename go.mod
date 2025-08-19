@@ -2,8 +2,6 @@ module github.com/eclipse-xfsc/crypto-provider-service
 
 go 1.21.4
 
-toolchain go1.21.7
-
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/google/uuid v1.6.0

@@ -369,6 +369,16 @@ var jwksResponse = Type("JwksResponse", func() {
 })
 
 var didResponse = Type("DidResponse", func() {
+	// @context – String oder Array -> Any verwenden
+	Field(0, "context", ArrayOf(String), "JSON-LD @context", func() {
+		// Go-Struct-Feldname (gültiger Identifier)
+		Meta("struct:field:name", "Context")
+		// JSON-Tag überschreiben, damit der Key "@context" heißt
+		Meta("struct:tag:json", "@context,omitempty")
+		Example([]string{
+			"https://www.w3.org/ns/did/v1",
+		})
+	})
 	Field(1, "id", String, "did of the document")
 	Field(2, "controller", String, "controler of the document")
 	Field(3, "verificationMethod", ArrayOf(DIDVerificationMethod), "methods of the document")
