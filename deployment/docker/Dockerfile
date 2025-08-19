@@ -27,5 +27,9 @@ COPY --from=builder /tmp/signer /opt/signer
 COPY --from=pluginBuilder local-provider.so /opt/plugins/local-provider.so
 COPY --from=pluginBuilder2 hashicorp-vault-provider.so /opt/plugins/hashicorp-vault-provider.so 
 WORKDIR /opt
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && update-ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
 CMD ["./signer"]
