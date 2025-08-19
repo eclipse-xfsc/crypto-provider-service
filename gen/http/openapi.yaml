@@ -693,14 +693,14 @@ definitions:
             did:
                 type: string
                 description: DID JWK of key
-                example: Esse ut error.
+                example: Fugiat dignissimos tempora et ipsa.
             name:
                 type: string
                 description: name of the key.
-                example: Et sint aut aspernatur.
+                example: Dolor consequatur laudantium.
         example:
-            did: Quos veritatis libero et.
-            name: Labore id ducimus aliquid aliquid excepturi.
+            did: Sunt ipsam sed.
+            name: Hic quasi molestiae reiciendis aut quam illum.
         required:
             - name
             - did
@@ -1033,14 +1033,22 @@ definitions:
         title: SignerDidDocInternalServerErrorResponseBody
         type: object
         properties:
+            context:
+                type: array
+                items:
+                    type: string
+                    example: Aspernatur corrupti esse ut error.
+                description: JSON-LD @context
+                example:
+                    - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Ex aut cum.
+                example: Quos veritatis libero et.
             id:
                 type: string
                 description: did of the document
-                example: At esse.
+                example: Labore id ducimus aliquid aliquid excepturi.
             service:
                 type: array
                 items:
@@ -1079,9 +1087,14 @@ definitions:
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
         example:
-            controller: Aut nihil.
-            id: Aspernatur quod.
+            context:
+                - https://www.w3.org/ns/did/v1
+            controller: Aperiam earum reiciendis consequatur.
+            id: Quam pariatur sit voluptatibus ipsum ea totam.
             service:
+                - id: Accusamus ex nihil inventore ea qui.
+                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
+                  type: Sapiente error nostrum.
                 - id: Accusamus ex nihil inventore ea qui.
                   serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                   type: Sapiente error nostrum.
@@ -1108,23 +1121,28 @@ definitions:
         title: SignerDidDocNotFoundResponseBody
         type: object
         properties:
+            context:
+                type: array
+                items:
+                    type: string
+                    example: Labore eum libero debitis tempore culpa illo.
+                description: JSON-LD @context
+                example:
+                    - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Ullam rerum ea.
+                example: Aut cum laboriosam.
             id:
                 type: string
                 description: did of the document
-                example: Expedita nam nostrum fuga est dicta.
+                example: Accusantium at praesentium est at esse laudantium.
             service:
                 type: array
                 items:
                     $ref: '#/definitions/serviceEndpointResponseBody'
                 description: serviceendpoints
                 example:
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
                     - id: Accusamus ex nihil inventore ea qui.
                       serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                       type: Sapiente error nostrum.
@@ -1150,12 +1168,11 @@ definitions:
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
         example:
-            controller: Libero debitis tempore culpa illo autem accusantium.
-            id: Aperiam maiores labore.
+            context:
+                - https://www.w3.org/ns/did/v1
+            controller: Nihil nihil dicta non.
+            id: Quod et.
             service:
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
                 - id: Accusamus ex nihil inventore ea qui.
                   serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                   type: Sapiente error nostrum.
@@ -1178,20 +1195,31 @@ definitions:
         title: SignerDidDocOKResponseBody
         type: object
         properties:
+            context:
+                type: array
+                items:
+                    type: string
+                    example: In aliquid sint numquam facere sequi.
+                description: JSON-LD @context
+                example:
+                    - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Maxime harum omnis qui laborum.
+                example: Id eum quis placeat laudantium.
             id:
                 type: string
                 description: did of the document
-                example: In aliquid sint numquam facere sequi.
+                example: Maxime harum omnis qui laborum.
             service:
                 type: array
                 items:
                     $ref: '#/definitions/serviceEndpointResponseBody'
                 description: serviceendpoints
                 example:
+                    - id: Accusamus ex nihil inventore ea qui.
+                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
+                      type: Sapiente error nostrum.
                     - id: Accusamus ex nihil inventore ea qui.
                       serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                       type: Sapiente error nostrum.
@@ -1215,10 +1243,22 @@ definitions:
                       id: key1
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
+                    - controller: did:web:example.com
+                      id: key1
+                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+                      type: JsonWebKey2020
         example:
-            controller: Ut at dolores omnis voluptas.
-            id: Facilis ratione cumque in facilis.
+            context:
+                - https://www.w3.org/ns/did/v1
+            controller: Rerum ea nihil placeat.
+            id: Nostrum fuga est dicta quo.
             service:
+                - id: Accusamus ex nihil inventore ea qui.
+                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
+                  type: Sapiente error nostrum.
+                - id: Accusamus ex nihil inventore ea qui.
+                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
+                  type: Sapiente error nostrum.
                 - id: Accusamus ex nihil inventore ea qui.
                   serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                   type: Sapiente error nostrum.
@@ -1285,10 +1325,10 @@ definitions:
                       name: Voluptates consectetur et repellat.
                     - did: Repudiandae aut dolorum hic aut voluptatem soluta.
                       name: Voluptates consectetur et repellat.
+                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                      name: Voluptates consectetur et repellat.
         example:
             list:
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
                 - did: Repudiandae aut dolorum hic aut voluptatem soluta.
                   name: Voluptates consectetur et repellat.
                 - did: Repudiandae aut dolorum hic aut voluptatem soluta.
@@ -1315,8 +1355,6 @@ definitions:
                       name: Voluptates consectetur et repellat.
         example:
             list:
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
                 - did: Repudiandae aut dolorum hic aut voluptatem soluta.
                   name: Voluptates consectetur et repellat.
                 - did: Repudiandae aut dolorum hic aut voluptatem soluta.
@@ -1350,17 +1388,18 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Qui voluptatum et.
+                    example: Ipsum sed et quia.
                     format: binary
                 description: List of jwk
                 example:
-                    - Deleniti ea consequatur voluptatem minima pariatur cum.
-                    - Illum est velit quam.
-                    - Animi ducimus porro qui necessitatibus voluptatum neque.
+                    - Ut sed sed architecto voluptate.
+                    - Voluptas sapiente nisi et est.
+                    - Sint est dolor culpa ut voluptatem explicabo.
         example:
             keys:
-                - Ipsum sed et quia.
-                - Id ut.
+                - Sit veniam officia omnis est.
+                - Eum fuga nihil non sapiente.
+                - Nobis velit cumque voluptas et nobis.
         required:
             - keys
     SignerJwksNotFoundResponseBody:
@@ -1371,19 +1410,17 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Dolor id aliquid mollitia in.
+                    example: Non vitae veniam totam.
                     format: binary
                 description: List of jwk
                 example:
-                    - Fuga reprehenderit.
-                    - Consequatur sunt velit.
-                    - Neque quia facere hic necessitatibus sequi.
+                    - Officia voluptatem aut deserunt quibusdam et.
+                    - Voluptatum et assumenda repudiandae deleniti ea.
+                    - Voluptatem minima pariatur cum quia illum.
         example:
             keys:
-                - Libero error aliquid molestiae quia omnis.
-                - Sed maiores voluptatem possimus.
-                - Nostrum sed non vitae veniam totam.
-                - Doloremque officia voluptatem aut deserunt quibusdam.
+                - Quam magnam.
+                - Ducimus porro qui necessitatibus voluptatum neque consequatur.
         required:
             - keys
     SignerJwksOKResponseBody:
@@ -1394,17 +1431,18 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Ipsum ea totam quam aperiam earum.
+                    example: Sapiente velit dolor.
                     format: binary
                 description: List of jwk
                 example:
-                    - Possimus cupiditate temporibus dolor consequatur.
-                    - Ipsum fugiat dignissimos tempora et ipsa.
+                    - Mollitia in iusto placeat fuga.
+                    - Non consequatur sunt.
         example:
             keys:
-                - Quasi molestiae reiciendis aut quam illum cupiditate.
-                - Ipsam sed ipsam quae earum sunt.
-                - Cum asperiores sapiente.
+                - Neque quia facere hic necessitatibus sequi.
+                - Quia libero error.
+                - Molestiae quia.
+                - Inventore sed maiores voluptatem possimus natus nostrum.
         required:
             - keys
     SignerPresentationProofRequestBody:
@@ -1840,19 +1878,19 @@ definitions:
             id:
                 type: string
                 description: did of the document
-                example: Eum quis.
+                example: Accusamus quisquam dolorem quibusdam cum nostrum aut.
             serviceEndpoint:
                 type: string
                 description: Endpoint URL
-                example: Accusamus quisquam dolorem quibusdam cum nostrum aut.
+                example: Quaerat est cupiditate.
             type:
                 type: string
                 description: type of endpoint
-                example: Laudantium autem.
+                example: Recusandae fugit ducimus assumenda omnis aut.
         example:
-            id: Recusandae fugit ducimus assumenda omnis aut.
-            serviceEndpoint: Suscipit molestiae a nihil voluptates rerum.
-            type: Quaerat est cupiditate.
+            id: Suscipit molestiae a nihil voluptates rerum.
+            serviceEndpoint: At dolores omnis voluptas necessitatibus vero et.
+            type: Praesentium facilis ratione cumque in facilis nostrum.
         required:
             - id
             - type

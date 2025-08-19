@@ -224,6 +224,8 @@ type SignOKResponseBody struct {
 // DidDocOKResponseBody is the type of the "signer" service "didDoc" endpoint
 // HTTP response body.
 type DidDocOKResponseBody struct {
+	// JSON-LD @context
+	Context []string `json:"@context,omitempty"`
 	// did of the document
 	ID string `form:"id" json:"id" xml:"id"`
 	// controler of the document
@@ -350,6 +352,12 @@ func NewDidDocOKResponseBody(res *signer.DidResponse) *DidDocOKResponseBody {
 	body := &DidDocOKResponseBody{
 		ID:         res.ID,
 		Controller: res.Controller,
+	}
+	if res.Context != nil {
+		body.Context = make([]string, len(res.Context))
+		for i, val := range res.Context {
+			body.Context[i] = val
+		}
 	}
 	if res.VerificationMethod != nil {
 		body.VerificationMethod = make([]*DIDVerificationMethodResponseBody, len(res.VerificationMethod))

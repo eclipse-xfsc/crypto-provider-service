@@ -204,6 +204,8 @@ type DidRequest struct {
 
 // DidResponse is the result type of the signer service didDoc method.
 type DidResponse struct {
+	// JSON-LD @context
+	Context []string `json:"@context,omitempty"`
 	// did of the document
 	ID string
 	// controler of the document
