@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/verify/train"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/verify/train"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 )
 
 // New initializes a list of signer.Verifier based on the given names.
@@ -20,12 +20,12 @@ func New(names []string, httpClient *http.Client, trainAddr string, trainSchemes
 		case "train":
 			t, err := train.New(httpClient, trainAddr, trainSchemes)
 			if err != nil {
-				return nil, errors.New("error initializing train verifier", err)
+				return nil, pkgErr.New("error initializing train verifier", err)
 			}
 
 			verifiers = append(verifiers, t)
 		default:
-			return nil, errors.New(errors.Internal, fmt.Sprintf("unknown credential verifier %s", v))
+			return nil, pkgErr.New(pkgErr.Internal, fmt.Sprintf("unknown credential verifier %s", v))
 		}
 	}
 

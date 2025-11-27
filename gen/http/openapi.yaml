@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
     title: Signer Service
     description: Signer service exposes HTTP API for making and verifying digital signatures and proofs for Verifiable Credentials.
-    version: ""
+    version: 0.0.1
 host: localhost:8085
 consumes:
     - application/json
@@ -23,7 +23,7 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/HealthLivenessResponseBody'
+                        $ref: '#/definitions/HealthResponse'
                         required:
                             - service
                             - status
@@ -40,7 +40,7 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/HealthReadinessResponseBody'
+                        $ref: '#/definitions/HealthResponse'
                         required:
                             - service
                             - status
@@ -64,7 +64,7 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerCreateCredentialRequestBody'
+                    $ref: '#/definitions/CreateCredentialRequest'
                     required:
                         - namespace
                         - key
@@ -73,9 +73,7 @@ paths:
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/credential/proof:
@@ -90,7 +88,7 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerCredentialProofRequestBody'
+                    $ref: '#/definitions/CredentialProofRequest'
                     required:
                         - namespace
                         - key
@@ -99,9 +97,7 @@ paths:
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/credential/verify:
@@ -135,14 +131,14 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerVerifyCredentialRequestBody'
+                    $ref: '#/definitions/VerifyCredentialRequest'
                     required:
                         - credential
             responses:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerVerifyCredentialResponseBody'
+                        $ref: '#/definitions/VerifyResult'
                         required:
                             - valid
             schemes:
@@ -185,13 +181,11 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerDidConfigurationRequestBody'
+                    $ref: '#/definitions/DidConfiguration'
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/did/document:
@@ -229,21 +223,21 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerDidDocOKResponseBody'
+                        $ref: '#/definitions/DidResponse'
                         required:
                             - id
                             - controller
                 "404":
                     description: Not Found response.
                     schema:
-                        $ref: '#/definitions/SignerDidDocNotFoundResponseBody'
+                        $ref: '#/definitions/DidResponse'
                         required:
                             - id
                             - controller
                 "500":
                     description: Internal Server Error response.
                     schema:
-                        $ref: '#/definitions/SignerDidDocInternalServerErrorResponseBody'
+                        $ref: '#/definitions/DidResponse'
                         required:
                             - id
                             - controller
@@ -277,19 +271,19 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerDidListOKResponseBody'
+                        $ref: '#/definitions/DidListResponse'
                         required:
                             - list
                 "404":
                     description: Not Found response.
                     schema:
-                        $ref: '#/definitions/SignerDidListNotFoundResponseBody'
+                        $ref: '#/definitions/DidListResponse'
                         required:
                             - list
                 "500":
                     description: Internal Server Error response.
                     schema:
-                        $ref: '#/definitions/SignerDidListInternalServerErrorResponseBody'
+                        $ref: '#/definitions/DidListResponse'
                         required:
                             - list
             schemes:
@@ -316,25 +310,19 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerJwkPublicKeyRequestBody'
+                    $ref: '#/definitions/JwkPublicKeyRequest'
                     required:
                         - group
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
                 "404":
                     description: Not Found response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
                 "500":
                     description: Internal Server Error response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/jwks:
@@ -364,19 +352,19 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerJwksOKResponseBody'
+                        $ref: '#/definitions/JwksResponse'
                         required:
                             - keys
                 "404":
                     description: Not Found response.
                     schema:
-                        $ref: '#/definitions/SignerJwksNotFoundResponseBody'
+                        $ref: '#/definitions/JwksResponse'
                         required:
                             - keys
                 "500":
                     description: Internal Server Error response.
                     schema:
-                        $ref: '#/definitions/SignerJwksInternalServerErrorResponseBody'
+                        $ref: '#/definitions/JwksResponse'
                         required:
                             - keys
             schemes:
@@ -395,7 +383,7 @@ paths:
                         type: array
                         items:
                             type: string
-                            example: Laborum delectus.
+                            example: Tempora dolores aliquid porro iste totam.
             schemes:
                 - http
     /v1/namespaces/{namespace}/keys:
@@ -424,7 +412,7 @@ paths:
                         type: array
                         items:
                             type: string
-                            example: Voluptatibus aperiam eius velit.
+                            example: Ut non.
             schemes:
                 - http
     /v1/presentation:
@@ -439,7 +427,7 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerCreatePresentationRequestBody'
+                    $ref: '#/definitions/CreatePresentationRequest'
                     required:
                         - namespace
                         - key
@@ -448,9 +436,7 @@ paths:
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/presentation/proof:
@@ -465,7 +451,7 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerPresentationProofRequestBody'
+                    $ref: '#/definitions/PresentationProofRequest'
                     required:
                         - namespace
                         - key
@@ -474,9 +460,7 @@ paths:
             responses:
                 "200":
                     description: OK response.
-                    schema:
-                        type: string
-                        format: binary
+                    schema: {}
             schemes:
                 - http
     /v1/presentation/verify:
@@ -500,14 +484,14 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerVerifyPresentationRequestBody'
+                    $ref: '#/definitions/VerifyPresentationRequest'
                     required:
                         - presentation
             responses:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerVerifyPresentationResponseBody'
+                        $ref: '#/definitions/VerifyResult'
                         required:
                             - valid
             schemes:
@@ -524,7 +508,7 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerSignRequestBody'
+                    $ref: '#/definitions/SignRequest'
                     required:
                         - namespace
                         - key
@@ -534,19 +518,19 @@ paths:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerSignOKResponseBody'
+                        $ref: '#/definitions/SignResult'
                         required:
                             - signature
                 "404":
                     description: Not Found response.
                     schema:
-                        $ref: '#/definitions/SignerSignNotFoundResponseBody'
+                        $ref: '#/definitions/SignResult'
                         required:
                             - signature
                 "500":
                     description: Internal Server Error response.
                     schema:
-                        $ref: '#/definitions/SignerSignInternalServerErrorResponseBody'
+                        $ref: '#/definitions/SignResult'
                         required:
                             - signature
             schemes:
@@ -573,14 +557,14 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerVerificationMethodsRequestBody'
+                    $ref: '#/definitions/VerificationMethodsRequest'
             responses:
                 "200":
                     description: OK response.
                     schema:
                         type: array
                         items:
-                            $ref: '#/definitions/DIDVerificationMethodResponse'
+                            $ref: '#/definitions/DIDVerificationMethod'
             schemes:
                 - http
     /v1/verification-methods/{namespace}/{key}/{did}:
@@ -610,12 +594,12 @@ paths:
                   in: body
                   required: true
                   schema:
-                    $ref: '#/definitions/SignerVerificationMethodRequestBody'
+                    $ref: '#/definitions/VerificationMethodRequest'
             responses:
                 "200":
                     description: OK response.
                     schema:
-                        $ref: '#/definitions/SignerVerificationMethodResponseBody'
+                        $ref: '#/definitions/DIDVerificationMethod'
                         required:
                             - id
                             - type
@@ -624,158 +608,28 @@ paths:
             schemes:
                 - http
 definitions:
-    DIDVerificationMethodResponse:
-        title: DIDVerificationMethodResponse
-        type: object
-        properties:
-            controller:
-                type: string
-                description: Controller of verification method specified as DID.
-                example: did:web:example.com
-            id:
-                type: string
-                description: ID of verification method.
-                example: key1
-            publicKeyJwk:
-                type: string
-                description: Public Key encoded in JWK format.
-                example: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                format: binary
-            type:
-                type: string
-                description: Type of verification method key.
-                example: JsonWebKey2020
-        example:
-            controller: did:web:example.com
-            id: key1
-            publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-            type: JsonWebKey2020
-        required:
-            - id
-            - type
-            - controller
-            - publicKeyJwk
-    DIDVerificationMethodResponseBody:
-        title: DIDVerificationMethodResponseBody
-        type: object
-        properties:
-            controller:
-                type: string
-                description: Controller of verification method specified as DID.
-                example: did:web:example.com
-            id:
-                type: string
-                description: ID of verification method.
-                example: key1
-            publicKeyJwk:
-                type: string
-                description: Public Key encoded in JWK format.
-                example: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                format: binary
-            type:
-                type: string
-                description: Type of verification method key.
-                example: JsonWebKey2020
-        example:
-            controller: did:web:example.com
-            id: key1
-            publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-            type: JsonWebKey2020
-        required:
-            - id
-            - type
-            - controller
-            - publicKeyJwk
-    DidListResponseItemResponseBody:
-        title: DidListResponseItemResponseBody
-        type: object
-        properties:
-            did:
-                type: string
-                description: DID JWK of key
-                example: Fugiat dignissimos tempora et ipsa.
-            name:
-                type: string
-                description: name of the key.
-                example: Dolor consequatur laudantium.
-        example:
-            did: Sunt ipsam sed.
-            name: Hic quasi molestiae reiciendis aut quam illum.
-        required:
-            - name
-            - did
-    HealthLivenessResponseBody:
-        title: HealthLivenessResponseBody
-        type: object
-        properties:
-            service:
-                type: string
-                description: Service name.
-                example: Aperiam odit illo natus.
-            status:
-                type: string
-                description: Status message.
-                example: Tenetur ut consequuntur.
-            version:
-                type: string
-                description: Service runtime version.
-                example: Occaecati doloremque animi quia deserunt quidem et.
-        example:
-            service: Maxime totam voluptatibus corrupti ipsam.
-            status: Officiis magni cum sunt.
-            version: Quibusdam sunt.
-        required:
-            - service
-            - status
-            - version
-    HealthReadinessResponseBody:
-        title: HealthReadinessResponseBody
-        type: object
-        properties:
-            service:
-                type: string
-                description: Service name.
-                example: Tempora dolores aliquid porro iste totam.
-            status:
-                type: string
-                description: Status message.
-                example: Ut non.
-            version:
-                type: string
-                description: Service runtime version.
-                example: Fugiat et repellat vel consequatur.
-        example:
-            service: Ab molestiae minus et ut.
-            status: Quidem vitae qui est et voluptatem voluptatum.
-            version: Itaque ratione.
-        required:
-            - service
-            - status
-            - version
-    SignerCreateCredentialRequestBody:
-        title: SignerCreateCredentialRequestBody
+    CreateCredentialRequest:
+        title: CreateCredentialRequest
         type: object
         properties:
             context:
                 type: array
                 items:
                     type: string
-                    example: Aut pariatur.
+                    example: Dolores libero.
                 description: Additional JSONLD contexts to be specified in the VC.
                 example:
                     - https://w3id.org/security/suites/jws-2020/v1
                     - https://schema.org
             credentialSubject:
-                type: string
                 description: Raw JSON that will be the VC subject.
                 example:
                     hello: world
-                format: binary
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Nihil numquam doloremque.
+                    example: Deleniti laudantium exercitationem tenetur iusto eos quidem.
                 description: Disclosed Attributes
                 example:
                     - email
@@ -828,7 +682,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Porro facilis et molestias ut ea reiciendis.
+                    example: Tempora voluptatem error molestiae.
                 description: Type(s) of the credential. Just first one for sd-jwt used.
                 example:
                     - VerifiableCredential
@@ -858,15 +712,15 @@ definitions:
             - key
             - credentialSubject
             - group
-    SignerCreatePresentationRequestBody:
-        title: SignerCreatePresentationRequestBody
+    CreatePresentationRequest:
+        title: CreatePresentationRequest
         type: object
         properties:
             context:
                 type: array
                 items:
                     type: string
-                    example: Fugit voluptatem maxime dolor et.
+                    example: Ut et quasi eius error minima eaque.
                 description: Additional JSONLD contexts to be specified in the VP.
                 example:
                     - https://w3id.org/security/suites/jws-2020/v1
@@ -874,9 +728,7 @@ definitions:
             data:
                 type: array
                 items:
-                    type: string
-                    example: Saepe quidem dolores fugiat.
-                    format: binary
+                    example: Dolorum et consequatur sed in vero qui.
                 description: Raw JSON to be included inside the VP as Verifiable Credential.
                 example:
                     - hello: world
@@ -928,12 +780,11 @@ definitions:
             - key
             - data
             - group
-    SignerCredentialProofRequestBody:
-        title: SignerCredentialProofRequestBody
+    CredentialProofRequest:
+        title: CredentialProofRequest
         type: object
         properties:
             credential:
-                type: string
                 description: Verifiable Credential in JSON format or as sdjwt.
                 example:
                     context:
@@ -947,12 +798,11 @@ definitions:
                     credentialsubject:
                         name: Alice
                         allow: true
-                format: binary
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Dolores libero.
+                    example: Fugiat et repellat vel consequatur.
                 description: Disclosed Attributes
                 example:
                     - email
@@ -1015,8 +865,38 @@ definitions:
             - key
             - credential
             - group
-    SignerDidConfigurationRequestBody:
-        title: SignerDidConfigurationRequestBody
+    DIDVerificationMethod:
+        title: DIDVerificationMethod
+        type: object
+        properties:
+            controller:
+                type: string
+                description: Controller of verification method specified as DID.
+                example: did:web:example.com
+            id:
+                type: string
+                description: ID of verification method.
+                example: key1
+            publicKeyJwk:
+                description: Public Key encoded in JWK format.
+                example: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+            type:
+                type: string
+                description: Type of verification method key.
+                example: JsonWebKey2020
+        description: Public Key represented as DID Verification Method.
+        example:
+            controller: did:web:example.com
+            id: key1
+            publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+            type: JsonWebKey2020
+        required:
+            - id
+            - type
+            - controller
+            - publicKeyJwk
+    DidConfiguration:
+        title: DidConfiguration
         type: object
         properties:
             x-signatureType:
@@ -1029,192 +909,74 @@ definitions:
                     - jsonwebsignature2020
         example:
             x-signatureType: ed25519signature2020
-    SignerDidDocInternalServerErrorResponseBody:
-        title: SignerDidDocInternalServerErrorResponseBody
+    DidListResponse:
+        title: DidListResponse
         type: object
         properties:
-            context:
+            list:
                 type: array
                 items:
-                    type: string
-                    example: Aspernatur corrupti esse ut error.
-                description: JSON-LD @context
+                    $ref: '#/definitions/DidListResponseItem'
+                description: did jwk list of keys
                 example:
-                    - https://www.w3.org/ns/did/v1
-            controller:
-                type: string
-                description: controler of the document
-                example: Quos veritatis libero et.
-            id:
-                type: string
-                description: did of the document
-                example: Labore id ducimus aliquid aliquid excepturi.
-            service:
-                type: array
-                items:
-                    $ref: '#/definitions/serviceEndpointResponseBody'
-                description: serviceendpoints
-                example:
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
-            verificationMethod:
-                type: array
-                items:
-                    $ref: '#/definitions/DIDVerificationMethodResponseBody'
-                description: methods of the document
-                example:
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
+                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                      name: Voluptates consectetur et repellat.
+                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                      name: Voluptates consectetur et repellat.
+                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                      name: Voluptates consectetur et repellat.
+                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                      name: Voluptates consectetur et repellat.
         example:
-            context:
-                - https://www.w3.org/ns/did/v1
-            controller: Aperiam earum reiciendis consequatur.
-            id: Quam pariatur sit voluptatibus ipsum ea totam.
-            service:
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
-            verificationMethod:
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
+            list:
+                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                  name: Voluptates consectetur et repellat.
+                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
+                  name: Voluptates consectetur et repellat.
         required:
-            - id
-            - controller
-    SignerDidDocNotFoundResponseBody:
-        title: SignerDidDocNotFoundResponseBody
+            - list
+    DidListResponseItem:
+        title: DidListResponseItem
         type: object
         properties:
-            context:
-                type: array
-                items:
-                    type: string
-                    example: Labore eum libero debitis tempore culpa illo.
-                description: JSON-LD @context
-                example:
-                    - https://www.w3.org/ns/did/v1
-            controller:
+            did:
                 type: string
-                description: controler of the document
-                example: Aut cum laboriosam.
-            id:
+                description: DID JWK of key
+                example: Doloribus quo eos.
+            name:
                 type: string
-                description: did of the document
-                example: Accusantium at praesentium est at esse laudantium.
-            service:
-                type: array
-                items:
-                    $ref: '#/definitions/serviceEndpointResponseBody'
-                description: serviceendpoints
-                example:
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
-                    - id: Accusamus ex nihil inventore ea qui.
-                      serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                      type: Sapiente error nostrum.
-            verificationMethod:
-                type: array
-                items:
-                    $ref: '#/definitions/DIDVerificationMethodResponseBody'
-                description: methods of the document
-                example:
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
-                    - controller: did:web:example.com
-                      id: key1
-                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                      type: JsonWebKey2020
+                description: name of the key.
+                example: Tenetur repellat accusantium maxime corrupti sed.
         example:
-            context:
-                - https://www.w3.org/ns/did/v1
-            controller: Nihil nihil dicta non.
-            id: Quod et.
-            service:
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
-            verificationMethod:
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
+            did: In aliquid sint numquam facere sequi.
+            name: Quis soluta nihil expedita numquam.
         required:
-            - id
-            - controller
-    SignerDidDocOKResponseBody:
-        title: SignerDidDocOKResponseBody
+            - name
+            - did
+    DidResponse:
+        title: DidResponse
         type: object
         properties:
             context:
                 type: array
                 items:
                     type: string
-                    example: In aliquid sint numquam facere sequi.
+                    example: Delectus esse.
                 description: JSON-LD @context
                 example:
                     - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Id eum quis placeat laudantium.
+                example: Ratione eum.
             id:
                 type: string
                 description: did of the document
-                example: Maxime harum omnis qui laborum.
+                example: Sapiente provident quo quis consectetur.
             service:
                 type: array
                 items:
-                    $ref: '#/definitions/serviceEndpointResponseBody'
+                    $ref: '#/definitions/ServiceEndpoint'
                 description: serviceendpoints
                 example:
                     - id: Accusamus ex nihil inventore ea qui.
@@ -1232,7 +994,7 @@ definitions:
             verificationMethod:
                 type: array
                 items:
-                    $ref: '#/definitions/DIDVerificationMethodResponseBody'
+                    $ref: '#/definitions/DIDVerificationMethod'
                 description: methods of the document
                 example:
                     - controller: did:web:example.com
@@ -1250,12 +1012,9 @@ definitions:
         example:
             context:
                 - https://www.w3.org/ns/did/v1
-            controller: Rerum ea nihil placeat.
-            id: Nostrum fuga est dicta quo.
+            controller: Laboriosam minus hic alias.
+            id: Et omnis.
             service:
-                - id: Accusamus ex nihil inventore ea qui.
-                  serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
-                  type: Sapiente error nostrum.
                 - id: Accusamus ex nihil inventore ea qui.
                   serviceEndpoint: Sunt incidunt et repellat cum sit quibusdam.
                   type: Sapiente error nostrum.
@@ -1285,84 +1044,32 @@ definitions:
         required:
             - id
             - controller
-    SignerDidListInternalServerErrorResponseBody:
-        title: SignerDidListInternalServerErrorResponseBody
+    HealthResponse:
+        title: HealthResponse
         type: object
         properties:
-            list:
-                type: array
-                items:
-                    $ref: '#/definitions/DidListResponseItemResponseBody'
-                description: did jwk list of keys
-                example:
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
+            service:
+                type: string
+                description: Service name.
+                example: Aperiam odit illo natus.
+            status:
+                type: string
+                description: Status message.
+                example: Tenetur ut consequuntur.
+            version:
+                type: string
+                description: Service runtime version.
+                example: Occaecati doloremque animi quia deserunt quidem et.
         example:
-            list:
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
+            service: Maxime totam voluptatibus corrupti ipsam.
+            status: Officiis magni cum sunt.
+            version: Quibusdam sunt.
         required:
-            - list
-    SignerDidListNotFoundResponseBody:
-        title: SignerDidListNotFoundResponseBody
-        type: object
-        properties:
-            list:
-                type: array
-                items:
-                    $ref: '#/definitions/DidListResponseItemResponseBody'
-                description: did jwk list of keys
-                example:
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-        example:
-            list:
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-        required:
-            - list
-    SignerDidListOKResponseBody:
-        title: SignerDidListOKResponseBody
-        type: object
-        properties:
-            list:
-                type: array
-                items:
-                    $ref: '#/definitions/DidListResponseItemResponseBody'
-                description: did jwk list of keys
-                example:
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-                    - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                      name: Voluptates consectetur et repellat.
-        example:
-            list:
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-                - did: Repudiandae aut dolorum hic aut voluptatem soluta.
-                  name: Voluptates consectetur et repellat.
-        required:
-            - list
-    SignerJwkPublicKeyRequestBody:
-        title: SignerJwkPublicKeyRequestBody
+            - service
+            - status
+            - version
+    JwkPublicKeyRequest:
+        title: JwkPublicKeyRequest
         type: object
         properties:
             engine:
@@ -1380,73 +1087,28 @@ definitions:
             group: Group
         required:
             - group
-    SignerJwksInternalServerErrorResponseBody:
-        title: SignerJwksInternalServerErrorResponseBody
+    JwksResponse:
+        title: JwksResponse
         type: object
         properties:
             keys:
                 type: array
                 items:
-                    type: string
-                    example: Ipsum sed et quia.
-                    format: binary
+                    example: Omnis qui laborum.
                 description: List of jwk
                 example:
-                    - Ut sed sed architecto voluptate.
-                    - Voluptas sapiente nisi et est.
-                    - Sint est dolor culpa ut voluptatem explicabo.
+                    - Eum quis.
+                    - Laudantium autem.
         example:
             keys:
-                - Sit veniam officia omnis est.
-                - Eum fuga nihil non sapiente.
-                - Nobis velit cumque voluptas et nobis.
+                - Quisquam dolorem quibusdam cum nostrum.
+                - Qui recusandae fugit.
+                - Assumenda omnis aut soluta quaerat.
+                - Cupiditate a suscipit molestiae a.
         required:
             - keys
-    SignerJwksNotFoundResponseBody:
-        title: SignerJwksNotFoundResponseBody
-        type: object
-        properties:
-            keys:
-                type: array
-                items:
-                    type: string
-                    example: Non vitae veniam totam.
-                    format: binary
-                description: List of jwk
-                example:
-                    - Officia voluptatem aut deserunt quibusdam et.
-                    - Voluptatum et assumenda repudiandae deleniti ea.
-                    - Voluptatem minima pariatur cum quia illum.
-        example:
-            keys:
-                - Quam magnam.
-                - Ducimus porro qui necessitatibus voluptatum neque consequatur.
-        required:
-            - keys
-    SignerJwksOKResponseBody:
-        title: SignerJwksOKResponseBody
-        type: object
-        properties:
-            keys:
-                type: array
-                items:
-                    type: string
-                    example: Sapiente velit dolor.
-                    format: binary
-                description: List of jwk
-                example:
-                    - Mollitia in iusto placeat fuga.
-                    - Non consequatur sunt.
-        example:
-            keys:
-                - Neque quia facere hic necessitatibus sequi.
-                - Quia libero error.
-                - Molestiae quia.
-                - Inventore sed maiores voluptatem possimus natus nostrum.
-        required:
-            - keys
-    SignerPresentationProofRequestBody:
-        title: SignerPresentationProofRequestBody
+    PresentationProofRequest:
+        title: PresentationProofRequest
         type: object
         properties:
             aud:
@@ -1457,7 +1119,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Dolorum et consequatur sed in vero qui.
+                    example: Itaque ratione.
                 description: Disclosed Attributes
                 example:
                     - email
@@ -1477,7 +1139,7 @@ definitions:
             issuer:
                 type: string
                 description: Issuer DID used to specify proof verification info.
-                example: Tempora voluptatem error molestiae.
+                example: Ab molestiae minus et ut.
             key:
                 type: string
                 description: Key to use for the proof signature.
@@ -1491,10 +1153,8 @@ definitions:
                 description: Proof challenge
                 example: 3483492392vvv-fff
             presentation:
-                type: string
                 description: Verifiable Presentation in JSON format.
-                example: Deleniti laudantium exercitationem tenetur iusto eos quidem.
-                format: binary
+                example: Quidem vitae qui est et voluptatem voluptatum.
             signatureType:
                 type: string
                 description: Type of signature.For sd-jwt is it automatically selected.
@@ -1510,61 +1170,49 @@ definitions:
                 - email
             format: ldp_vc or vc+sd-jwt
             group: Group
-            issuer: Ut et quasi eius error minima eaque.
+            issuer: Laborum delectus.
             key: key1
             namespace: transit
             nonce: 3483492392vvv-fff
-            presentation: Voluptatem qui consequatur.
+            presentation: Voluptatibus aperiam eius velit.
             signatureType: ed25519signature2020
         required:
             - namespace
             - key
             - presentation
             - group
-    SignerSignInternalServerErrorResponseBody:
-        title: SignerSignInternalServerErrorResponseBody
+    ServiceEndpoint:
+        title: ServiceEndpoint
         type: object
         properties:
-            signature:
+            id:
                 type: string
-                description: Signature encoded as base64 string.
-                example: Omnis quas perferendis id ipsum quis recusandae.
-        example:
-            signature: Et sunt culpa est et accusantium sit.
-        required:
-            - signature
-    SignerSignNotFoundResponseBody:
-        title: SignerSignNotFoundResponseBody
-        type: object
-        properties:
-            signature:
+                description: did of the document
+                example: Et quo vel eaque molestiae tempora.
+            serviceEndpoint:
                 type: string
-                description: Signature encoded as base64 string.
-                example: Sed quia aspernatur consequuntur ducimus eos consequuntur.
-        example:
-            signature: Similique fuga iste aliquid quam.
-        required:
-            - signature
-    SignerSignOKResponseBody:
-        title: SignerSignOKResponseBody
-        type: object
-        properties:
-            signature:
+                description: Endpoint URL
+                example: Consequuntur culpa similique fuga iste aliquid.
+            type:
                 type: string
-                description: Signature encoded as base64 string.
-                example: Ratione eum.
+                description: type of endpoint
+                example: Quia aspernatur consequuntur ducimus.
         example:
-            signature: Voluptatem et quo vel eaque molestiae.
+            id: Totam omnis quas perferendis id ipsum quis.
+            serviceEndpoint: Est et accusantium sit consequatur.
+            type: Qui et sunt.
         required:
-            - signature
-    SignerSignRequestBody:
-        title: SignerSignRequestBody
+            - id
+            - type
+            - serviceEndpoint
+    SignRequest:
+        title: SignRequest
         type: object
         properties:
             data:
                 type: string
                 description: Data that must be signed, encoded as base64 string.
-                example: Hic alias consectetur excepturi esse tenetur repellat.
+                example: Fugit cumque ab doloremque voluptatibus autem.
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -1573,72 +1221,35 @@ definitions:
             key:
                 type: string
                 description: Key to be used for signing.
-                example: Qui laboriosam.
+                example: Rerum tempora ut veniam voluptatem.
             namespace:
                 type: string
                 description: Key namespace to be used for signing.
-                example: Eius corporis et.
+                example: Porro consequatur voluptatibus dignissimos.
         example:
-            data: Quis soluta nihil expedita numquam.
+            data: Et pariatur omnis est id.
             group: Group
-            key: Facere doloribus quo eos.
-            namespace: Maxime corrupti.
+            key: Dicta in dignissimos fugit reiciendis.
+            namespace: Beatae quis dolor expedita dolor.
         required:
             - namespace
             - key
             - data
             - group
-    SignerVerificationMethodRequestBody:
-        title: SignerVerificationMethodRequestBody
+    SignResult:
+        title: SignResult
         type: object
         properties:
-            engine:
+            signature:
                 type: string
-                description: Engine which shall be used. Eg transit or transit;kv or kv
-                default: transit
-                example: transit
-            group:
-                type: string
-                description: Group identifies a group of keys within a namespace.
-                default: ""
-                example: Group
+                description: Signature encoded as base64 string.
+                example: Voluptas eos sed vero qui.
         example:
-            engine: transit
-            group: Group
-    SignerVerificationMethodResponseBody:
-        title: SignerVerificationMethodResponseBody
-        type: object
-        properties:
-            controller:
-                type: string
-                description: Controller of verification method specified as DID.
-                example: did:web:example.com
-            id:
-                type: string
-                description: ID of verification method.
-                example: key1
-            publicKeyJwk:
-                type: string
-                description: Public Key encoded in JWK format.
-                example: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                format: binary
-            type:
-                type: string
-                description: Type of verification method key.
-                example: JsonWebKey2020
-        description: Public Key represented as DID Verification Method.
-        example:
-            controller: did:web:example.com
-            id: key1
-            publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-            type: JsonWebKey2020
+            signature: Ducimus autem non aut quisquam sunt.
         required:
-            - id
-            - type
-            - controller
-            - publicKeyJwk
-    SignerVerificationMethodsRequestBody:
-        title: SignerVerificationMethodsRequestBody
+            - signature
+    VerificationMethodRequest:
+        title: VerificationMethodRequest
         type: object
         properties:
             engine:
@@ -1654,61 +1265,56 @@ definitions:
         example:
             engine: transit
             group: Group
-    SignerVerifyCredentialRequestBody:
-        title: SignerVerifyCredentialRequestBody
+    VerificationMethodsRequest:
+        title: VerificationMethodsRequest
+        type: object
+        properties:
+            engine:
+                type: string
+                description: Engine which shall be used. Eg transit or transit;kv or kv
+                default: transit
+                example: transit
+            group:
+                type: string
+                description: Group identifies a group of keys within a namespace.
+                default: ""
+                example: Group
+        example:
+            engine: transit
+            group: Group
+    VerifyCredentialRequest:
+        title: VerifyCredentialRequest
         type: object
         properties:
             credential:
                 type: string
                 description: Verifiable Credential in JSON format.
                 example:
-                    - 65
-                    - 116
-                    - 32
-                    - 105
-                    - 115
-                    - 116
-                    - 101
-                    - 32
-                    - 110
+                    - 77
                     - 111
+                    - 108
+                    - 101
                     - 115
                     - 116
-                    - 114
-                    - 117
-                    - 109
-                    - 32
-                    - 110
-                    - 117
-                    - 109
-                    - 113
-                    - 117
-                    - 97
-                    - 109
-                    - 32
-                    - 113
-                    - 117
-                    - 97
-                    - 101
-                    - 114
-                    - 97
-                    - 116
-                    - 32
-                    - 110
-                    - 97
-                    - 116
-                    - 117
-                    - 115
-                    - 32
-                    - 116
-                    - 101
-                    - 109
-                    - 112
-                    - 111
-                    - 114
                     - 105
-                    - 98
+                    - 97
+                    - 115
+                    - 32
                     - 117
+                    - 116
+                    - 32
+                    - 101
+                    - 97
+                    - 32
+                    - 114
+                    - 101
+                    - 105
+                    - 99
+                    - 105
+                    - 101
+                    - 110
+                    - 100
+                    - 105
                     - 115
                     - 46
                 format: byte
@@ -1716,95 +1322,73 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Ipsum laudantium voluptatibus ipsam autem eligendi nostrum.
+                    example: Nihil numquam doloremque.
                 description: Disclosed Attributes
                 example:
                     - email
         example:
             credential:
-                - 69
-                - 116
-                - 32
+                - 83
                 - 97
+                - 101
+                - 112
+                - 101
+                - 32
+                - 113
                 - 117
-                - 116
+                - 105
+                - 100
                 - 101
                 - 109
                 - 32
-                - 118
+                - 100
                 - 111
                 - 108
-                - 117
-                - 112
-                - 116
-                - 97
-                - 115
-                - 32
-                - 101
                 - 111
-                - 115
-                - 32
-                - 115
-                - 101
-                - 100
-                - 32
-                - 118
-                - 101
                 - 114
-                - 111
+                - 101
+                - 115
+                - 32
+                - 102
+                - 117
+                - 103
+                - 105
+                - 97
+                - 116
                 - 46
             disclosureFrame:
                 - email
         required:
             - credential
-    SignerVerifyCredentialResponseBody:
-        title: SignerVerifyCredentialResponseBody
-        type: object
-        properties:
-            disclosedCredential:
-                type: string
-                description: Disclosed Credential
-                example: Quo voluptatem aut quisquam unde blanditiis.
-                format: binary
-            valid:
-                type: boolean
-                description: Valid specifies if the proof is successfully verified.
-                example: false
-        example:
-            disclosedCredential: Unde consequatur odit.
-            valid: false
-        required:
-            - valid
-    SignerVerifyPresentationRequestBody:
-        title: SignerVerifyPresentationRequestBody
+    VerifyPresentationRequest:
+        title: VerifyPresentationRequest
         type: object
         properties:
             aud:
                 type: string
                 description: expected audience
-                example: Autem cumque beatae.
+                example: Unde blanditiis ea recusandae.
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Ab doloremque.
+                    example: Fugit quo voluptatem aut.
                 description: Disclosed Attributes
                 example:
                     - email
             nonce:
                 type: string
                 description: expected nonce
-                example: Dolor expedita dolor molestias dicta in dignissimos.
+                example: Consequatur odit ut.
             presentation:
                 type: string
                 description: Verifiable Presentation in JSON or sdjwt format.
                 example:
-                    - 86
-                    - 101
-                    - 110
+                    - 70
+                    - 117
+                    - 103
                     - 105
-                    - 97
-                    - 109
+                    - 116
                     - 32
                     - 118
                     - 111
@@ -1817,81 +1401,97 @@ definitions:
                     - 101
                     - 109
                     - 32
-                    - 113
-                    - 117
+                    - 109
+                    - 97
+                    - 120
                     - 105
+                    - 109
+                    - 101
                     - 32
-                    - 102
-                    - 117
-                    - 103
-                    - 105
+                    - 100
+                    - 111
+                    - 108
+                    - 111
+                    - 114
+                    - 32
+                    - 101
                     - 116
                     - 46
                 format: byte
         example:
-            aud: Omnis est id sit delectus esse.
+            aud: Laudantium voluptatibus ipsam autem eligendi.
             disclosureFrame:
                 - email
-            nonce: Sapiente provident quo quis consectetur.
+            nonce: Eveniet et.
             presentation:
-                - 82
+                - 73
+                - 115
+                - 116
                 - 101
-                - 105
-                - 99
-                - 105
-                - 101
+                - 32
                 - 110
-                - 100
-                - 105
+                - 111
+                - 115
+                - 116
+                - 114
+                - 117
+                - 109
+                - 32
+                - 110
+                - 117
+                - 109
+                - 113
+                - 117
+                - 97
+                - 109
+                - 32
+                - 113
+                - 117
+                - 97
+                - 101
+                - 114
+                - 97
+                - 116
+                - 32
+                - 110
+                - 97
+                - 116
+                - 117
                 - 115
                 - 32
-                - 117
                 - 116
-                - 32
                 - 101
-                - 116
+                - 109
+                - 112
+                - 111
+                - 114
+                - 105
+                - 98
+                - 117
+                - 115
+                - 32
+                - 109
+                - 97
+                - 120
+                - 105
+                - 109
+                - 101
                 - 46
         required:
             - presentation
-    SignerVerifyPresentationResponseBody:
-        title: SignerVerifyPresentationResponseBody
+    VerifyResult:
+        title: VerifyResult
         type: object
         properties:
             disclosedCredential:
-                type: string
                 description: Disclosed Credential
-                example: Ducimus autem non aut quisquam sunt.
-                format: binary
+                example: Qui consequatur et.
             valid:
                 type: boolean
                 description: Valid specifies if the proof is successfully verified.
                 example: false
         example:
-            disclosedCredential: Consequatur voluptatibus dignissimos autem rerum tempora.
-            valid: false
+            disclosedCredential: Numquam porro facilis.
+            valid: true
         required:
             - valid
-    serviceEndpointResponseBody:
-        title: serviceEndpointResponseBody
-        type: object
-        properties:
-            id:
-                type: string
-                description: did of the document
-                example: Accusamus quisquam dolorem quibusdam cum nostrum aut.
-            serviceEndpoint:
-                type: string
-                description: Endpoint URL
-                example: Quaerat est cupiditate.
-            type:
-                type: string
-                description: type of endpoint
-                example: Recusandae fugit ducimus assumenda omnis aut.
-        example:
-            id: Suscipit molestiae a nihil voluptates rerum.
-            serviceEndpoint: At dolores omnis voluptas necessitatibus vero et.
-            type: Praesentium facilis ratione cumque in facilis nostrum.
-        required:
-            - id
-            - type
-            - serviceEndpoint

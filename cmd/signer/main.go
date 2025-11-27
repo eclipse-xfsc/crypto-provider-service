@@ -8,8 +8,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -21,23 +19,23 @@ import (
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc/credentials/insecure"
 
-	goahealth "github.com/eclipse-xfsc/crypto-provider-service/gen/health"
-	goahealthsrv "github.com/eclipse-xfsc/crypto-provider-service/gen/http/health/server"
-	goaopenapisrv "github.com/eclipse-xfsc/crypto-provider-service/gen/http/openapi/server"
-	goasignersrv "github.com/eclipse-xfsc/crypto-provider-service/gen/http/signer/server"
-	"github.com/eclipse-xfsc/crypto-provider-service/gen/openapi"
-	goasigner "github.com/eclipse-xfsc/crypto-provider-service/gen/signer"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/config"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service/health"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/verify"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
-	sjwt "gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/jwt"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/auth"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/graceful"
+	core "github.com/eclipse-xfsc/crypto-provider-core/v2"
+	goahealth "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/health"
+	goahealthsrv "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/http/health/server"
+	goaopenapisrv "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/http/openapi/server"
+	goasignersrv "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/http/signer/server"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/gen/openapi"
+	goasigner "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/signer"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/config"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/health"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/verify"
+	"github.com/eclipse-xfsc/microservice-core-go/pkg/auth"
+	"github.com/eclipse-xfsc/microservice-core-go/pkg/graceful"
+	sjwt "github.com/eclipse-xfsc/ssi-jwt/v2"
 )
 
 var Version = os.Getenv("VERSION")
@@ -56,30 +54,10 @@ func main() {
 	}
 	defer logger.Sync() //nolint:errcheck
 
-	var engine types.CryptoProvider
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
+	engine, stop := core.CreateCryptoEngine(cfg.EngineAdress, insecure.NewCredentials())
 
-	exPath := filepath.Dir(ex)
-	enginePath := os.Getenv("ENGINE_PATH")
-	logger.Log(zap.InfoLevel, "Start Service with Engine "+enginePath)
+	defer stop()
 
-	if cfg.Profile == "DEBUG:LOCAL" {
-		engine = core.CreateCryptoEngine(path.Join(exPath, "../../.engines/.local/local-provider.so"))
-	} else {
-		if cfg.Profile == "DEBUG:VAULT" {
-			engine = core.CreateCryptoEngine(path.Join(exPath, "../../.engines/.vault/hashicorp-vault-provider.so"))
-		} else {
-			if _, err := os.Stat(enginePath); err == nil || os.IsExist(err) {
-				logger.Log(zap.InfoLevel, "Load Engine...")
-				engine = core.CreateCryptoEngine(enginePath)
-			} else {
-				panic("Engine not exists.")
-			}
-		}
-	}
 	sjwt.EnableCryptoProvider(engine, true, false)
 	// create logger
 

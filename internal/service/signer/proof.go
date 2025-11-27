@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/jsonld"
 	ariesigner "github.com/hyperledger/aries-framework-go/pkg/doc/signature/signer"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite"
@@ -12,9 +14,6 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite/jsonwebsignature2020"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"golang.org/x/exp/slices"
-
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
 )
 
 const (
@@ -25,16 +24,16 @@ func (s *Service) addCredentialProof(ctx context.Context, issuer string, namespa
 	key, err := s.getKey(ctx, namespace, group, keyname, sigType)
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.NotFound,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.NotFound,
 			Err:     err,
 			Message: err.Error(),
 		}
 	}
 
 	if !slices.Contains(s.supportedKeys, string(key.KeyType)) {
-		return nil, &errors.Error{
-			Kind:    errors.Unknown,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Unknown,
 			Err:     err,
 			Message: fmt.Sprintf("unsupported key type: %s", key.KeyType),
 		}
@@ -42,16 +41,16 @@ func (s *Service) addCredentialProof(ctx context.Context, issuer string, namespa
 
 	proofContext, err := s.proofContext(ctx, issuer, namespace, group, key.Identifier.KeyId, nonce, sigType)
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Err:     err,
 			Message: err.Error(),
 		}
 	}
 
 	if err := vc.AddLinkedDataProof(proofContext, jsonld.WithDocumentLoader(s.docLoader)); err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Err:     err,
 			Message: err.Error(),
 		}
@@ -64,16 +63,16 @@ func (s *Service) addPresentationProof(ctx context.Context, issuer, keyNamespace
 	key, err := s.getKey(ctx, keyNamespace, group, keyName, sigType)
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.NotFound,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.NotFound,
 			Err:     err,
 			Message: err.Error(),
 		}
 	}
 
 	if !slices.Contains(s.supportedKeys, string(key.KeyType)) {
-		return nil, &errors.Error{
-			Kind:    errors.Unknown,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Unknown,
 			Err:     err,
 			Message: fmt.Sprintf("unsupported key type: %s", key.KeyType),
 		}
@@ -85,16 +84,16 @@ func (s *Service) addPresentationProof(ctx context.Context, issuer, keyNamespace
 
 	proofContext, err := s.proofContext(ctx, issuer, keyNamespace, group, key.Identifier.KeyId, nonce, sigType)
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Err:     err,
 			Message: err.Error(),
 		}
 	}
 
 	if err := vp.AddLinkedDataProof(proofContext, jsonld.WithDocumentLoader(s.docLoader)); err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Err:     err,
 			Message: err.Error(),
 		}
@@ -116,18 +115,18 @@ func (s *Service) getKey(ctx context.Context, namespace, group, keyname, sigType
 
 	key, err := s.cryptoProvider.GetKey(identifier)
 	if err != nil || key == nil {
-		return nil, errors.New(fmt.Sprintf("failed to fetch key with id %s", identifier.KeyId), err)
+		return nil, pkgErr.New(fmt.Sprintf("failed to fetch key with id %s", identifier.KeyId), err)
 	}
 
 	if key.KeyType != types.Ed25519 && sigType == EdSignature {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Key doesnt match to signature type. Must be ed key.",
 		}
 	}
 
 	if err != nil {
-		return nil, errors.New("error getting signing key", err)
+		return nil, pkgErr.New("error getting signing key", err)
 	}
 
 	return key, nil

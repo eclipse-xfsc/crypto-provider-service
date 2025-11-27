@@ -10,9 +10,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
-	"path/filepath"
-	"runtime"
 	"slices"
 	"sync"
 	"testing"
@@ -24,16 +21,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/credentials/insecure"
 
-	goasigner "github.com/eclipse-xfsc/crypto-provider-service/gen/signer"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
+	core "github.com/eclipse-xfsc/crypto-provider-core/v2"
+	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
+	goasigner "github.com/eclipse-xfsc/crypto-provider-service/v2/gen/signer"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 )
 
 var docLoader *ld.CachingDocumentLoader
-var plugins []string
+var pluginAddresses []string
 var wg sync.WaitGroup
 
 func TestMain(m *testing.M) {
@@ -55,13 +53,9 @@ func TestMain(m *testing.M) {
 		docLoader = ld.NewCachingDocumentLoader(ld.NewDefaultDocumentLoader(c))
 	}
 
-	_, filename, _, _ := runtime.Caller(0)
-	exPath := filepath.Dir(filename)
-	pluginPath := path.Join(exPath, "../../../.engines")
-
-	plugins = make([]string, 0)
-	plugins = append(plugins, path.Join(pluginPath, ".local/local-provider.so"))
-	plugins = append(plugins, path.Join(pluginPath, ".vault/hashicorp-vault-provider.so"))
+	pluginAddresses = make([]string, 0)
+	pluginAddresses = append(pluginAddresses, "0.0.0.0:50051")
+	pluginAddresses = append(pluginAddresses, "0.0.0.0:50052")
 
 	os.Setenv("VAULT_ADRESS", "http://localhost:8200")
 	os.Setenv("VAULT_TOKEN", "test")
@@ -70,9 +64,11 @@ func TestMain(m *testing.M) {
 
 func TestService_Namespaces(t *testing.T) {
 
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		t.Run("cryptoprovider fails to return namespaces", func(t *testing.T) {
 			cryptoProvider.DestroyCryptoContext(types.CryptoContext{Namespace: "transit"})
@@ -107,9 +103,11 @@ func TestService_Namespaces(t *testing.T) {
 }
 
 func TestService_NamespaceKeys(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		t.Run("error while fetching keys", func(t *testing.T) {
 			svc := signer.New(cryptoProvider, []signer.Verifier{}, []string{}, docLoader, zap.NewNop(), "", "", "", &wg, "")
@@ -165,9 +163,11 @@ func TestService_NamespaceKeys(t *testing.T) {
 }
 
 func TestService_VerificationMethod(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		t.Run("signer returns error when getting key", func(t *testing.T) {
 			svc := signer.New(cryptoProvider, []signer.Verifier{}, []string{}, docLoader, zap.NewNop(), "", "", "", &wg, "")
@@ -213,18 +213,20 @@ func TestService_VerificationMethod(t *testing.T) {
 }
 
 func TestService_VerificationMethods(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		t.Run("signer returns error when getting verification methods", func(t *testing.T) {
 			svc := signer.New(cryptoProvider, []signer.Verifier{}, []string{}, docLoader, zap.NewNop(), "", "", "", &wg, "")
 			result, err := svc.VerificationMethods(context.Background(), &goasigner.VerificationMethodsRequest{Namespace: "unknown"})
 			assert.Nil(t, result)
 			assert.Error(t, err)
-			e, ok := err.(*errors.Error)
+			e, ok := err.(*pkgErr.Error)
 			assert.True(t, ok)
-			assert.Equal(t, errors.Internal, e.Kind)
+			assert.Equal(t, pkgErr.Internal, e.Kind)
 		})
 
 		t.Run("signer return empty list if vault has no keys", func(t *testing.T) {
@@ -353,9 +355,11 @@ func TestService_VerificationMethods(t *testing.T) {
 }
 
 func TestService_JwkPublicKey(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		t.Run("signer returns error when getting key", func(t *testing.T) {
 			svc := signer.New(cryptoProvider, []signer.Verifier{}, []string{}, docLoader, zap.NewNop(), "", "", "", &wg, "")
@@ -365,9 +369,9 @@ func TestService_JwkPublicKey(t *testing.T) {
 			)
 			assert.Nil(t, result)
 			assert.Error(t, err)
-			e, ok := err.(*errors.Error)
+			e, ok := err.(*pkgErr.Error)
 			assert.True(t, ok)
-			assert.Equal(t, errors.NotFound, e.Kind)
+			assert.Equal(t, pkgErr.NotFound, e.Kind)
 		})
 
 		t.Run("signer returns ecdsa-p256 key successfully", func(t *testing.T) {
@@ -407,9 +411,11 @@ func TestService_JwkPublicKey(t *testing.T) {
 
 func TestService_CredentialProof(t *testing.T) {
 
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
@@ -458,7 +464,7 @@ func TestService_CredentialProof(t *testing.T) {
 			keyname    string
 			credential []byte
 
-			errkind errors.Kind
+			errkind pkgErr.Kind
 			errtext string
 
 			contexts                []string
@@ -472,25 +478,25 @@ func TestService_CredentialProof(t *testing.T) {
 			{
 				name:       "invalid credential",
 				credential: []byte(invalidCredential),
-				errkind:    errors.BadRequest,
+				errkind:    pkgErr.BadRequest,
 				errtext:    "credential type of unknown structure",
 			},
 			{
 				name:       "invalid credential contexts",
 				credential: []byte(invalidCredentialContexts),
-				errkind:    errors.BadRequest,
+				errkind:    pkgErr.BadRequest,
 				errtext:    "Dereferencing a URL did not result in a valid JSON-LD context",
 			},
 			{
 				name:       "non-existing credential contexts",
 				credential: []byte(nonExistingCredentialContexts),
-				errkind:    errors.BadRequest,
+				errkind:    pkgErr.BadRequest,
 				errtext:    "Dereferencing a URL did not result in a valid JSON-LD context",
 			},
 			{
 				name:       "credential with invalid subject id",
 				credential: []byte(credentialWithInvalidSubjectID),
-				errkind:    errors.BadRequest,
+				errkind:    pkgErr.BadRequest,
 				errtext:    "invalid subject id: must be URI",
 			},
 			{
@@ -499,7 +505,7 @@ func TestService_CredentialProof(t *testing.T) {
 				keyname:    "keyyyyyyyy",
 				credential: []byte(validCredential),
 				signer:     cryptoProvider,
-				errkind:    errors.NotFound,
+				errkind:    pkgErr.NotFound,
 				errtext:    "failed to fetch key",
 			},
 			{
@@ -508,7 +514,7 @@ func TestService_CredentialProof(t *testing.T) {
 				keyname:    "exotickey",
 				credential: []byte(validCredential),
 				signer:     cryptoProvider,
-				errkind:    errors.Unknown,
+				errkind:    pkgErr.Unknown,
 				errtext:    "unsupported key type",
 			},
 			{
@@ -582,7 +588,7 @@ func TestService_CredentialProof(t *testing.T) {
 					assert.Nil(t, res)
 					require.NotEmpty(t, test.errtext, "error is not expected, but got: %v ", err)
 					assert.Contains(t, err.Error(), test.errtext)
-					if e, ok := err.(*errors.Error); ok {
+					if e, ok := err.(*pkgErr.Error); ok {
 						assert.Equal(t, test.errkind, e.Kind)
 					}
 				} else {
@@ -610,9 +616,11 @@ func TestService_CredentialProof(t *testing.T) {
 }
 
 func TestService_PresentationProof(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
@@ -662,7 +670,7 @@ func TestService_PresentationProof(t *testing.T) {
 			keyname      string
 			presentation []byte
 
-			errkind errors.Kind
+			errkind pkgErr.Kind
 			errtext string
 
 			contexts                []string
@@ -674,25 +682,25 @@ func TestService_PresentationProof(t *testing.T) {
 			{
 				name:         "invalid verifiable presentation",
 				presentation: []byte(invalidPresentation),
-				errkind:      errors.BadRequest,
+				errkind:      pkgErr.BadRequest,
 				errtext:      "verifiable presentation is not valid",
 			},
 			{
 				name:         "invalid presentation contexts",
 				presentation: []byte(invalidPresentationContexts),
-				errkind:      errors.BadRequest,
+				errkind:      pkgErr.BadRequest,
 				errtext:      "verifiable presentation is not valid",
 			},
 			{
 				name:         "non-existing presentation contexts",
 				presentation: []byte(nonExistingPresentationContexts),
-				errkind:      errors.BadRequest,
+				errkind:      pkgErr.BadRequest,
 				errtext:      "Dereferencing a URL did not result in a valid JSON-LD context",
 			},
 			{
 				name:         "presentation with missing credential context",
 				presentation: []byte(presentationWithMissingCredentialContext),
-				errkind:      errors.BadRequest,
+				errkind:      pkgErr.BadRequest,
 				errtext:      "JSON-LD doc has different structure after compaction",
 			},
 			{
@@ -701,7 +709,7 @@ func TestService_PresentationProof(t *testing.T) {
 				keyname:      "keyyyyyyyy",
 				presentation: []byte(validPresentation),
 				signer:       cryptoProvider,
-				errkind:      errors.NotFound,
+				errkind:      pkgErr.NotFound,
 				errtext:      "failed to fetch key",
 			},
 			{
@@ -710,7 +718,7 @@ func TestService_PresentationProof(t *testing.T) {
 				keyname:      "exotickey",
 				presentation: []byte(validPresentation),
 				signer:       cryptoProvider,
-				errkind:      errors.Unknown,
+				errkind:      pkgErr.Unknown,
 				errtext:      "unsupported key type",
 			},
 			{
@@ -766,7 +774,7 @@ func TestService_PresentationProof(t *testing.T) {
 					assert.Nil(t, res)
 					require.NotEmpty(t, test.errtext, "error is not expected, but got: %v")
 					assert.Contains(t, err.Error(), test.errtext)
-					if e, ok := err.(*errors.Error); ok {
+					if e, ok := err.(*pkgErr.Error); ok {
 						assert.Equal(t, test.errkind, e.Kind)
 					}
 					return
@@ -791,9 +799,11 @@ func TestService_PresentationProof(t *testing.T) {
 }
 
 func TestService_CreateCredential(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
@@ -827,7 +837,7 @@ func TestService_CreateCredential(t *testing.T) {
 			keyname           string
 			credentialSubject map[string]interface{}
 
-			errkind errors.Kind
+			errkind pkgErr.Kind
 			errtext string
 
 			contexts                []string
@@ -839,14 +849,14 @@ func TestService_CreateCredential(t *testing.T) {
 		}{
 			{
 				name:    "missing credential subject",
-				errtext: "invalid credential subject",
-				errkind: errors.BadRequest,
+				errtext: "invalid or missing credential subject",
+				errkind: pkgErr.BadRequest,
 			},
 			{
 				name:              "invalid credential subject id",
 				credentialSubject: map[string]interface{}{"id": "invalid credential subject id"},
 				errtext:           "invalid credential subject",
-				errkind:           errors.BadRequest,
+				errkind:           pkgErr.BadRequest,
 			},
 			{
 				name:              "valid credential subject, but error finding signing key",
@@ -856,8 +866,8 @@ func TestService_CreateCredential(t *testing.T) {
 				keyname:           "keyyyyyyyyyyy",
 				credentialSubject: map[string]interface{}{"id": "https://example.com"},
 				signer:            cryptoProvider,
-				errtext:           "error during signing",
-				errkind:           errors.Internal,
+				errtext:           "Error getting key from Crypto Engine.",
+				errkind:           pkgErr.Internal,
 			},
 			{
 				name:              "valid credential subject and signing is successful",
@@ -925,7 +935,7 @@ func TestService_CreateCredential(t *testing.T) {
 				if err != nil {
 					require.NotEmpty(t, test.errtext, "received error, but test case has no error: %v", err)
 					assert.Contains(t, err.Error(), test.errtext)
-					if e, ok := err.(*errors.Error); ok {
+					if e, ok := err.(*pkgErr.Error); ok {
 						assert.Equal(t, test.errkind, e.Kind)
 					}
 					assert.Nil(t, credential)
@@ -953,9 +963,11 @@ func TestService_CreateCredential(t *testing.T) {
 }
 
 func TestService_Sign(t *testing.T) {
-	for _, v := range plugins {
+	for _, v := range pluginAddresses {
 
-		cryptoProvider := core.CreateCryptoEngine(v)
+		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+
+		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
@@ -978,21 +990,21 @@ func TestService_Sign(t *testing.T) {
 			data   string
 			// output
 			signature string
-			errkind   errors.Kind
+			errkind   pkgErr.Kind
 			errtext   string
 		}{
 			{
 				name:    "invalid encoding of data",
 				data:    "not base64 encoded string",
 				errtext: "cannot base64 decode data",
-				errkind: errors.BadRequest,
+				errkind: pkgErr.BadRequest,
 			},
 			{
 				name:    "signing key not found",
 				data:    base64.StdEncoding.EncodeToString([]byte("something")),
 				signer:  cryptoProvider,
 				errtext: "key not found",
-				errkind: errors.NotFound,
+				errkind: pkgErr.NotFound,
 			},
 			{
 				name:      "successful signing",
@@ -1014,7 +1026,7 @@ func TestService_Sign(t *testing.T) {
 					require.NotEmpty(t, test.errtext, "expected no error but got %s", err)
 					require.Nil(t, result)
 					assert.ErrorContains(t, err, test.errtext)
-					e, ok := err.(*errors.Error)
+					e, ok := err.(*pkgErr.Error)
 					require.True(t, ok)
 					assert.Equal(t, test.errkind, e.Kind)
 					return

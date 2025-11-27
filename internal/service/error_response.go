@@ -6,7 +6,7 @@ import (
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 )
 
 func NewErrorResponse(ctx context.Context, err error) goahttp.Statuser {
@@ -14,24 +14,24 @@ func NewErrorResponse(ctx context.Context, err error) goahttp.Statuser {
 		return nil
 	}
 
-	var newerr *errors.Error
+	var newerr *pkgErr.Error
 	switch e := err.(type) {
-	case *errors.Error:
+	case *pkgErr.Error:
 		newerr = e
 	case *goa.ServiceError:
 		// Use goahttp.ErrorResponse to determine error kind
 		goaerr := goahttp.NewErrorResponse(ctx, e)
-		kind := errors.GetKind(goaerr.StatusCode())
-		newerr = &errors.Error{
+		kind := pkgErr.GetKind(goaerr.StatusCode())
+		newerr = &pkgErr.Error{
 			ID:      e.ID,
 			Kind:    kind,
 			Message: e.Message,
 			Err:     e,
 		}
 	default:
-		newerr = &errors.Error{
-			ID:      errors.NewID(),
-			Kind:    errors.Internal,
+		newerr = &pkgErr.Error{
+			ID:      pkgErr.NewID(),
+			Kind:    pkgErr.Internal,
 			Message: e.Error(),
 			Err:     e,
 		}

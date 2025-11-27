@@ -12,12 +12,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/gen/signer"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/config"
-	sign "github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer"
+	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/gen/signer"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/config"
+	sign "github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/piprate/json-gold/ld"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
 
 	"go.uber.org/zap"
 )

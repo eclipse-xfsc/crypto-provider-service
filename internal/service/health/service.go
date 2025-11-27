@@ -3,7 +3,7 @@ package health
 import (
 	"context"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/gen/health"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/gen/health"
 )
 
 type Service struct {

@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path"
 	"strings"
 	"testing"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/integration/internal/client"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/config"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer/jwkvdr"
+	core "github.com/eclipse-xfsc/crypto-provider-core/v2"
+	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/integration/internal/client"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/config"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer/jwkvdr"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr"
 	"github.com/hyperledger/aries-framework-go/pkg/vdr/key"
@@ -23,8 +23,7 @@ import (
 	"github.com/piprate/json-gold/ld"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -40,28 +39,10 @@ func initTests(t *testing.T) {
 		log.Fatalf("cannot load configuration: %v", err)
 	}
 	var engine types.CryptoProvider
-	exPath, _ := os.Getwd()
-	enginePath := os.Getenv("ENGINE_PATH")
 
-	if _, err := os.Stat(path.Join(exPath, ".engines")); os.IsNotExist(err) {
-		exPath = path.Join(exPath, "..")
-	}
+	engine, stop := core.CreateCryptoEngine(cfg.EngineAdress, insecure.NewCredentials())
 
-	log.Printf(exPath)
-
-	if cfg.Profile == "DEBUG:LOCAL" {
-		engine = core.CreateCryptoEngine(path.Join(exPath, ".engines/.local/local-provider.so"))
-	} else {
-		if cfg.Profile == "DEBUG:VAULT" {
-			engine = core.CreateCryptoEngine(path.Join(exPath, ".engines/.vault/hashicorp-vault-provider.so"))
-		} else {
-			if _, err := os.Stat(enginePath); err == nil || os.IsExist(err) {
-				engine = core.CreateCryptoEngine(enginePath)
-			} else {
-				panic("Engine not exists.")
-			}
-		}
-	}
+	defer stop()
 
 	require.NotEmpty(t, cfg, "environment variable SIGNER_ADDR is not set")
 

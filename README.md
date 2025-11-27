@@ -27,15 +27,38 @@ In the local docker-compose environment a live Swagger UI is exposed at http://l
 
 ```mermaid  
 flowchart LR
-	A([client]) -- HTTP --> B[Signer API] 
-	subgraph signer 
-		B --HTTP--> C[Vault\nTransit API] 
-		C --> D[(Vault)] 
+	A([client]) -- HTTP --> B[crypto service API] 
+	subgraph crypto service 
+		B --GRPC-->  C[GRPC Crypto Engine] 
+    C --> D[Vault\nTransit API] 
+		D --> E[(Vault)] 
+    C --> F[Local Crypto API] 
+    C --> G[HSM API] 
+    G --> H[(HSM)]
 	end
 ```
 ### Formats
 
 The signer supports linked data proofs and optionally sd-jwt(experimental). Sd-JWT is not yet finally standardized, so the implementation is just an experimental demonstration how to do it. SD- Jwt used the sd-jwt service (https://gitlab.eclipse.org/eclipse/xfsc/common-services/sd-jwt-service). It support also just did:jwk as proof signature.
+
+### Engine Configuration
+
+A engine can be set in the helm chart like: 
+
+```
+  engine:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/crypto-provider-hashicorp-vault-plugin:v2.0.3
+    address: 0.0.0.0:50051
+    pullPolicy: Always
+    env:
+      VAULT_ADRESS: http://vault.vault.svc.cluster.local:8200
+    secretEnv:
+      VAULT_TOKEN: 
+        name: vault
+        key: token
+```
+
+In general the Crypto Engine is configurable over setting the CRYPTO_GRPC_ADDR env for instance to 127.0.0.1:50051.
 
 #### 1. Linked Data Proofs
 

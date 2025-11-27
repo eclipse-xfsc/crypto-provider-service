@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/decoder"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/decoder"
 )
 
 func TestBytesDecoder_Decode(t *testing.T) {

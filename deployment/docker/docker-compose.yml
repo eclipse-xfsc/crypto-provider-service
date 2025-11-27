@@ -22,22 +22,22 @@ services:
       - ./vault-init.sh:/usr/local/bin/vault-init.sh
     entrypoint: ["sh", "-c", "
       sleep 5 && /usr/local/bin/vault-init.sh"]
-  signer-service:
-    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/signer:main
-    ports:
-      - 8080:8080
-    networks:
-      - internal
-    environment:
-      - VAULT_ADRESS=http://vault:8200
-      - VAULT_TOKEN=test
-      - NATS_HOST=nats:4222
-      - NATS_TOPIC=signer-topic
-      - NATS_STATUS_TOPIC=status.data.create
-      - NATS_STATUS_VERIFY_TOPIC=status.data.verify
-      - CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL=nats
-      - CLOUDEVENTPROVIDER_MESSAGING_NATS_URL=localhost:4222
-      - ENGINE_PATH=/opt/plugins/hashicorp-vault-provider.so
+  # signer-service:
+  #   image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/signer:main
+  #   ports:
+  #     - 8080:8080
+  #   networks:
+  #     - internal
+  #   environment:
+  #     - VAULT_ADRESS=http://vault:8200
+  #     - VAULT_TOKEN=test
+  #     - NATS_HOST=nats:4222
+  #     - NATS_TOPIC=signer-topic
+  #     - NATS_STATUS_TOPIC=status.data.create
+  #     - NATS_STATUS_VERIFY_TOPIC=status.data.verify
+  #     - CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL=nats
+  #     - CLOUDEVENTPROVIDER_MESSAGING_NATS_URL=localhost:4222
+  #     - ENGINE_PATH=/opt/plugins/hashicorp-vault-provider.so
   status:
     image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack/status-list-service:main
     networks:
@@ -69,7 +69,7 @@ services:
     ports:
       - 4222:4222
   sdjwt:
-    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services/sdjwt-service
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services/sd-jwt-service
     ports: 
       - 8082:3000
     networks:
@@ -78,12 +78,12 @@ services:
       - PORT=3000
       - SIGNER_SIGN_URL=http://host.docker.internal:8080/v1/sign
       - RESOLVER_URL=http://resolver:8080/1.0/identifiers/
-  resolver:
-    image: transmute/restricted-resolver:latest
-    networks:
-      - internal
-    ports:
-      - 8083:8080
+  # resolver:
+  #   image: transmute/restricted-resolver:latest
+  #   networks:
+  #     - internal
+  #   ports:
+  #     - 8083:8080
   policy:
     image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/policy:latest
     networks:
@@ -100,3 +100,21 @@ services:
       - CACHE_ADDR=
       - NATS_SUBJECT=policy
       - NATS_ADDR=nats://nats:4222
+  vaultPlugin:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/crypto-provider-hashicorp-vault-plugin:v2.0.5
+    networks: 
+      - internal
+    ports:
+      - 50051:50051
+    environment:
+      - VAULT_ADRESS=http://vault:8200
+      - VAULT_TOKEN=test
+      - CRYPTO_GRPC_ADDR=0.0.0.0:50051
+  localPlugin:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/crypto-provider-local-plugin:v2.0.2
+    networks: 
+      - internal
+    ports:
+      - 50052:50052
+    environment:
+      - CRYPTO_GRPC_ADDR=0.0.0.0:50052

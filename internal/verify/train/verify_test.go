@@ -6,12 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/verify/train"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/verify/train"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
 )
 
 func TestNew(t *testing.T) {
@@ -34,13 +33,13 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 		vc      *verifiable.Credential
 		handler http.HandlerFunc
 
-		errkind errors.Kind
+		errkind pkgErr.Kind
 		errtext string
 	}{
 		{
 			name:    "empty terms of use",
 			vc:      &verifiable.Credential{TermsOfUse: nil},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "terms of use cannot be empty",
 		},
 		{
@@ -54,7 +53,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: trustScheme field is expected to be an array",
 		},
 		{
@@ -68,7 +67,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: trustScheme field cannot be empty",
 		},
 		{
@@ -82,7 +81,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: unsupported trust scheme",
 		},
 		{
@@ -103,7 +102,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 				// this is an imperative error response syntax
 				_, _ = w.Write([]byte(`{"code":"500","message":"internal error"}`))
 			},
-			errkind: errors.Internal,
+			errkind: pkgErr.Internal,
 			errtext: "500 Internal Server Error",
 		},
 		{
@@ -121,7 +120,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 				w.Header().Add("Content-Type", "application/json")
 				_, _ = w.Write([]byte(trainServerResp("false", "true")))
 			},
-			errkind: errors.Unknown,
+			errkind: pkgErr.Unknown,
 			errtext: "train validation failed: did is not verified",
 		},
 		{
@@ -139,7 +138,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 				w.Header().Add("Content-Type", "application/json")
 				_, _ = w.Write([]byte(trainServerResp("true", "false")))
 			},
-			errkind: errors.Unknown,
+			errkind: pkgErr.Unknown,
 			errtext: "train validation failed: endpoint VC is not verified",
 		},
 		{
@@ -172,7 +171,7 @@ func TestVerifier_VerifyCredential(t *testing.T) {
 			if err != nil {
 				require.NotEmpty(t, test.errtext, "expected no error but got %s", err)
 				assert.ErrorContains(t, err, test.errtext)
-				e, ok := err.(*errors.Error)
+				e, ok := err.(*pkgErr.Error)
 				require.True(t, ok)
 				assert.Equal(t, test.errkind, e.Kind)
 				return
@@ -192,19 +191,19 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 		vp      *verifiable.Presentation
 		handler http.HandlerFunc
 
-		errkind errors.Kind
+		errkind pkgErr.Kind
 		errtext string
 	}{
 		{
 			name:    "terms of use are not set in request",
 			vp:      &verifiable.Presentation{CustomFields: map[string]interface{}{}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "terms of use must be an array",
 		},
 		{
 			name:    "empty terms of use",
 			vp:      &verifiable.Presentation{CustomFields: map[string]interface{}{"termsOfUse": []interface{}{}}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "terms of use cannot be empty",
 		},
 		{
@@ -214,7 +213,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 					"string",
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: must contain an array of map",
 		},
 		{
@@ -224,7 +223,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 					map[string]interface{}{},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: missing id key",
 		},
 		{
@@ -236,7 +235,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: trustScheme field is expected",
 		},
 		{
@@ -249,7 +248,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: trustScheme field cannot be empty",
 		},
 		{
@@ -262,7 +261,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 					},
 				},
 			}},
-			errkind: errors.BadRequest,
+			errkind: pkgErr.BadRequest,
 			errtext: "invalid terms of use: unsupported trust scheme",
 		},
 		{
@@ -282,7 +281,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 				// this is an imperative error response syntax
 				_, _ = w.Write([]byte(`{"code":"500","message":"internal error"}`))
 			},
-			errkind: errors.Internal,
+			errkind: pkgErr.Internal,
 			errtext: "500 Internal Server Error",
 		},
 		{
@@ -299,7 +298,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 				w.Header().Add("Content-Type", "application/json")
 				_, _ = w.Write([]byte(trainServerResp("false", "true")))
 			},
-			errkind: errors.Unknown,
+			errkind: pkgErr.Unknown,
 			errtext: "train validation failed: did is not verified",
 		},
 		{
@@ -316,7 +315,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 				w.Header().Add("Content-Type", "application/json")
 				_, _ = w.Write([]byte(trainServerResp("true", "false")))
 			},
-			errkind: errors.Unknown,
+			errkind: pkgErr.Unknown,
 			errtext: "train validation failed: endpoint VC is not verified",
 		},
 		{
@@ -348,7 +347,7 @@ func TestVerifier_VerifyPresentation(t *testing.T) {
 			if err != nil {
 				require.NotEmpty(t, test.errtext, "expected no error but got %s", err)
 				assert.ErrorContains(t, err, test.errtext)
-				e, ok := err.(*errors.Error)
+				e, ok := err.(*pkgErr.Error)
 				require.True(t, ok)
 				assert.Equal(t, test.errkind, e.Kind)
 				return

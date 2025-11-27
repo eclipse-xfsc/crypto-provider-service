@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/verify"
-	"github.com/eclipse-xfsc/crypto-provider-service/internal/verify/train"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/verify"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/internal/verify/train"
 )
 
 func TestNew(t *testing.T) {

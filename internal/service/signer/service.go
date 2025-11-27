@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -29,16 +30,16 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/eclipse-xfsc/crypto-provider-service/gen/signer"
-	jwkvdr "github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer/jwkvdr"
-	policy "github.com/eclipse-xfsc/crypto-provider-service/internal/service/signer/policy"
-	messaging "github.com/eclipse-xfsc/crypto-provider-service/pkg/messaging"
+	cloudeventprovider "github.com/eclipse-xfsc/cloud-event-provider"
+	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
+	"github.com/eclipse-xfsc/crypto-provider-service/v2/gen/signer"
+	jwkvdr "github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer/jwkvdr"
+	policy "github.com/eclipse-xfsc/crypto-provider-service/v2/internal/service/signer/policy"
+	messaging "github.com/eclipse-xfsc/crypto-provider-service/v2/pkg/messaging"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
+	commonMessaging "github.com/eclipse-xfsc/nats-message-library"
+	"github.com/eclipse-xfsc/nats-message-library/common"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/core/types"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider"
-	commonMessaging "gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging"
-	"gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging/common"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
 )
 
 //go:generate counterfeiter . Vault
@@ -117,7 +118,7 @@ func getSignatureType(s types.KeyType) string {
 		return "ES256"
 	case types.Ecdsap384:
 		return "ES384"
-	case types.Ecdsap521:
+	case types.Ecdsap512:
 		return "ES512"
 	case types.Rsa2048:
 		return "PS256"
@@ -180,7 +181,7 @@ func (s *Service) GenerateJwk(ctx context.Context, key, namespace, group string)
 
 	pubKey, err := k.GetJwk()
 
-	if err != nil {
+	if err != nil || len(pubKey) == 0 {
 		s.logger.Error("error making JWK from Provider key",
 			zap.String("keyType", string(k.KeyType)),
 			zap.Error(err),
@@ -188,17 +189,17 @@ func (s *Service) GenerateJwk(ctx context.Context, key, namespace, group string)
 		return nil, "", fmt.Errorf("error converting vault key to JWK")
 	}
 
-	b, err := json.Marshal(pubKey)
+	b, err := json.Marshal(pubKey[0])
 
 	if err != nil {
 		s.logger.Error("error marshalling jwk",
-			zap.String("key", pubKey.KeyID()),
+			zap.String("key", pubKey[0].KeyID()),
 			zap.Error(err),
 		)
 		return nil, "", fmt.Errorf("error converting vault key to JWK")
 	}
 
-	return pubKey, "did:jwk:" + base64.RawURLEncoding.EncodeToString(b), nil
+	return pubKey[0], "did:jwk:" + base64.RawURLEncoding.EncodeToString(b), nil
 
 }
 
@@ -214,7 +215,11 @@ func (s *Service) Namespaces(ctx context.Context) ([]string, error) {
 	namespaces, err := s.cryptoProvider.GetNamespaces(cctx)
 	if err != nil {
 		logger.Error("error getting keys namespaces", zap.Error(err))
-		return nil, errors.New("error getting keys namespaces", err)
+		return []string{}, pkgErr.New("error getting keys namespaces", err)
+	}
+
+	if namespaces == nil {
+		namespaces = make([]string, 0)
 	}
 
 	return namespaces, nil
@@ -238,13 +243,13 @@ func (s *Service) NamespaceKeys(ctx context.Context, req *signer.NamespaceKeysRe
 	}
 	keys, err := s.cryptoProvider.GetKeys(filter)
 	if err != nil {
-		if errors.Is(errors.NotFound, err) {
+		if pkgErr.Is(pkgErr.NotFound, err) {
 			logger.Error("no namespace keys found", zap.Error(err))
-			return nil, errors.New("no keys found in namespace", err)
+			return nil, pkgErr.New("no keys found in namespace", err)
 		}
 
 		logger.Error("error getting namespace keys", zap.Error(err))
-		return nil, errors.New("error getting namespace keys", err)
+		return nil, pkgErr.New("error getting namespace keys", err)
 	}
 
 	keyNames := make([]string, 0)
@@ -313,8 +318,8 @@ func (s *Service) getVerficationMethods(ctx context.Context, namespace string, g
 	res = make([]*signer.DIDVerificationMethod, 0)
 	keys, err := s.cryptoProvider.GetKeys(filter)
 	if err != nil {
-		if !errors.Is(errors.NotFound, err) {
-			err = &errors.Error{Message: "error getting keys", Err: err, Kind: errors.Internal}
+		if !pkgErr.Is(pkgErr.NotFound, err) {
+			err = &pkgErr.Error{Message: "error getting keys", Err: err, Kind: pkgErr.Internal}
 			logger.Error("error getting keys from vault", zap.Error(err))
 			return nil, err
 		}
@@ -333,11 +338,15 @@ func (s *Service) getVerficationMethods(ctx context.Context, namespace string, g
 			return nil, fmt.Errorf("error converting vault key to JWK")
 		}
 
+		if len(pubKey) == 0 {
+			continue
+		}
+
 		vm := &signer.DIDVerificationMethod{
 			ID:           did + "#" + key.Identifier.KeyId,
 			Type:         "JsonWebKey2020",
 			Controller:   did,
-			PublicKeyJwk: pubKey,
+			PublicKeyJwk: pubKey[0],
 		}
 
 		res = append(res, vm)
@@ -374,9 +383,9 @@ func (s *Service) JwkPublicKey(ctx context.Context, req *signer.JwkPublicKeyRequ
 	key, err := s.cryptoProvider.GetKey(identifier)
 	if err != nil {
 		logger.Error("error getting key", zap.Error(err))
-		err = &errors.Error{
+		err = &pkgErr.Error{
 			Err:  err,
-			Kind: errors.NotFound,
+			Kind: pkgErr.NotFound,
 		}
 		return nil, err
 	}
@@ -398,7 +407,7 @@ func (s *Service) addProof(ctx context.Context, credential any, format string, n
 	vcBytes, err := json.Marshal(credential)
 	if err != nil {
 		logger.Error("credential is not valid json", zap.Error(err))
-		return nil, errors.New(errors.BadRequest, err.Error())
+		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	// credential may not have a proof, so disable proofCheck on first round
@@ -406,9 +415,9 @@ func (s *Service) addProof(ctx context.Context, credential any, format string, n
 	if err != nil {
 		logger.Error("error parsing verifiable credential", zap.Error(err))
 		if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-			return nil, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+			return nil, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 		}
-		return nil, errors.New(errors.BadRequest, err.Error())
+		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	if format == "vc+sd-jwt" {
@@ -421,25 +430,25 @@ func (s *Service) addProof(ctx context.Context, credential any, format string, n
 			vc, err = s.parseCredential(vcBytes, true)
 			if err != nil {
 				logger.Error("credential proofs cannot be verified", zap.Error(err))
-				return nil, errors.New(errors.Forbidden, err.Error())
+				return nil, pkgErr.New(pkgErr.Forbidden, err.Error())
 			}
 		}
 
 		if err := validateCredentialSubject(vc.Subject); err != nil {
 			logger.Error(err.Error())
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, namespace, group, key, vc, nonce, sigType)
 		if err != nil {
 			logger.Error("error making credential proof", zap.Error(err))
-			return nil, errors.New(err)
+			return nil, pkgErr.New(err)
 		}
 
 		return vcWithProof, nil
 	}
-	return nil, &errors.Error{
-		Kind:    errors.BadRequest,
+	return nil, &pkgErr.Error{
+		Kind:    pkgErr.BadRequest,
 		Message: "Unknown format.",
 	}
 }
@@ -461,7 +470,7 @@ func (s *Service) convertIssuer(ctx context.Context, key, namespace, group strin
 		_, did, err := s.GenerateJwk(ctx, key, namespace, group)
 		if err != nil {
 			s.logger.Error("error generating jwk", zap.Error(err))
-			return "", errors.New(errors.BadRequest, err.Error())
+			return "", pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 		s.logger.Debug("DID Generated:", zap.String("DID:", did))
 		issuer = did
@@ -484,13 +493,13 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 	if req.Format == "vc+sd-jwt" {
 
 		if req.Presentation == nil {
-			return nil, errors.New("sdjwt presentation is nil")
+			return nil, pkgErr.New("sdjwt presentation is nil")
 		}
 
 		p, ok := req.Presentation.(string)
 
 		if !ok {
-			return nil, errors.New("sdjwt presentation in wrong format")
+			return nil, pkgErr.New("sdjwt presentation in wrong format")
 		}
 
 		holderKey, err := s.cryptoProvider.GetKey(types.CryptoIdentifier{
@@ -504,7 +513,7 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 		})
 
 		if err != nil {
-			return nil, errors.New("holder key not available")
+			return nil, pkgErr.New("holder key not available")
 		}
 
 		var kid string
@@ -521,14 +530,14 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 		vpBytes, err := json.Marshal(req.Presentation)
 		if err != nil {
 			logger.Error("presentation is not valid json", zap.Error(err))
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		issuer, err := s.convertIssuer(ctx, req.Key, req.Namespace, req.Group, req.Issuer)
 
 		if err != nil {
 			logger.Error("issuer conversion error", zap.Error(err))
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		vp, err := verifiable.ParsePresentation(
@@ -539,53 +548,53 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 		if err != nil {
 			logger.Error("error parsing verifiable presentation", zap.Error(err))
 			if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-				return nil, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+				return nil, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 			}
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		if len(vp.Credentials()) == 0 {
 			logger.Error("presentation must contain at least 1 verifiable credential")
-			return nil, errors.New(errors.BadRequest, "presentation must contain at least 1 verifiable credential")
+			return nil, pkgErr.New(pkgErr.BadRequest, "presentation must contain at least 1 verifiable credential")
 		}
 
 		for _, cred := range vp.Credentials() {
 			cred, ok := cred.(map[string]interface{})
 			if !ok {
 				logger.Error("presentation has credentials in unsupported format")
-				return nil, errors.New(errors.BadRequest, "presentation has credentials in unsupported format")
+				return nil, pkgErr.New(pkgErr.BadRequest, "presentation has credentials in unsupported format")
 			}
 
 			credJSON, err := json.Marshal(cred)
 			if err != nil {
 				logger.Error("fail to encode credential to json", zap.Error(err))
-				return nil, errors.New("fail to encode credential to json", err)
+				return nil, pkgErr.New("fail to encode credential to json", err)
 			}
 
 			_, err = s.parseCredential(credJSON, true)
 			if err != nil {
 				logger.Error("error validating credential", zap.Error(err))
 				if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-					return nil, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+					return nil, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 				}
-				return nil, errors.New(errors.BadRequest, "error validating credential", err)
+				return nil, pkgErr.New(pkgErr.BadRequest, "error validating credential", err)
 			}
 
 			if err := validateCredentialSubject(cred["credentialSubject"]); err != nil {
 				logger.Error(err.Error())
-				return nil, errors.New(errors.BadRequest, err.Error())
+				return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 			}
 		}
 
 		vpWithProof, err := s.addPresentationProof(ctx, issuer, req.Namespace, req.Group, req.Key, vp, req.Nonce, req.SignatureType)
 		if err != nil {
 			logger.Error("error making presentation proof", zap.Error(err))
-			return nil, errors.New(err)
+			return nil, pkgErr.New(err)
 		}
 
 		return vpWithProof, nil
 	}
-	return nil, errors.New("unsupported format")
+	return nil, pkgErr.New("unsupported format")
 }
 
 func (s *Service) getStatusListEntry(namespace, group, origin string) (string, string, string, int, error) {
@@ -624,12 +633,12 @@ func (s *Service) getStatusListEntry(namespace, group, origin string) (string, s
 		}
 
 		if rep.Error != nil {
-			return "", "", "", -1, errors.New("error on status list creation")
+			return "", "", "", -1, pkgErr.New("error on status list creation")
 		}
 
 		return rep.StatusUrl, rep.Type, rep.Purpose, rep.Index, err
 	}
-	return "", "", "", -1, errors.New("unknown operation")
+	return "", "", "", -1, pkgErr.New("unknown operation")
 }
 
 func (s *Service) appendVCStatus(vc *verifiable.Credential, namespace string, group string, origin string) error {
@@ -711,20 +720,22 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		zap.String("group", req.Group),
 		zap.String("key", req.Key),
 	)
+
+	credSubject, ok := req.CredentialSubject.(map[string]interface{})
+
 	logger.Debug("Start Testing Credential Subject")
-	if req.CredentialSubject == nil {
+	if req.CredentialSubject == nil || (ok && len(credSubject) == 0) {
 		logger.Error("invalid or missing credential subject")
-		return nil, &errors.Error{
-			Kind:    errors.BadRequest,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.BadRequest,
 			Message: "invalid or missing credential subject",
 		}
 	}
 
-	credSubject, ok := req.CredentialSubject.(map[string]interface{})
 	if !ok || len(credSubject) == 0 {
 		logger.Error("invalid credential subject: non-empty map is expected")
-		return nil, &errors.Error{
-			Kind:    errors.BadRequest,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.BadRequest,
 			Message: "invalid credential subject: non-empty map is expected",
 		}
 	}
@@ -748,6 +759,15 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	var subject verifiable.Subject
 	var holderJwk any
 	if subjectID, ok := credSubject["id"].(string); ok && len(subjectID) > 0 {
+
+		if !isAllowedURIScheme(subjectID) {
+			logger.Error("invalid credential subject")
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.BadRequest,
+				Message: "invalid credential subject",
+			}
+		}
+
 		subject.ID = subjectID
 		delete(credSubject, "id")
 	} else {
@@ -763,7 +783,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 					json.Unmarshal(header, &h)
 					holderJwk = h["jwk"]
 				} else {
-					return nil, errors.New("no valid jwk header in holder token")
+					return nil, pkgErr.New("no valid jwk header in holder token")
 				}
 				b, _ := json.Marshal(holderJwk)
 				subject.ID = "did:jwk:" + base64.RawURLEncoding.EncodeToString(b)
@@ -800,8 +820,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	logger.Debug("Start Creating JWK for issuer")
 
 	if s.cryptoProvider == nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Crypto Engine not found",
 		}
 	}
@@ -809,33 +829,33 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	key, err := s.cryptoProvider.GetKey(cryptoIdentifier)
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Error getting key from Crypto Engine.",
 		}
 	}
 
 	if key.KeyType != types.Ed25519 && req.SignatureType == EdSignature {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Key doesnt match to signature type. Must be ed key.",
 		}
 	}
 
 	jwk, err := key.GetJwk()
 
-	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+	if err != nil || len(jwk) == 0 {
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Error transforming jwk.",
 		}
 	}
 	logger.Debug("Start Marshalling Key")
-	bytes, err := json.Marshal(jwk)
+	bytes, err := json.Marshal(jwk[0])
 	if err != nil {
 		logger.Error("error getting keys.", zap.Error(err))
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "Error getting keys.",
 		}
 	}
@@ -853,8 +873,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	}
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "error during revocation appending.",
 		}
 	}
@@ -863,8 +883,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	err = s.appendTermsOfUse(vc, req.Namespace, req.Group)
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "error during terms of use appending.",
 		}
 	}
@@ -873,8 +893,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	err = s.appendEvidence(vc, req.Namespace, req.Group)
 
 	if err != nil {
-		return nil, &errors.Error{
-			Kind:    errors.Internal,
+		return nil, &pkgErr.Error{
+			Kind:    pkgErr.Internal,
 			Message: "error during terms of use appending.",
 		}
 	}
@@ -891,8 +911,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		err = validateCredentialSubject(vc.Subject)
 		if err != nil {
 			logger.Error("invalid credential subject", zap.Error(err))
-			return nil, &errors.Error{
-				Kind:    errors.BadRequest,
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.BadRequest,
 				Message: "invalid credential subject",
 			}
 		}
@@ -901,8 +921,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, req.Namespace, req.Group, req.Key, vc, req.Nonce, req.SignatureType)
 		if err != nil {
 			logger.Error("error making credential proof", zap.Error(err))
-			return nil, &errors.Error{
-				Kind:    errors.Internal,
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.Internal,
 				Message: "error during signing",
 			}
 		}
@@ -910,8 +930,8 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return vcWithProof, nil
 	}
 
-	return nil, &errors.Error{
-		Kind:    errors.BadRequest,
+	return nil, &pkgErr.Error{
+		Kind:    pkgErr.BadRequest,
 		Message: "Unknown format.",
 	}
 }
@@ -930,12 +950,12 @@ func (s *Service) CreatePresentation(ctx context.Context, req *signer.CreatePres
 
 	if err != nil {
 		logger.Error("issuer conversion error", zap.Error(err))
-		return nil, errors.New(errors.BadRequest, err.Error())
+		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	if req.Data == nil || len(req.Data) == 0 {
 		logger.Error("invalid or missing credentials data")
-		return nil, errors.New(errors.BadRequest, "invalid or missing credentials data")
+		return nil, pkgErr.New(pkgErr.BadRequest, "invalid or missing credentials data")
 	}
 
 	// prepare credentials to be included in the VP
@@ -944,7 +964,7 @@ func (s *Service) CreatePresentation(ctx context.Context, req *signer.CreatePres
 		credSubject, ok := credData.(map[string]interface{})
 		if !ok {
 			logger.Error("invalid credential data: map is expected")
-			return nil, errors.New(errors.BadRequest, "invalid credential data: map is expected")
+			return nil, pkgErr.New(pkgErr.BadRequest, "invalid credential data: map is expected")
 		}
 
 		vc := &verifiable.Credential{
@@ -959,7 +979,7 @@ func (s *Service) CreatePresentation(ctx context.Context, req *signer.CreatePres
 
 		if err := validateCredentialSubject(vc.Subject); err != nil {
 			logger.Error(err.Error())
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		credentials = append(credentials, vc)
@@ -990,6 +1010,22 @@ func (s *Service) CreatePresentation(ctx context.Context, req *signer.CreatePres
 	}
 
 	return vpWithProof, nil
+}
+
+func isAllowedURIScheme(s string) bool {
+	u, err := url.Parse(s)
+	if err != nil {
+		return false
+	}
+
+	scheme := strings.ToLower(u.Scheme)
+
+	switch scheme {
+	case "http", "https", "did", "urn":
+		return true
+	}
+
+	return false
 }
 
 func (s *Service) statusListCheckup(namespace, group *string, typ, purpose, url string, index int) (bool, error) {
@@ -1053,21 +1089,21 @@ func (s *Service) verifyLdProof(ctx context.Context, credential []byte, namespac
 	if err != nil {
 		logger.Error("error verifying credential", zap.Error(err))
 		if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-			return false, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+			return false, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 		}
-		return false, errors.New(errors.BadRequest, err.Error())
+		return false, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	if err := validateCredentialSubject(vc.Subject); err != nil {
 		logger.Error(err.Error())
-		return false, errors.New(errors.BadRequest, err.Error())
+		return false, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	// verify credential with all additional verifiers
 	for _, v := range s.verifiers {
 		if err := v.VerifyCredential(ctx, vc); err != nil {
 			logger.Error("error verifying credential", zap.Error(err))
-			return false, errors.New(errors.BadRequest, err.Error())
+			return false, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 	}
 
@@ -1102,7 +1138,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 
 	if req.XFormat == "vc+sd-jwt" {
 		if req.DisclosureFrame == nil {
-			return &signer.VerifyResult{Valid: false}, errors.New("no disclosure frame given")
+			return &signer.VerifyResult{Valid: false}, pkgErr.New("no disclosure frame given")
 		}
 		return s.verifySdJwt(req.Credential, req.DisclosureFrame, false, "", "")
 	}
@@ -1115,7 +1151,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 		return &signer.VerifyResult{Valid: b}, err
 	}
 
-	return nil, errors.New(errors.BadRequest)
+	return nil, pkgErr.New(pkgErr.BadRequest)
 }
 
 // VerifyPresentation verifies the proof of a Verifiable Presentation.
@@ -1142,68 +1178,68 @@ func (s *Service) VerifyPresentation(ctx context.Context, req *signer.VerifyPres
 	if err != nil {
 		logger.Error("error verifying presentation", zap.Error(err))
 		if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-			return nil, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+			return nil, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 		}
-		return nil, errors.New(errors.BadRequest, err.Error())
+		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
 	// check if the credential contains proof section
 	if len(vp.Proofs) == 0 {
 		logger.Error("verifiable presentation must have proof section")
-		return nil, errors.New(errors.BadRequest, "verifiable presentation must have proof section")
+		return nil, pkgErr.New(pkgErr.BadRequest, "verifiable presentation must have proof section")
 	}
 
 	if req.Aud != nil {
 		_, ok := vp.CustomFields["aud"]
 		if ok && vp.CustomFields["aud"] != req.Aud {
-			return &signer.VerifyResult{Valid: false}, errors.New("Audience not matching")
+			return &signer.VerifyResult{Valid: false}, pkgErr.New("Audience not matching")
 		}
 	}
 
 	if req.Nonce != nil {
 		_, ok := vp.CustomFields["nonce"]
 		if ok && vp.CustomFields["noce"] != req.Nonce {
-			return &signer.VerifyResult{Valid: false}, errors.New("Nonce not matching")
+			return &signer.VerifyResult{Valid: false}, pkgErr.New("Nonce not matching")
 		}
 	}
 
 	if len(vp.Credentials()) == 0 {
 		logger.Error("presentation must contain at least 1 verifiable credential")
-		return nil, errors.New(errors.BadRequest, "presentation must contain at least 1 verifiable credential")
+		return nil, pkgErr.New(pkgErr.BadRequest, "presentation must contain at least 1 verifiable credential")
 	}
 
 	for _, cred := range vp.Credentials() {
 		cred, ok := cred.(map[string]interface{})
 		if !ok {
 			logger.Error("presentation has credentials in unsupported format")
-			return nil, errors.New(errors.BadRequest, "presentation has credentials in unsupported format")
+			return nil, pkgErr.New(pkgErr.BadRequest, "presentation has credentials in unsupported format")
 		}
 
 		credJSON, err := json.Marshal(cred)
 		if err != nil {
 			logger.Error("fail to encode credential to json", zap.Error(err))
-			return nil, errors.New("fail to encode credential to json", err)
+			return nil, pkgErr.New("fail to encode credential to json", err)
 		}
 
 		_, err = s.parseCredential(credJSON, true)
 		if err != nil {
 			logger.Error("error validating credential", zap.Error(err))
 			if strings.Contains(err.Error(), "JSON-LD doc has different structure after compaction") {
-				return nil, errors.New(errors.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
+				return nil, pkgErr.New(pkgErr.BadRequest, "JSON-LD doc has different structure after compaction: some attributes may not be described by schema")
 			}
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
 		if err := validateCredentialSubject(cred["credentialSubject"]); err != nil {
 			logger.Error(err.Error())
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 	}
 
 	for _, v := range s.verifiers {
 		if err := v.VerifyPresentation(ctx, vp); err != nil {
 			logger.Error("error verifying presentation", zap.Error(err))
-			return nil, errors.New(errors.BadRequest, err.Error())
+			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 	}
 
@@ -1231,13 +1267,13 @@ func (s *Service) Sign(ctx context.Context, req *signer.SignRequest) (res *signe
 	data, err := base64.StdEncoding.DecodeString(req.Data)
 	if err != nil {
 		logger.Error("cannot base64 decode data", zap.Error(err))
-		return nil, errors.New(errors.BadRequest, "cannot base64 decode data", err)
+		return nil, pkgErr.New(pkgErr.BadRequest, "cannot base64 decode data", err)
 	}
 
 	signature, err := s.cryptoProvider.Sign(identifier, data)
 	if err != nil {
 		logger.Error("error signing data", zap.Error(err))
-		return nil, errors.New(err)
+		return nil, pkgErr.New(err)
 	}
 
 	encodedSignature := base64.StdEncoding.EncodeToString(signature)
@@ -1283,7 +1319,7 @@ func (s *Service) createSdJwtPresentation(sdjwt, kid, namespace, group, keyId, s
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, errors.New(string(bodyBytes))
+		return nil, pkgErr.New(string(bodyBytes))
 	}
 
 	if err != nil {
@@ -1300,7 +1336,7 @@ func (s *Service) createSdJwtPresentation(sdjwt, kid, namespace, group, keyId, s
 	r, ok := result["sdjwt"]
 
 	if !ok {
-		return nil, errors.New("no result")
+		return nil, pkgErr.New("no result")
 	}
 
 	return &r, nil
@@ -1325,16 +1361,16 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 				}
 
 				if vct == "" {
-					return nil, errors.New("No vct given")
+					return nil, pkgErr.New("No vct given")
 				}
 
 			} else {
-				return nil, errors.New("No vct given")
+				return nil, pkgErr.New("No vct given")
 			}
 		} else {
 			vct, ok = sub[0].CustomFields["vct"]
 			if !ok {
-				return nil, errors.New("No vct given")
+				return nil, pkgErr.New("No vct given")
 			}
 		}
 	}
@@ -1378,7 +1414,7 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 		sub, ok := vc.Subject.([]verifiable.Subject)
 
 		if !ok {
-			return nil, errors.New("No valid subject")
+			return nil, pkgErr.New("No valid subject")
 		} else {
 			m = sub[0]
 		}
@@ -1432,7 +1468,7 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, errors.New(string(bodyBytes))
+		return nil, pkgErr.New(string(bodyBytes))
 	}
 
 	if err != nil {
@@ -1449,7 +1485,7 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 	r, ok := result["sdjwt"]
 
 	if !ok {
-		return nil, errors.New("no result")
+		return nil, pkgErr.New("no result")
 	}
 
 	return &r, nil
@@ -1483,7 +1519,7 @@ func (s *Service) verifySdJwt(credential []byte, disclosureFrame []string, verif
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return nil, errors.New(string(bodyBytes))
+		return nil, pkgErr.New(string(bodyBytes))
 	}
 
 	if err != nil {
@@ -1504,7 +1540,7 @@ func (s *Service) verifySdJwt(credential []byte, disclosureFrame []string, verif
 		valid = valid && b.(bool)
 
 		if !valid {
-			return &signer.VerifyResult{Valid: false}, errors.New(i + "not valid")
+			return &signer.VerifyResult{Valid: false}, pkgErr.New(i + "not valid")
 		}
 	}
 
@@ -1546,7 +1582,7 @@ func (s *Service) parseCredentialWithProof(vc []byte) (*verifiable.Credential, e
 
 	// check if the credential contains proof section
 	if len(cred.Proofs) == 0 {
-		return nil, errors.New("verifiable credential must have proof section")
+		return nil, pkgErr.New("verifiable credential must have proof section")
 	}
 
 	return cred, nil
@@ -1561,45 +1597,29 @@ func validateCredentialSubject(subject interface{}) error {
 	case []verifiable.Subject:
 		for _, sub := range subj {
 			if sub.ID != "" {
-				err := validateSubjectID(sub.ID)
-				if err != nil {
-					return err
+				if !isAllowedURIScheme(sub.ID) {
+					return fmt.Errorf("invalid subject id format, uri is expected")
 				}
 			}
 		}
 	case verifiable.Subject:
 		if subj.ID != "" {
-			err := validateSubjectID(subj.ID)
-			if err != nil {
-				return err
+			if !isAllowedURIScheme(subj.ID) {
+				return fmt.Errorf("invalid subject id format, uri is expected")
 			}
 		}
 	case map[string]interface{}:
 		if subj["id"] != nil {
 			id, ok := subj["id"].(string)
 			if !ok {
-				return fmt.Errorf("invalid subject id format, string is expected")
+				return fmt.Errorf("invalid subject id format, uri is expected")
 			}
-			err := validateSubjectID(id)
-			if err != nil {
-				return err
+			if !isAllowedURIScheme(id) {
+				return fmt.Errorf("invalid subject id format, uri is expected")
 			}
 		}
 	default:
 		return fmt.Errorf("unknown credential subject format")
-	}
-
-	return nil
-}
-
-func validateSubjectID(id string) error {
-	s := strings.Split(id, ":")
-	if len(s) < 2 {
-		return fmt.Errorf("invalid subject id: must be URI")
-	}
-
-	if len(s[0]) == 0 || len(s[1]) == 0 {
-		return fmt.Errorf("invalid subject id: must be URI")
 	}
 
 	return nil
@@ -1740,9 +1760,9 @@ func (s *Service) DidList(c context.Context, req *signer.DidListRequest) (*signe
 		if err != nil || !exist {
 			logger.Error("namespace not found", zap.Error(err))
 
-			return nil, &errors.Error{
+			return nil, &pkgErr.Error{
 				Err:     err,
-				Kind:    errors.NotFound,
+				Kind:    pkgErr.NotFound,
 				Message: "Namespace not found.",
 			}
 		}
@@ -1754,20 +1774,20 @@ func (s *Service) DidList(c context.Context, req *signer.DidListRequest) (*signe
 
 			if err != nil {
 				logger.Error("error getting keys.", zap.Error(err))
-				return nil, &errors.Error{
+				return nil, &pkgErr.Error{
 					Err:     err,
-					Kind:    errors.BadRequest,
+					Kind:    pkgErr.BadRequest,
 					Message: "Error getting keys.",
 				}
 			}
 
 			for _, k := range keys.Keys {
 				jwk, err := k.GetJwk()
-				if err != nil {
+				if err != nil || len(jwk) == 0 {
 					logger.Error("error getting keys.", zap.Error(err))
 					continue
 				}
-				bytes, err := json.Marshal(jwk)
+				bytes, err := json.Marshal(jwk[0])
 				if err != nil {
 					logger.Error("error getting keys.", zap.Error(err))
 					continue
@@ -1809,9 +1829,9 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 	if err != nil || !exist {
 		logger.Error("namespace not found", zap.Error(err))
 
-		return didConfigError, &errors.Error{
+		return didConfigError, &pkgErr.Error{
 			Err:     err,
-			Kind:    errors.NotFound,
+			Kind:    pkgErr.NotFound,
 			Message: "Namespace not found.",
 		}
 	}
@@ -1824,8 +1844,8 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 
 		if err != nil {
 			logger.Error(err.Error())
-			return didConfigError, &errors.Error{
-				Kind:    errors.BadRequest,
+			return didConfigError, &pkgErr.Error{
+				Kind:    pkgErr.BadRequest,
 				Message: "Keys not found.",
 				Err:     err,
 			}
@@ -1844,11 +1864,11 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 		vcArray := make([]any, 0)
 		for _, k := range keys.Keys {
 			jwk, err := k.GetJwk()
-			if err != nil {
+			if err != nil || len(jwk) == 0 {
 				logger.Error("error getting keys.", zap.Error(err))
 				continue
 			}
-			bytes, err := json.Marshal(jwk)
+			bytes, err := json.Marshal(jwk[0])
 			if err != nil {
 				logger.Error("error getting keys.", zap.Error(err))
 				continue
@@ -1861,8 +1881,8 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				res, err := s.addProof(ctx.Context, vc, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XNonce, logger, req.XSignatureType, []string{})
 
 				if err != nil {
-					return didConfigError, &errors.Error{
-						Kind:    errors.Internal,
+					return didConfigError, &pkgErr.Error{
+						Kind:    pkgErr.Internal,
 						Message: "Error during vc creation",
 					}
 				}
@@ -1877,8 +1897,8 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				res, err := s.addProof(ctx.Context, vc, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XNonce, logger, req.XSignatureType, []string{})
 
 				if err != nil {
-					return didConfigError, &errors.Error{
-						Kind:    errors.Internal,
+					return didConfigError, &pkgErr.Error{
+						Kind:    pkgErr.Internal,
 						Message: "Error during vc creation",
 					}
 				}
@@ -1893,8 +1913,8 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 
 		return didconfig, nil
 	}
-	return nil, &errors.Error{
-		Kind:    errors.BadRequest,
+	return nil, &pkgErr.Error{
+		Kind:    pkgErr.BadRequest,
 		Message: "Nothing found.",
 	}
 }
@@ -1938,12 +1958,12 @@ func (s *Service) Jwks(ctx context.Context, req *signer.JwksRequest) (*signer.Jw
 		for _, k := range keys.Keys {
 			jwk, err := k.GetJwk()
 
-			if err != nil {
+			if err != nil || len(jwk) == 0 {
 				logger.Error("error transforming keys", zap.Error(err))
 				return &signer.JwksResponse{Keys: make([]any, 0)}, nil
 			}
 
-			barray = append(barray, jwk)
+			barray = append(barray, jwk[0])
 		}
 	}
 
@@ -2151,7 +2171,7 @@ func (s *Service) handleCreateToken(event event.Event) (*event.Event, error) {
 		alg = jwa.ES384
 	}
 
-	if key.KeyType == types.Ecdsap521 {
+	if key.KeyType == types.Ecdsap512 {
 		alg = jwa.ES512
 	}
 
@@ -2165,12 +2185,12 @@ func (s *Service) handleCreateToken(event event.Event) (*event.Event, error) {
 		return &e, err
 	}
 
-	k.Set("alg", alg)
+	k[0].Set("alg", alg)
 
 	_, kOk := headers.Get("kid")
 
 	if !kOk && !selfOk {
-		bytes, err := json.Marshal(k)
+		bytes, err := json.Marshal(k[0])
 
 		if err != nil {
 			s.logger.Error(err.Error())
@@ -2201,7 +2221,7 @@ func (s *Service) handleCreateToken(event event.Event) (*event.Event, error) {
 			return &e, err
 		}
 
-		err = headers.Set("jwk", k)
+		err = headers.Set("jwk", k[0])
 
 		if err != nil {
 			s.logger.Error(err.Error())
