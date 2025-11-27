@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package crypto.provider;
+
+option go_package = "/proto;commonProviderpb";
+
+// =======================================================
+// ENUMS
+// =======================================================
+
+enum KeyType {
+  KEY_TYPE_UNKNOWN        = 0;
+  KEY_TYPE_AES256_GCM96   = 1;
+  KEY_TYPE_ED25519        = 2;
+  KEY_TYPE_ECDSA_P256     = 3;
+  KEY_TYPE_ECDSA_P384     = 4;
+  KEY_TYPE_ECDSA_P512     = 5;
+  KEY_TYPE_RSA_2048       = 6;
+  KEY_TYPE_RSA_3072       = 7;
+  KEY_TYPE_RSA_4096       = 8;
+  KEY_TYPE_KEYVALUE       = 9;
+}
+
+enum HashAlgorithm {
+  HASH_UNKNOWN   = 0;
+
+  HASH_SHA2_224  = 1;
+  HASH_SHA2_256  = 2;
+  HASH_SHA2_384  = 3;
+  HASH_SHA2_512  = 4;
+
+  HASH_SHA3_224  = 5;
+  HASH_SHA3_256  = 6;
+  HASH_SHA3_384  = 7;
+  HASH_SHA3_512  = 8;
+}
+
+// =======================================================
+// BASIC STRUCTURES
+// =======================================================
+
+message CryptoContext {
+  string namespace = 1;
+  string group     = 2;
+  string engine    = 3;
+}
+
+// Identifier used for keys
+message CryptoIdentifier {
+  string key_id      = 1;
+  CryptoContext ctx  = 2;
+}
+
+// Filter with regex expression
+message CryptoFilter {
+  string id          = 1;
+  string filter      = 2;  // regex as string
+  CryptoContext ctx  = 3;
+}
+
+// Key generation parameters
+message CryptoKeyParameter {
+  CryptoIdentifier identifier = 1;
+  KeyType key_type            = 2;
+  bytes params                = 3; // JSON blob
+}
+
+// Hash parameters
+message CryptoHashParameter {
+  CryptoIdentifier identifier  = 1;
+  HashAlgorithm hash_algorithm = 2;
+}
+
+// Key structure
+message CryptoKey {
+  bytes key     = 1; // PEM or raw
+  string version = 2;
+  CryptoKeyParameter key_parameter = 3;
+}
+
+// Set of keys
+message CryptoKeySet {
+  repeated CryptoKey keys = 1;
+}
+
+// =======================================================
+// REQUEST MESSAGES
+// =======================================================
+
+message CreateContextRequest { CryptoContext ctx = 1; }
+message DestroyContextRequest { CryptoContext ctx = 1; }
+message IsContextExistingRequest { CryptoContext ctx = 1; }
+
+message GetNamespacesRequest { CryptoContext ctx = 1; }
+message GenerateRandomRequest {
+  CryptoContext ctx = 1;
+  int32 number      = 2;
+}
+
+message HashRequest {
+  CryptoHashParameter parameter = 1;
+  bytes msg = 2;
+}
+
+message EncryptRequest {
+  CryptoIdentifier identifier = 1;
+  bytes data = 2;
+}
+
+message DecryptRequest {
+  CryptoIdentifier identifier = 1;
+  bytes data = 2;
+}
+
+message SignRequest {
+  CryptoIdentifier identifier = 1;
+  bytes data = 2;
+}
+
+message VerifyRequest {
+  CryptoIdentifier identifier = 1;
+  bytes data = 2;
+  bytes signature = 3;
+}
+
+message GetKeysRequest {
+  CryptoFilter filter = 1;
+}
+
+message GetKeyRequest {
+  CryptoIdentifier identifier = 1;
+}
+
+message GenerateKeyRequest {
+  CryptoKeyParameter parameter = 1;
+}
+
+message IsKeyExistingRequest {
+  CryptoIdentifier identifier = 1;
+}
+
+message DeleteKeyRequest {
+  CryptoIdentifier identifier = 1;
+}
+
+message RotateKeyRequest {
+  CryptoIdentifier identifier = 1;
+}
+
+// =======================================================
+// RESPONSE MESSAGES
+// =======================================================
+
+message BoolResponse { bool value = 1; }
+
+message NamespacesResponse {
+  repeated string namespaces = 1;
+}
+
+message RandomResponse { bytes random = 1; }
+
+message HashResponse { bytes hash = 1; }
+
+message EncryptResponse { bytes cipher = 1; }
+message DecryptResponse { bytes plain  = 1; }
+message SignResponse    { bytes signature = 1; }
+
+message VerifyResponse { bool valid = 1; }
+
+message GetKeysResponse { CryptoKeySet keys = 1; }
+message GetKeyResponse  { CryptoKey key     = 1; }
+
+message SupportedKeyTypesResponse {
+  repeated KeyType types = 1;
+}
+
+message SupportedHashTypesResponse {
+  repeated HashAlgorithm algorithms = 1;
+}
+
+// =======================================================
+// SERVICE INTERFACE
+// =======================================================
+
+service CryptoProviderService {
+
+  // Context Lifecycle
+  rpc CreateCryptoContext(CreateContextRequest) returns (BoolResponse);
+  rpc DestroyCryptoContext(DestroyContextRequest) returns (BoolResponse);
+  rpc IsCryptoContextExisting(IsContextExistingRequest) returns (BoolResponse);
+
+  // Operations requiring an existing context
+  rpc GetNamespaces(GetNamespacesRequest) returns (NamespacesResponse);
+  rpc GenerateRandom(GenerateRandomRequest) returns (RandomResponse);
+
+  rpc Hash(HashRequest) returns (HashResponse);
+  rpc Encrypt(EncryptRequest) returns (EncryptResponse);
+  rpc Decrypt(DecryptRequest) returns (DecryptResponse);
+  rpc Sign(SignRequest) returns (SignResponse);
+
+  rpc Verify(VerifyRequest) returns (VerifyResponse);
+
+  rpc GetKeys(GetKeysRequest) returns (GetKeysResponse);
+  rpc GetKey(GetKeyRequest) returns (GetKeyResponse);
+
+  rpc GenerateKey(GenerateKeyRequest) returns (BoolResponse);
+  rpc IsKeyExisting(IsKeyExistingRequest) returns (BoolResponse);
+  rpc DeleteKey(DeleteKeyRequest) returns (BoolResponse);
+  rpc RotateKey(RotateKeyRequest) returns (BoolResponse);
+
+  rpc GetSupportedKeysAlgs(Empty) returns (SupportedKeyTypesResponse);
+  rpc GetSupportedHashAlgs(Empty) returns (SupportedHashTypesResponse);
+}
+
+message Empty {}

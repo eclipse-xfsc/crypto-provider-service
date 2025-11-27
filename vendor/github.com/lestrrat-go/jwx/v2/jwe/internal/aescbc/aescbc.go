@@ -19,21 +19,17 @@ const (
 
 const defaultBufSize int64 = 256 * 1024 * 1024
 
-// Grr, we would like to use atomic.Int64, but that's only available
-// from Go 1.19. Yes, we will cut support for Go 1.19 at some point,
-// but not today (probably going to up the minimum required Go version
-// some time after 1.22 is released)
-var maxBufSize int64
+var maxBufSize atomic.Int64
 
 func init() {
-	atomic.StoreInt64(&maxBufSize, defaultBufSize)
+	SetMaxBufferSize(defaultBufSize)
 }
 
 func SetMaxBufferSize(siz int64) {
 	if siz <= 0 {
 		siz = defaultBufSize
 	}
-	atomic.StoreInt64(&maxBufSize, siz)
+	maxBufSize.Store(siz)
 }
 
 func pad(buf []byte, n int) []byte {
@@ -42,11 +38,12 @@ func pad(buf []byte, n int) []byte {
 		return buf
 	}
 
-	mbs := atomic.LoadInt64(&maxBufSize)
-	if int64(len(buf)+rem) > mbs {
+	bufsiz := len(buf) + rem
+	mbs := maxBufSize.Load()
+	if int64(bufsiz) > mbs {
 		panic(fmt.Errorf("failed to allocate buffer"))
 	}
-	newbuf := make([]byte, len(buf)+rem)
+	newbuf := make([]byte, bufsiz)
 	copy(newbuf, buf)
 
 	for i := len(buf); i < len(newbuf); i++ {
@@ -199,11 +196,12 @@ func ensureSize(dst []byte, n int) []byte {
 func (c Hmac) Seal(dst, nonce, plaintext, data []byte) []byte {
 	ctlen := len(plaintext)
 	bufsiz := ctlen + c.Overhead()
-	mbs := atomic.LoadInt64(&maxBufSize)
+	mbs := maxBufSize.Load()
+
 	if int64(bufsiz) > mbs {
 		panic(fmt.Errorf("failed to allocate buffer"))
 	}
-	ciphertext := make([]byte, ctlen+c.Overhead())[:ctlen]
+	ciphertext := make([]byte, bufsiz)[:ctlen]
 	copy(ciphertext, plaintext)
 	ciphertext = pad(ciphertext, c.blockCipher.BlockSize())
 
