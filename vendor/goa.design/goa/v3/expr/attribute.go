@@ -102,6 +102,10 @@ type (
 	// ValidationFormat is the type used to enumerate the possible string
 	// formats.
 	ValidationFormat string
+
+	// CookieSameSiteValue is the type used to enumerate the possible cookie
+	// SameSite values.
+	CookieSameSiteValue string
 )
 
 const (
@@ -148,8 +152,15 @@ const (
 	FormatRFC1123 = "rfc1123"
 )
 
+const (
+	CookieSameSiteStrict  CookieSameSiteValue = "strict"
+	CookieSameSiteLax     CookieSameSiteValue = "lax"
+	CookieSameSiteNone    CookieSameSiteValue = "none"
+	CookieSameSiteDefault CookieSameSiteValue = "default"
+)
+
 // EvalName returns the name used by the DSL evaluation.
-func (a *AttributeExpr) EvalName() string {
+func (*AttributeExpr) EvalName() string {
 	return "attribute"
 }
 
@@ -201,6 +212,7 @@ func (a *AttributeExpr) Validate(ctx string, parent eval.Expression) *eval.Valid
 	if v := a.Validation; v != nil {
 		verr.Merge(v.Validate(ctx, parent))
 	}
+	verr.Merge(a.validateExamples(ctx, parent))
 	if o := AsObject(a.Type); o != nil {
 		for _, n := range a.AllRequired() {
 			if a.Find(n) == nil {
@@ -214,17 +226,7 @@ func (a *AttributeExpr) Validate(ctx string, parent eval.Expression) *eval.Valid
 			}
 		}
 		for _, nat := range *o {
-			if ut, ok := nat.Attribute.Type.(UserType); pkgPath != "" && ok {
-				// This check ensures we error if a sub-type has a different custom package type set
-				// or if two user types have different custom packages but share a sub-type (field that's a user type)
-				if ut.Attribute().Meta != nil &&
-					ut.Attribute().Meta["struct:pkg:path"] != nil &&
-					ut.Attribute().Meta["struct:pkg:path"][0] != pkgPath {
-					verr.Add(a, "type \"%s\" has conflicting packages %s and %s", ut.Name(), ut.Attribute().Meta["struct:pkg:path"][0], pkgPath)
-				}
-
-				ut.Attribute().AddMeta("struct:pkg:path", pkgPath)
-			}
+			verr.Merge(a.validatePkgPath(pkgPath, nat.Attribute.Type))
 			ctx = fmt.Sprintf("field %s", nat.Name)
 			verr.Merge(nat.Attribute.Validate(ctx, parent))
 		}
@@ -242,26 +244,51 @@ func (a *AttributeExpr) Validate(ctx string, parent eval.Expression) *eval.Valid
 		}
 	}
 
-	if views, ok := a.Meta["view"]; ok {
+	if view, ok := a.Meta.Last(ViewMetaKey); ok {
 		rt, ok := a.Type.(*ResultTypeExpr)
 		if !ok {
-			verr.Add(parent, "%s uses view %q but %q is not a result type", ctx, views[0], a.Type.Name())
+			verr.Add(parent, "%s uses view %q but %q is not a result type", ctx, view, a.Type.Name())
 		}
-		if name := views[0]; name != "default" && rt != nil {
+		if view != DefaultView && rt != nil {
 			found := false
 			for _, v := range rt.Views {
-				if v.Name == name {
+				if v.Name == view {
 					found = true
 					break
 				}
 			}
 			if !found {
-				verr.Add(parent, "%s: type %q does not define view %q", ctx, a.Type.Name(), name)
+				verr.Add(parent, "%s: type %q does not define view %q", ctx, a.Type.Name(), view)
 			}
 		}
 	}
 
 	return verr
+}
+
+func (a *AttributeExpr) validatePkgPath(pkgPath string, t DataType) *eval.ValidationErrors {
+	verr := new(eval.ValidationErrors)
+	if ar := AsArray(t); ar != nil {
+		verr.Merge(a.validatePkgPath(pkgPath, ar.ElemType.Type))
+	}
+	if mp := AsMap(t); mp != nil {
+		verr.Merge(a.validatePkgPath(pkgPath, mp.KeyType.Type))
+		verr.Merge(a.validatePkgPath(pkgPath, mp.ElemType.Type))
+	}
+	if ut, ok := t.(UserType); pkgPath != "" && ok {
+		// This check ensures we error if a sub-type has a different custom package type set
+		// or if two user types have different custom packages but share a sub-type (field that's a user type)
+		if ut.Attribute().Meta != nil &&
+			ut.Attribute().Meta["struct:pkg:path"] != nil &&
+			ut.Attribute().Meta["struct:pkg:path"][0] != pkgPath {
+			verr.Add(a, "type \"%s\" has conflicting packages %s and %s", ut.Name(), ut.Attribute().Meta["struct:pkg:path"][0], pkgPath)
+		}
+		ut.Attribute().AddMeta("struct:pkg:path", pkgPath)
+	}
+	if len(verr.Errors) > 0 {
+		return verr
+	}
+	return nil
 }
 
 // Finalize merges base and reference type attributes and finalizes the Type
@@ -271,8 +298,12 @@ func (a *AttributeExpr) Finalize() {
 		return // Avoid infinite recursion.
 	}
 	a.finalized = true
+	var pkgPath string
 	if ut, ok := a.Type.(UserType); ok {
 		ut.Finalize()
+		if meta, ok := ut.Attribute().Meta["struct:pkg:path"]; ok {
+			pkgPath = meta[0]
+		}
 	}
 	switch {
 	case IsObject(a.Type):
@@ -290,12 +321,12 @@ func (a *AttributeExpr) Finalize() {
 			}
 			a.Merge(ru.Attribute())
 		}
-		var pkgPath string
-		if ut, ok := a.Type.(UserType); ok {
-			if meta, ok := ut.Attribute().Meta["struct:pkg:path"]; ok {
-				pkgPath = meta[0]
-			}
-		}
+
+		// Now that we've merged the bases, we can clear them.  This
+		// avoids issues where the bases are dupped and modifications
+		// made to the originals are not reflected in the dups.
+		a.Bases = nil
+
 		for _, nat := range *AsObject(a.Type) {
 			if pkgPath != "" {
 				if u := AsUnion(nat.Attribute.Type); u != nil {
@@ -704,6 +735,18 @@ func (a *AttributeExpr) validateEnumDefault(ctx string, parent eval.Expression) 
 	return verr
 }
 
+// validateExamples makes sure that the attribute example values are compatible
+// with the attribute type.
+func (a *AttributeExpr) validateExamples(ctx string, parent eval.Expression) *eval.ValidationErrors {
+	verr := new(eval.ValidationErrors)
+	for _, ex := range a.UserExamples {
+		if !a.Type.IsCompatible(ex.Value) { // DSL ensures ex.Value is not nil
+			verr.Add(parent, "%sexample value %#v is incompatible with type %s", ctx, ex.Value, a.Type.Name())
+		}
+	}
+	return verr
+}
+
 func (a *AttributeExpr) inheritRecursive(parent *AttributeExpr, seen map[*AttributeExpr]struct{}) {
 	if !a.shouldInherit(parent) {
 		return
@@ -925,7 +968,7 @@ func (v *ValidationExpr) Debug(title, prefix, indent string) {
 }
 
 // IsSupportedValidationFormat checks if the validation format is supported by goa.
-func (a *AttributeExpr) IsSupportedValidationFormat(vf ValidationFormat) bool {
+func (*AttributeExpr) IsSupportedValidationFormat(vf ValidationFormat) bool {
 	switch vf {
 	case FormatDate:
 		return true
