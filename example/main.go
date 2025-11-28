@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
+	cloudeventprovider "github.com/eclipse-xfsc/cloud-event-provider"
+	msg "github.com/eclipse-xfsc/nats-message-library"
+	"github.com/eclipse-xfsc/nats-message-library/common"
 	"github.com/google/uuid"
-	"gitlab.eclipse.org/eclipse/xfsc/libraries/messaging/cloudeventprovider"
-	msg "gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging"
-	"gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging/common"
 )
 
 func main() {

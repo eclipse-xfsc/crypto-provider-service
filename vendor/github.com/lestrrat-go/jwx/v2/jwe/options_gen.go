@@ -260,7 +260,7 @@ func WithKeyProvider(v KeyProvider) DecryptOption {
 // return the key used for decryption. This may be useful when
 // you specify multiple key sources or if you pass a `jwk.Set`
 // and you want to know which key was successful at decrypting the
-// signature.
+// CEK.
 //
 // `v` must be a pointer to an empty `interface{}`. Do not use
 // `jwk.Key` here unless you are 100% sure that all keys that you
@@ -310,14 +310,9 @@ func WithMergeProtectedHeaders(v bool) EncryptOption {
 	return &encryptOption{option.New(identMergeProtectedHeaders{}, v)}
 }
 
-// WithMessage provides a message object to be populated by `jwe.Decrpt`
+// WithMessage provides a message object to be populated by `jwe.Decrypt`
 // Using this option allows you to decrypt AND obtain the `jwe.Message`
 // in one go.
-//
-// Note that you should NOT be using the message object for anything other
-// than inspecting its contents. Particularly, do not expect the message
-// reliable when you call `Decrypt` on it. `(jwe.Message).Decrypt` is
-// slated to be deprecated in the next major version.
 func WithMessage(v *Message) DecryptOption {
 	return &decryptOption{option.New(identMessage{}, v)}
 }
@@ -328,7 +323,7 @@ func WithPretty(v bool) WithJSONSuboption {
 	return &withJSONSuboption{option.New(identPretty{}, v)}
 }
 
-// WithrequiredKid specifies whether the keys in the jwk.Set should
+// WithRequiredKid specifies whether the keys in the jwk.Set should
 // only be matched if the target JWE message's Key ID and the Key ID
 // in the given key matches.
 func WithRequireKid(v bool) WithKeySetSuboption {

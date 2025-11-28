@@ -8,8 +8,8 @@ import (
 
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
 
-	"gitlab.eclipse.org/eclipse/xfsc/train/trusted-content-resolver/clients/go/tcr"
-	"gitlab.eclipse.org/eclipse/xfsc/tsa/golib/errors"
+	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
+	"github.com/eclipse-xfsc/train-trusted-content-resolver/clients/go/tcr"
 )
 
 const (
@@ -25,7 +25,7 @@ type Verifier struct {
 
 func New(httpClient *http.Client, addr string, schemes []string) (*Verifier, error) {
 	if addr == "" {
-		return nil, errors.New(errors.Internal, "train server address cannot be empty")
+		return nil, pkgErr.New(pkgErr.Internal, "train server address cannot be empty")
 	}
 
 	client := trainClient(httpClient, addr)
@@ -38,16 +38,16 @@ func New(httpClient *http.Client, addr string, schemes []string) (*Verifier, err
 
 func (v *Verifier) VerifyCredential(ctx context.Context, vc *verifiable.Credential) error {
 	if len(vc.TermsOfUse) == 0 {
-		return errors.New(errors.BadRequest, "terms of use cannot be empty")
+		return pkgErr.New(pkgErr.BadRequest, "terms of use cannot be empty")
 	}
 
 	ss, ok := vc.TermsOfUse[0].CustomFields[trustSchemesKey].([]interface{})
 	if !ok {
-		return errors.New(errors.BadRequest, "invalid terms of use: trustScheme field is expected to be an array")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: trustScheme field is expected to be an array")
 	}
 
 	if len(ss) == 0 {
-		return errors.New(errors.BadRequest, "invalid terms of use: trustScheme field cannot be empty")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: trustScheme field cannot be empty")
 	}
 
 	err := v.verify(ctx, vc.TermsOfUse[0].ID, ss)
@@ -61,29 +61,29 @@ func (v *Verifier) VerifyCredential(ctx context.Context, vc *verifiable.Credenti
 func (v *Verifier) VerifyPresentation(ctx context.Context, vp *verifiable.Presentation) error {
 	terms, ok := vp.CustomFields[termsOfUseKey].([]interface{})
 	if !ok {
-		return errors.New(errors.BadRequest, "terms of use must be an array")
+		return pkgErr.New(pkgErr.BadRequest, "terms of use must be an array")
 	}
 
 	if len(terms) == 0 {
-		return errors.New(errors.BadRequest, "terms of use cannot be empty")
+		return pkgErr.New(pkgErr.BadRequest, "terms of use cannot be empty")
 	}
 
 	m, ok := terms[0].(map[string]interface{})
 	if !ok {
-		return errors.New(errors.BadRequest, "invalid terms of use: must contain an array of map[string]interface{}")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: must contain an array of map[string]interface{}")
 	}
 
 	issuer, ok := m[idKey].(string)
 	if !ok {
-		return errors.New(errors.BadRequest, "invalid terms of use: missing id key")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: missing id key")
 	}
 
 	ss, ok := m[trustSchemesKey].([]interface{})
 	if !ok {
-		return errors.New(errors.BadRequest, "invalid terms of use: trustScheme field is expected to be an array")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: trustScheme field is expected to be an array")
 	}
 	if len(ss) == 0 {
-		return errors.New(errors.BadRequest, "invalid terms of use: trustScheme field cannot be empty")
+		return pkgErr.New(pkgErr.BadRequest, "invalid terms of use: trustScheme field cannot be empty")
 	}
 
 	err := v.verify(ctx, issuer, ss)
@@ -100,7 +100,7 @@ func (v *Verifier) verify(ctx context.Context, issuer string, ss []interface{}) 
 	for _, scheme := range ss {
 		scheme := scheme.(string)
 		if !contains(v.trustSchemes, scheme) {
-			return errors.New(errors.BadRequest, fmt.Sprintf("invalid terms of use: unsupported trust scheme %s", scheme))
+			return pkgErr.New(pkgErr.BadRequest, fmt.Sprintf("invalid terms of use: unsupported trust scheme %s", scheme))
 		}
 		schemes = append(schemes, scheme)
 	}
@@ -109,11 +109,11 @@ func (v *Verifier) verify(ctx context.Context, issuer string, ss []interface{}) 
 
 	resp, r, err := v.client.TrustedContentResolverAPI.ResolveTrustList(ctx).ResolveRequest(resolveRequest).Execute()
 	if err != nil {
-		return errors.New(errors.Internal, err)
+		return pkgErr.New(pkgErr.Internal, err)
 	}
 
 	if r.StatusCode != http.StatusOK {
-		return errors.New(errors.GetKind(r.StatusCode), getErrorBody(r))
+		return pkgErr.New(pkgErr.GetKind(r.StatusCode), getErrorBody(r))
 	}
 
 	if err = v.validate(resp); err != nil {
@@ -125,19 +125,19 @@ func (v *Verifier) verify(ctx context.Context, issuer string, ss []interface{}) 
 
 func (v *Verifier) validate(resp *tcr.ResolveResponse) error {
 	if len(resp.ResolvedResults) == 0 {
-		return errors.New("train validation failed: resolved result cannot be empty")
+		return pkgErr.New("train validation failed: resolved result cannot be empty")
 	}
 
 	for _, r := range resp.ResolvedResults {
 		if !r.ResolvedDoc.DidVerified {
-			return errors.New("train validation failed: did is not verified")
+			return pkgErr.New("train validation failed: did is not verified")
 		}
 		if len(r.ResolvedDoc.Endpoints) == 0 {
-			return errors.New("train validation failed: resolved endpoints cannot be empty")
+			return pkgErr.New("train validation failed: resolved endpoints cannot be empty")
 		}
 		for _, e := range r.ResolvedDoc.Endpoints {
 			if !e.VcVerified {
-				return errors.New("train validation failed: endpoint VC is not verified")
+				return pkgErr.New("train validation failed: endpoint VC is not verified")
 			}
 		}
 	}

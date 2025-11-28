@@ -31,35 +31,34 @@ var (
 //
 // Example:
 //
-//     // simple alias
-//     var MyString = Type("MyString", String)
+//	// simple alias
+//	var MyString = Type("MyString", String)
 //
-//     // alias with description and additional validation
-//     var Hostname = Type("Hostname", String, func() {
-//         Description("A host name")
-//         Format(FormatHostname)
-//     })
+//	// alias with description and additional validation
+//	var Hostname = Type("Hostname", String, func() {
+//	    Description("A host name")
+//	    Format(FormatHostname)
+//	})
 //
-//     // new type
-//     var SumPayload = Type("SumPayload", func() {
-//         Description("Type sent to add method")
+//	// new type
+//	var SumPayload = Type("SumPayload", func() {
+//	    Description("Type sent to add method")
 //
-//         Attribute("a", String)                 // string attribute "a"
-//         Attribute("b", Int32, "operand")       // attribute with description
-//         Attribute("operands", ArrayOf(Int32))  // array attribute
-//         Attribute("ops", MapOf(String, Int32)) // map attribute
-//         Attribute("c", SumMod)                 // attribute using user type
-//         Attribute("len", Int64, func() {       // attribute with validation
-//             Minimum(1)
-//         })
+//	    Attribute("a", String)                 // string attribute "a"
+//	    Attribute("b", Int32, "operand")       // attribute with description
+//	    Attribute("operands", ArrayOf(Int32))  // array attribute
+//	    Attribute("ops", MapOf(String, Int32)) // map attribute
+//	    Attribute("c", SumMod)                 // attribute using user type
+//	    Attribute("len", Int64, func() {       // attribute with validation
+//	        Minimum(1)
+//	    })
 //
-//         Required("a")                          // Required attributes
-//         Required("b", "c")
-//     })
-//
+//	    Required("a")                          // Required attributes
+//	    Required("b", "c")
+//	})
 func Type(name string, args ...any) expr.UserType {
 	if len(args) > 2 {
-		eval.ReportError("too many arguments")
+		eval.TooManyArgError()
 		return nil
 	}
 	if t := expr.Root.UserType(name); t != nil {
@@ -86,7 +85,7 @@ func Type(name string, args ...any) expr.UserType {
 		if len(args) == 2 {
 			d, ok := args[1].(func())
 			if !ok {
-				eval.ReportError("third argument must be a function")
+				eval.InvalidArgError("function", args[1])
 				return nil
 			}
 			fn = d
@@ -95,7 +94,7 @@ func Type(name string, args ...any) expr.UserType {
 		base = &expr.Object{}
 		fn = a
 		if len(args) == 2 {
-			eval.ReportError("only one argument allowed when it is a function")
+			eval.TooManyArgError()
 			return nil
 		}
 	default:
@@ -104,8 +103,12 @@ func Type(name string, args ...any) expr.UserType {
 	}
 
 	t := &expr.UserTypeExpr{
-		TypeName:      name,
-		AttributeExpr: &expr.AttributeExpr{Type: base, DSLFunc: fn},
+		TypeName: name,
+		AttributeExpr: &expr.AttributeExpr{
+			Type:    base,
+			DSLFunc: fn,
+			Meta:    expr.MetaExpr{"openapi:typename": []string{name}},
+		},
 	}
 	expr.Root.Types = append(expr.Root.Types, t)
 	return t
@@ -121,15 +124,15 @@ func Type(name string, args ...any) expr.UserType {
 //
 // Examples:
 //
-//    var Names = ArrayOf(String, func() {
-//        Pattern("[a-zA-Z]+") // Validates elements of the array
-//    })
+//	var Names = ArrayOf(String, func() {
+//	    Pattern("[a-zA-Z]+") // Validates elements of the array
+//	})
 //
-//    var Account = Type("Account", func() {
-//        Attribute("bottles", ArrayOf(Bottle), "Account bottles", func() {
-//            MinLength(1) // Validates array as a whole
-//        })
-//    })
+//	var Account = Type("Account", func() {
+//	    Attribute("bottles", ArrayOf(Bottle), "Account bottles", func() {
+//	        MinLength(1) // Validates array as a whole
+//	    })
+//	})
 //
 // Note: CollectionOf and ArrayOf both return array types. CollectionOf returns
 // a result type where ArrayOf returns a user type. In general you want to use
@@ -150,7 +153,7 @@ func ArrayOf(v any, fn ...func()) *expr.Array {
 		return &expr.Array{ElemType: &expr.AttributeExpr{Type: expr.String}}
 	}
 	if len(fn) > 1 {
-		eval.ReportError("ArrayOf: too many arguments")
+		eval.TooManyArgError()
 		return &expr.Array{ElemType: &expr.AttributeExpr{Type: expr.String}}
 	}
 	at := expr.AttributeExpr{Type: t}
@@ -167,15 +170,14 @@ func ArrayOf(v any, fn ...func()) *expr.Array {
 //
 // Example:
 //
-//    var Review = Type("Review", func() {
-//        Attribute("ratings", MapOf(Bottle, Int32), "Bottle ratings", func() {
-//            Elem(func() {
-//                Minimum(1)
-//                Maximum(5)
-//            })
-//        })
-//    })
-//
+//	var Review = Type("Review", func() {
+//	    Attribute("ratings", MapOf(Bottle, Int32), "Bottle ratings", func() {
+//	        Elem(func() {
+//	            Minimum(1)
+//	            Maximum(5)
+//	        })
+//	    })
+//	})
 func MapOf(k, v any, fn ...func()) *expr.Map {
 	var tk, tv expr.DataType
 	var ok bool
@@ -205,7 +207,7 @@ func MapOf(k, v any, fn ...func()) *expr.Map {
 		return &expr.Map{KeyType: &expr.AttributeExpr{Type: expr.String}, ElemType: &expr.AttributeExpr{Type: expr.String}}
 	}
 	if len(fn) > 1 {
-		eval.ReportError("MapOf: too many arguments")
+		eval.TooManyArgError()
 		return &expr.Map{KeyType: &expr.AttributeExpr{Type: expr.String}, ElemType: &expr.AttributeExpr{Type: expr.String}}
 	}
 	kat := expr.AttributeExpr{Type: tk}
@@ -222,12 +224,11 @@ func MapOf(k, v any, fn ...func()) *expr.Map {
 //
 // Example:
 //
-//    Attribute("map", MapOf(String, Int), func() {
-//        Key(func() {
-//            Format(FormatDateTime) // map keys are timestamps
-//        })
-//    })
-//
+//	Attribute("map", MapOf(String, Int), func() {
+//	    Key(func() {
+//	        Format(FormatDateTime) // map keys are timestamps
+//	    })
+//	})
 func Key(fn func()) {
 	at, ok := eval.Current().(*expr.AttributeExpr)
 	if !ok {
@@ -245,19 +246,18 @@ func Key(fn func()) {
 //
 // Example:
 //
-//    Attribute("array", ArrayOf(Int), func() {
-//        Elem(func() {
-//            Enum(1, 2, 3, 4, 5) // list possible values for array elements
-//        })
-//    })
+//	Attribute("array", ArrayOf(Int), func() {
+//	    Elem(func() {
+//	        Enum(1, 2, 3, 4, 5) // list possible values for array elements
+//	    })
+//	})
 //
-//    Attribute("map", MapOf(String, Int), func() {
-//        Elem(func() {
-//            Minimum(1)
-//            Maximum(100)
-//        })
-//    })
-//
+//	Attribute("map", MapOf(String, Int), func() {
+//	    Elem(func() {
+//	        Minimum(1)
+//	        Maximum(100)
+//	    })
+//	})
 func Elem(fn func()) {
 	at, ok := eval.Current().(*expr.AttributeExpr)
 	if !ok {

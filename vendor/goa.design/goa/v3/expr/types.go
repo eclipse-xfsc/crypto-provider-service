@@ -3,6 +3,7 @@ package expr
 import (
 	"fmt"
 	"reflect"
+	"sort"
 
 	"goa.design/goa/v3/eval"
 )
@@ -271,10 +272,10 @@ func IsAlias(dt DataType) bool {
 // Equal compares the types recursively and returns true if they are equal. Two
 // types are equal if:
 //
-//    - both types have the same kind
-//    - array types have elements whose types are equal
-//    - map types have keys and elements whose types are equal
-//    - objects have the same attribute names and the attribute types are equal
+//   - both types have the same kind
+//   - array types have elements whose types are equal
+//   - map types have keys and elements whose types are equal
+//   - objects have the same attribute names and the attribute types are equal
 //
 // Note: calling Equal is not equivalent to evaluating dt.Hash() == dt2.Hash()
 // as the former may return true for two user types with different names and
@@ -381,10 +382,10 @@ func (p Primitive) Hash() string {
 }
 
 // Kind implements DataKind.
-func (a *Array) Kind() Kind { return ArrayKind }
+func (*Array) Kind() Kind { return ArrayKind }
 
 // Name returns the type name.
-func (a *Array) Name() string {
+func (*Array) Name() string {
 	return "array"
 }
 
@@ -502,10 +503,10 @@ func (o *Object) Rename(n, m string) {
 }
 
 // Kind implements DataKind.
-func (o *Object) Kind() Kind { return ObjectKind }
+func (*Object) Kind() Kind { return ObjectKind }
 
 // Name returns the type name.
-func (o *Object) Name() string { return "object" }
+func (*Object) Name() string { return "object" }
 
 // Hash returns a unique hash value for o.
 func (o *Object) Hash() string {
@@ -524,7 +525,7 @@ func (o *Object) Merge(other *Object) *Object {
 }
 
 // IsCompatible returns true if o describes the (Go) type of val.
-func (o *Object) IsCompatible(val any) bool {
+func (*Object) IsCompatible(val any) bool {
 	k := reflect.TypeOf(val).Kind()
 	return k == reflect.Map || k == reflect.Struct
 }
@@ -541,10 +542,10 @@ func (o *Object) Example(r *ExampleGenerator) any {
 }
 
 // Kind implements DataKind.
-func (m *Map) Kind() Kind { return MapKind }
+func (*Map) Kind() Kind { return MapKind }
 
 // Name returns the type name.
-func (m *Map) Name() string { return "map" }
+func (*Map) Name() string { return "map" }
 
 // Hash returns a unique hash value for m.
 func (m *Map) Hash() string {
@@ -591,8 +592,15 @@ func (m *Map) Example(r *ExampleGenerator) any {
 // which cannot be handled by json.Marshal.
 func (m *Map) MakeMap(raw map[any]any) any {
 	ma := reflect.MakeMap(toReflectType(m))
-	for key, value := range raw {
-		ma.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(value))
+	keys := make([]any, 0, len(raw))
+	for key := range raw {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return reflect.ValueOf(keys[i]).String() < reflect.ValueOf(keys[j]).String()
+	})
+	for _, key := range keys {
+		ma.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(raw[key]))
 	}
 	return ma.Interface()
 }
@@ -614,7 +622,7 @@ func (m MapVal) ToMap() map[any]any {
 }
 
 // Kind implements DataKind.
-func (u *Union) Kind() Kind { return UnionKind }
+func (*Union) Kind() Kind { return UnionKind }
 
 // Name returns the type name.
 func (u *Union) Name() string { return u.TypeName }
@@ -647,10 +655,9 @@ func (u *Union) Example(r *ExampleGenerator) any {
 // array or map types. This is useful in reporting types in error messages,
 // examples of qualified type names:
 //
-//     "array<string>"
-//     "map<string, string>"
-//     "map<string, array<int32>>"
-//
+//	"array<string>"
+//	"map<string, string>"
+//	"map<string, array<int32>>"
 func QualifiedTypeName(t DataType) string {
 	switch t.Kind() {
 	case ArrayKind:

@@ -1,35 +1,52 @@
-FROM golang:1.21.5 as pluginBuilder
-ARG PLUGIN_URL_LOCAL="https://gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/plugins/local-provider.git --branch v0.0.6"
-WORKDIR /go/src/github.com/eclipse-xfsc/crypto-provider-service
-RUN git clone $PLUGIN_URL_LOCAL .
-RUN CGO_ENABLED=1 GOOS=linux go build --buildmode=plugin -mod=vendor -o /local-provider.so 
+# ----------------------------------------
+# Builder: Go 1.24
+# ----------------------------------------
+    FROM golang:1.24.5-bullseye AS builder
 
-
-FROM golang:1.21.5 as pluginBuilder2
-ARG PLUGIN_URL_PROD="https://gitlab.eclipse.org/eclipse/xfsc/libraries/crypto/engine/plugins/hashicorp-vault-provider.git --branch v1.2.4"
-WORKDIR /go/src/github.com/eclipse-xfsc/crypto-provider-service
-RUN git clone $PLUGIN_URL_PROD .
-RUN CGO_ENABLED=1 GOOS=linux go build --buildmode=plugin -mod=vendor -o /hashicorp-vault-provider.so 
-
-FROM golang:1.21.5 as builder
-
-WORKDIR /go/src/github.com/eclipse-xfsc/crypto-provider-service
-
-ARG APP_REPO_TAG
-
-ADD . .
-
-RUN CGO_ENABLED=1 GOOS=linux go build -mod=vendor -o  /tmp/signer ./cmd/signer/...
-
-FROM golang:1.21.5 as runner
-RUN mkdir /opt/plugins
-COPY --from=builder /tmp/signer /opt/signer
-COPY --from=pluginBuilder local-provider.so /opt/plugins/local-provider.so
-COPY --from=pluginBuilder2 hashicorp-vault-provider.so /opt/plugins/hashicorp-vault-provider.so 
-WORKDIR /opt
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates \
- && update-ca-certificates \
- && rm -rf /var/lib/apt/lists/*
-
-CMD ["./signer"]
+    WORKDIR /app
+    ARG APP_REPO_TAG
+    
+    # Install updated CA certificates in builder
+    RUN apt-get update \
+        && apt-get install -y --no-install-recommends ca-certificates \
+        && update-ca-certificates \
+        && rm -rf /var/lib/apt/lists/*
+    
+    # Put updated system certs somewhere we can copy later
+    RUN mkdir -p /out/certs && cp -r /etc/ssl/certs/* /out/certs/
+    
+    # Prepare Go build environment
+    COPY go.mod go.sum ./
+    COPY vendor ./vendor
+    RUN go mod vendor
+    
+    COPY . .
+    
+    # Build binary
+    RUN CGO_ENABLED=1 GOOS=linux \
+        go build -mod=vendor -trimpath \
+        -ldflags="-s -w" \
+        -o /out/signer ./cmd/signer
+    
+    # Create plugin directory
+    RUN mkdir -p /out/plugins
+    
+    # ----------------------------------------
+    # Runner: Distroless (nonroot)
+    # ----------------------------------------
+    FROM gcr.io/distroless/base-debian12:nonroot AS runner
+    
+    WORKDIR /opt
+    USER nonroot
+    
+    # Copy signer binary
+    COPY --from=builder /out/signer /opt/signer
+    
+    # Copy plugins dir
+    COPY --from=builder /out/plugins /opt/plugins
+    
+    # Copy UPDATED CA certificates into distroless
+    COPY --from=builder /out/certs /etc/ssl/certs
+    
+    CMD ["/opt/signer"]
+    

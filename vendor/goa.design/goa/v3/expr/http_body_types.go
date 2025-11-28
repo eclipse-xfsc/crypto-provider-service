@@ -1,11 +1,61 @@
 package expr
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"unicode"
 )
+
+// UnionToObject returns an object adequate to serialize the given union type in
+// HTTP requests and responses. The object has two fields: "Type" and "Value".
+// The "Type" field is a string that indicates the name of the union type. The
+// "Value" field is a string that contains the JSON encoded union value.
+func UnionToObject(att *AttributeExpr) *AttributeExpr {
+	example := att.Example(Root.API.ExampleGenerator)
+	js, err := json.Marshal(example)
+	if err != nil {
+		js = []byte("null")
+	}
+	values := AsUnion(att.Type).Values
+	names := make([]any, len(values))
+	vals := make([]string, len(values))
+	bases := make([]DataType, len(values))
+	for i, nat := range values {
+		names[i] = nat.Name
+		vals[i] = fmt.Sprintf("- %q", nat.Name)
+		bases[i] = nat.Attribute.Type
+	}
+	obj := Object([]*NamedAttributeExpr{
+		{Name: "Type", Attribute: &AttributeExpr{
+			Type:        String,
+			Description: "Union type name, one of:\n" + strings.Join(vals, "\n"),
+			Validation:  &ValidationExpr{Values: names},
+			Meta: MetaExpr{
+				"struct:tag:form": {"Type"},
+				"struct:tag:json": {"Type"},
+				"struct:tag:xml":  {"Type"},
+			},
+		}},
+		{Name: "Value", Attribute: &AttributeExpr{
+			Type:         String,
+			Description:  "JSON encoded union value",
+			UserExamples: []*ExampleExpr{{Value: string(js)}},
+			Bases:        bases, // For OpenAPI generation
+			Meta: MetaExpr{
+				"struct:tag:form": {"Value"},
+				"struct:tag:json": {"Value"},
+				"struct:tag:xml":  {"Value"},
+			},
+		}},
+	})
+	return &AttributeExpr{
+		Type:        &obj,
+		Description: att.Description,
+		Validation:  &ValidationExpr{Required: []string{"Type", "Value"}},
+	}
+}
 
 // defaultRequestHeaderAttributes returns a map keyed by the names of the
 // payload attributes that should come from the request HTTP headers by default.
@@ -17,11 +67,21 @@ import (
 // single "Authorization" header is used to compute both the username and
 // password attributes).
 func defaultRequestHeaderAttributes(e *HTTPEndpointExpr) map[string]bool {
-	if len(e.MethodExpr.Requirements) == 0 {
+	var requirements []*SecurityExpr
+	if e.MethodExpr.Requirements != nil {
+		requirements = e.MethodExpr.Requirements
+	}
+	if e.Service.ServiceExpr.Requirements != nil {
+		requirements = append(requirements, e.Service.ServiceExpr.Requirements...)
+	}
+	if Root.API.Requirements != nil {
+		requirements = append(requirements, Root.API.Requirements...)
+	}
+	if len(requirements) == 0 {
 		return nil
 	}
 	headers := make(map[string]bool)
-	for _, req := range e.MethodExpr.Requirements {
+	for _, req := range requirements {
 		for _, sch := range req.Schemes {
 			var field string
 			switch sch.Kind {
@@ -68,6 +128,9 @@ func httpRequestBody(a *HTTPEndpointExpr) *AttributeExpr {
 	if a.Body != nil {
 		a.Body = DupAtt(a.Body)
 		renameType(a.Body, name, suffix)
+		if ut, ok := a.Body.Type.(*UserTypeExpr); ok {
+			ut.UID = a.Service.Name() + "#" + name
+		}
 		return a.Body
 	}
 
@@ -82,7 +145,9 @@ func httpRequestBody(a *HTTPEndpointExpr) *AttributeExpr {
 	// 1. If Payload is a union type, then the request body is a struct with
 	// two fields: the union type and its value.
 	if IsUnion(payload.Type) {
-		return unionToObject(payload, name, suffix, a.Service.Name())
+		attr := UnionToObject(payload)
+		renameType(attr, name, suffix)
+		return attr
 	}
 
 	// 2. If Payload is not an object then check whether there are
@@ -127,6 +192,18 @@ func httpRequestBody(a *HTTPEndpointExpr) *AttributeExpr {
 	}
 	appendSuffix(ut.Attribute().Type, suffix)
 
+	if t, ok := payload.Type.(UserType); ok {
+		// Remember openapi typename for example to generate friendly OpenAPI specs.
+		if m, ok := t.Attribute().Meta["openapi:typename"]; ok {
+			ut.AttributeExpr.AddMeta("openapi:typename", m...)
+		}
+
+		// Remember additionalProperties.
+		if m, ok := t.Attribute().Meta["openapi:additionalProperties"]; ok {
+			ut.AttributeExpr.AddMeta("openapi:additionalProperties", m...)
+		}
+	}
+
 	return &AttributeExpr{
 		Type:         ut,
 		Validation:   att.Validation,
@@ -142,7 +219,9 @@ func httpStreamingBody(e *HTTPEndpointExpr) *AttributeExpr {
 	}
 	att := e.MethodExpr.StreamingPayload
 	if IsUnion(att.Type) {
-		return unionToObject(att, e.Name(), "StreamingBody", e.Service.Name())
+		attr := UnionToObject(att)
+		renameType(attr, e.Name(), "StreamingBody")
+		return attr
 	}
 	if !IsObject(att.Type) {
 		return DupAtt(att)
@@ -151,7 +230,7 @@ func httpStreamingBody(e *HTTPEndpointExpr) *AttributeExpr {
 	ut := &UserTypeExpr{
 		AttributeExpr: DupAtt(att),
 		TypeName:      concat(e.Name(), "Streaming", "Body"),
-		UID:           concat(e.Service.Name(), e.Name(), "Streaming", "Body"),
+		UID:           e.Service.Name() + "#" + e.Name() + "StreamingBody",
 	}
 	appendSuffix(ut.Attribute().Type, suffix)
 
@@ -199,7 +278,9 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 	// methods with potentially different result types.
 	if resp.Body != nil {
 		if IsUnion(resp.Body.Type) {
-			return unionToObject(resp.Body, name, suffix, svc.Name())
+			attr := UnionToObject(resp.Body)
+			renameType(attr, name, suffix)
+			return attr
 		}
 		if !IsObject(resp.Body.Type) {
 			return resp.Body
@@ -209,12 +290,20 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 		}
 		att := DupAtt(resp.Body)
 		renameType(att, name, suffix)
+		if ut, ok := att.Type.(*UserTypeExpr); ok {
+			ut.UID = svc.Name() + "#" + name
+		}
+		if rt, ok := att.Type.(*ResultTypeExpr); ok {
+			rt.UID = svc.Name() + "#" + name
+		}
 		return att
 	}
 
 	// 2. Map unions to objects.
 	if IsUnion(attr.Type) {
-		return unionToObject(attr, name, suffix, svc.Name())
+		attr = UnionToObject(attr)
+		renameType(attr, name, suffix)
+		return attr
 	}
 
 	// 3. If attribute is not an object then check whether there are headers or
@@ -250,10 +339,18 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 		UID:           concat(svc.Name(), "#", name),
 	}
 
-	// Remember original type name for example to generate friendly OpenAPI
-	// specs.
 	if t, ok := attr.Type.(UserType); ok {
+		// Remember original type name and openapi typename for example
+		// to generate friendly OpenAPI specs.
 		userType.AttributeExpr.AddMeta("name:original", t.Name())
+		if m, ok := t.Attribute().Meta["openapi:typename"]; ok {
+			userType.AttributeExpr.AddMeta("openapi:typename", m...)
+		}
+
+		// Remember additionalProperties.
+		if m, ok := t.Attribute().Meta["openapi:additionalProperties"]; ok {
+			userType.AttributeExpr.AddMeta("openapi:additionalProperties", m...)
+		}
 	}
 
 	appendSuffix(userType.Attribute().Type, suffix)
@@ -292,41 +389,6 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 	}
 }
 
-// unionToObject returns an object adequate to serialize the given union type.
-func unionToObject(att *AttributeExpr, name, suffix, svcName string) *AttributeExpr {
-	values := AsUnion(att.Type).Values
-	names := make([]any, len(values))
-	vals := make([]string, len(values))
-	for i, nat := range values {
-		names[i] = nat.Attribute.Type.Name()
-		vals[i] = fmt.Sprintf("- %q", nat.Attribute.Type.Name())
-	}
-	obj := Object([]*NamedAttributeExpr{{
-		"Type", &AttributeExpr{
-			Type:        String,
-			Description: "Union type name, one of:\n" + strings.Join(vals, "\n"),
-			Validation:  &ValidationExpr{Values: names},
-		}}, {
-		"Value", &AttributeExpr{
-			Type:         String,
-			Description:  "JSON formatted union value",
-			UserExamples: []*ExampleExpr{{Value: `"JSON"`}},
-		}},
-	})
-	uatt := &AttributeExpr{
-		Type:       &obj,
-		Validation: &ValidationExpr{Required: []string{"Type", "Value"}},
-	}
-	ut := &UserTypeExpr{
-		AttributeExpr: uatt,
-		TypeName:      name,
-		UID:           concat(svcName, "#", name),
-	}
-	wrapper := &AttributeExpr{Type: ut, Description: att.Description}
-	renameType(wrapper, name, suffix)
-	return wrapper
-}
-
 // concat concatenates the given strings with "smart(?) casing".
 // The concatenation algorithm is:
 //
@@ -343,7 +405,6 @@ func unionToObject(att *AttributeExpr, name, suffix, svcName string) *AttributeE
 // 3) If the first string is a single word or camelcased, the rest of the
 // strings are concatenated to form a valid upper camelcase.
 // e.g. concat("myEndpoint", "streaming", "Body") => "MyEndpointStreamingBody"
-//
 func concat(strs ...string) string {
 	if len(strs) == 1 {
 		return strs[0]
@@ -384,6 +445,7 @@ func concat(strs ...string) string {
 }
 
 func renameType(att *AttributeExpr, name, suffix string) {
+	RemovePkgPath(att)
 	rt := att.Type
 	switch rtt := rt.(type) {
 	case UserType:
@@ -438,7 +500,7 @@ func removeAttribute(attr *MappedAttributeExpr, name string) {
 	}
 }
 
-// extendedBodyAttribute returns an attribute describing the HTTP
+// extendBodyAttribute returns an attribute describing the HTTP
 // request/response body type by merging any Bases and References to the parent
 // attribute. This must be invoked during validation or to determine the actual
 // body type by removing any headers/params/cookies.

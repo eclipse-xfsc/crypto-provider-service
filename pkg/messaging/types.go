@@ -1,7 +1,7 @@
 package messaging
 
 import (
-	"gitlab.eclipse.org/eclipse/xfsc/organisational-credential-manager-w-stack/libraries/messaging/common"
+	"github.com/eclipse-xfsc/nats-message-library/common"
 )
 
 const (

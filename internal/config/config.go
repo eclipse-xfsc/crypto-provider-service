@@ -3,16 +3,16 @@ package config
 import "time"
 
 type Config struct {
-	HTTP     httpConfig
-	Metrics  metricsConfig
-	Auth     authConfig
-	Cred     credentialsConfig
-	Train    trainConfig
-	Nats     natsConfig
-	SdJwt    sdjwtConfig
-	LogLevel string `envconfig:"LOG_LEVEL" default:"INFO"`
-	Profile  string `envconfig:"PROFILE" default:"DEBUG"`
-	Protocol string `envconfig:"PROTOCOL" default:"nats"`
+	HTTP         httpConfig
+	Metrics      metricsConfig
+	Auth         authConfig
+	Cred         credentialsConfig
+	Train        trainConfig
+	Nats         natsConfig
+	SdJwt        sdjwtConfig
+	LogLevel     string `envconfig:"LOG_LEVEL" default:"INFO"`
+	Protocol     string `envconfig:"PROTOCOL" default:"nats"`
+	EngineAdress string `envconfig:"CRYPTO_GRPC_ADDR""`
 }
 
 type sdjwtConfig struct {

@@ -14,10 +14,9 @@ import (
 //
 // Example:
 //
-//    API("adder", func() {
-//        Description("Adder API")
-//    })
-//
+//	API("adder", func() {
+//	    Description("Adder API")
+//	})
 func Description(d string) {
 	switch e := eval.Current().(type) {
 	case *expr.APIExpr:
@@ -45,6 +44,8 @@ func Description(d string) {
 	case *expr.HTTPFileServerExpr:
 		e.Description = d
 	case *expr.GRPCResponseExpr:
+		e.Description = d
+	case *expr.InterceptorExpr:
 		e.Description = d
 	default:
 		eval.IncompatibleDSL()

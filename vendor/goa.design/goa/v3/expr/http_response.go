@@ -139,10 +139,10 @@ func (r *HTTPResponseExpr) Validate(e *HTTPEndpointExpr) *eval.ValidationErrors 
 	// an explicit conflict with the content-type and response.
 	if (r.ContentType == "text/html" || r.ContentType == "text/plain") && !e.SkipRequestBodyEncodeDecode {
 		if e.MethodExpr.Result.Type != nil && e.MethodExpr.Result.Type != String && e.MethodExpr.Result.Type != Bytes && r.Body == nil {
-			verr.Add(r, fmt.Sprintf("Result type must be String or Bytes when ContentType is '%s'", r.ContentType))
+			verr.Add(r, "Result type must be String or Bytes when ContentType is '%s'", r.ContentType)
 		}
 		if r.Body != nil && r.Body.Type != String && r.Body.Type != Bytes {
-			verr.Add(r, fmt.Sprintf("Result type must be String or Bytes when ContentType is '%s'", r.ContentType))
+			verr.Add(r, "Result type must be String or Bytes when ContentType is '%s'", r.ContentType)
 		}
 	}
 
@@ -152,8 +152,8 @@ func (r *HTTPResponseExpr) Validate(e *HTTPEndpointExpr) *eval.ValidationErrors 
 			return nil
 		}
 		if isrt {
-			if v, ok := e.MethodExpr.Result.Meta["view"]; ok {
-				v := rt.View(v[0])
+			if view, ok := e.MethodExpr.Result.Meta.Last(ViewMetaKey); ok {
+				v := rt.View(view)
 				if v == nil {
 					return nil
 				}
@@ -346,11 +346,9 @@ func (r *HTTPResponseExpr) mapUnmappedAttrs(svcAtt *AttributeExpr) {
 		// not mapped explicitly.
 
 		var originAttr string
-		{
-			if r.Body != nil {
-				if o, ok := r.Body.Meta["origin:attribute"]; ok {
-					originAttr = o[0]
-				}
+		if r.Body != nil {
+			if o, ok := r.Body.Meta["origin:attribute"]; ok {
+				originAttr = o[0]
 			}
 		}
 		// if response body was mapped explicitly using Body(<attribute name>) then
