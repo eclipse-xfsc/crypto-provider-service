@@ -56,7 +56,13 @@ func main() {
 
 	engine, stop := core.CreateCryptoEngine(cfg.EngineAdress, insecure.NewCredentials())
 
-	defer stop()
+	if engine == nil {
+		logger.Fatal("cannot initialize crypto engine")
+	}
+
+	if stop != nil {
+		defer stop()
+	}
 
 	sjwt.EnableCryptoProvider(engine, true, false)
 	// create logger
@@ -64,10 +70,6 @@ func main() {
 	logger.Info("signer service started", zap.String("version", Version), zap.String("goa", goa.Version()))
 
 	httpClient := httpClient()
-
-	if err != nil {
-		logger.Fatal("cannot initialize vault client", zap.Error(err))
-	}
 
 	verifiers, err := verify.New(cfg.Cred.Verifiers, httpClient, cfg.Train.Addr, cfg.Train.TrustSchemes)
 	if err != nil {
