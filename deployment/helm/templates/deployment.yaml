@@ -85,6 +85,8 @@ spec:
             value: "nats"
           - name: NATS_TOPIC
             value: {{ .Values.signer.nats.topic }}
+          - name: CRYPTO_GRPC_ADDR
+            value: {{ .Values.signer.engine.clusterAddress }}
           {{- end }}
           {{- if .Values.secretEnv }}
           {{- range $key, $value := .Values.secretEnv }}
