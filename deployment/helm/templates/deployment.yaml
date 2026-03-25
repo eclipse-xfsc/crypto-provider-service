@@ -40,8 +40,8 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         {{- if .Values.useSecretRef }}
         envFrom:
-          - secretRef:
-            name: {{ .Values.secretRefName }}
+          - secretKeyRef:
+             name: {{ .Values.secretRefName }}
         {{- else if .Values.useConfigMap }}
         envFrom:
           - configMapRef:
@@ -110,7 +110,7 @@ spec:
         {{- range $key, $value := .Values.signer.engine.secretEnv }}
           - name: "{{ $key }}"
             valueFrom:
-              secretRef:
+              secretKeyRef:
                 name: "{{ $value.name }}"
                 key: "{{ $value.key }}" 
         {{- end }}
