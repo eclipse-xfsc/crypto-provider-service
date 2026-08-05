@@ -73,7 +73,10 @@ spec:
               value: {{ .topic | quote }}
             {{- end }}
             {{- end }}
-
+            {{- with .Values.signer.nats }}
+            - name: NATS_TOPIC
+              value: {{ .topic | quote }}
+            {{- end }}
             - name: CRYPTO_GRPC_ADDR
               value: {{ .Values.signer.engine.clusterAddress | quote }}
 
