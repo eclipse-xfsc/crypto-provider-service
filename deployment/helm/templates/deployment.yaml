@@ -68,9 +68,6 @@ spec:
             {{- with .Values.signer.nats }}
             - name: NATS_HOST
               value: {{ .natsHost | quote }}
-
-            - name: NATS_TOPIC
-              value: {{ .topic | quote }}
             {{- end }}
             {{- end }}
             {{- with .Values.signer.nats }}

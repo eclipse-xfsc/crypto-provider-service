@@ -1,6 +1,6 @@
 {{- if eq (index .Values.podAnnotations "inject.xfsc.io/enabled") "true" }}
 {{- $serviceName := include "app.name" . -}}
-{{- $serviceURL := printf "http://%s.%s.svc.cluster.local:%s" $serviceName .Release.Namespace  .Values.service.port -}}
+{{- $serviceURL := printf "http://%s.%s.svc.cluster.local:%V" $serviceName .Release.Namespace  .Values.service.port -}}
 {{- $serviceSignURL := printf "%s/v1/%s" $serviceURL "sign" -}}
 {{- $serviceSignPresentationURL := printf "%s/v1/presentation/proof" $serviceURL -}}
 {{- $serviceSignVerifyURL := printf "%s/v1/presentation/verify" $serviceURL -}}
@@ -8,9 +8,9 @@
 apiVersion: resources.xfsc.io/v1alpha1
 kind: ResourceProvider
 metadata:
-  name: sdjwt
+  name: signer
 spec:
-  type: sdjwt
+  type: signer
   scope: {{ .Values.resourceProvider.scope | quote }}
   description: {{ .Values.resourceProvider.description | quote }}
 {{- with .Values.resourceProvider.allow.namespaces }}
