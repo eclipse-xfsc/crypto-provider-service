@@ -30,6 +30,15 @@ podAnnotations:
     inject.xfsc.io/enabled: "false"
     inject.xfsc.io/needs: "nats,sdjwt"
 
+resourceProvider:
+  enabled: true
+  name: ""
+  scope: Cluster
+  description: Crypto Service
+  allow:
+    namespaces: []
+
+
 resources:
   requests:
     cpu: 150m
