@@ -1,0 +1,30 @@
+{{- if eq (index .Values.podAnnotations "inject.xfsc.io/enabled") "true" }}
+{{- $serviceName := include "app.name" . -}}
+{{- $serviceURL := printf "http://%s.%s.svc.cluster.local:%v" $serviceName .Release.Namespace  .Values.service.port -}}
+{{- $serviceCredentialURL := printf "%s/v1/%s" $serviceURL "credential" -}}
+{{- $serviceSignURL := printf "%s/v1/%s" $serviceURL "sign" -}}
+{{- $serviceSignPresentationURL := printf "%s/v1/presentation/proof" $serviceURL -}}
+{{- $serviceSignVerifyURL := printf "%s/v1/presentation/verify" $serviceURL -}}
+
+apiVersion: resources.xfsc.io/v1alpha1
+kind: ResourceProvider
+metadata:
+  name: signer
+spec:
+  type: signer
+  scope: {{ .Values.resourceProvider.scope | quote }}
+  description: {{ .Values.resourceProvider.description | quote }}
+{{- with .Values.resourceProvider.allow.namespaces }}
+  allow:
+    namespaces:
+{{ toYaml . | indent 6 }}
+{{- end }}
+  outputs:
+    env:
+      SIGNER_URL: {{ $serviceURL | quote }}    
+      SIGNER_SIGN_URL: {{ $serviceSignURL | quote }} 
+      SIGNER_CREDENTIAL_URL: {{ $serviceCredentialURL | quote }} 
+      SIGNER_TOPIC: {{ .Values.signer.nats.topic }}
+      SIGNER_PRESENTATIONSIGNURL: {{ $serviceSignPresentationURL | quote }} 
+      SIGNER_PRESENTATIONVERIFYURL: {{ $serviceSignVerifyURL | quote }} 
+{{- end }}
