@@ -85,6 +85,7 @@ func main() {
 		supported := make([]string, 0)
 		for _, s := range engine.GetSupportedKeysAlgs() {
 			supported = append(supported, string(s))
+			logger.Info("Supported Alg", zap.String("Alg", string(s)))
 		}
 		// create jsonld document loader which the signer uses to resolve jsonld contexts
 		docLoader := ld.NewCachingDocumentLoader(ld.NewDefaultDocumentLoader(httpClient))
