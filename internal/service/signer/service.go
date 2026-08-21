@@ -156,6 +156,8 @@ func New(cryptoProvider types.CryptoProvider, verifiers []Verifier, supportedKey
 		sdjwtServiceUrl: sdjwtServiceUrl,
 	}
 
+	logger.Info("Supported Keys:", zap.Any("Length", len(supportedKeys)))
+
 	for _, k := range supportedKeys {
 		logger.Info("Supported Keys:", zap.Any("Key", string(k)))
 	}
