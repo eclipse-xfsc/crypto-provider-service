@@ -156,6 +156,10 @@ func New(cryptoProvider types.CryptoProvider, verifiers []Verifier, supportedKey
 		sdjwtServiceUrl: sdjwtServiceUrl,
 	}
 
+	for _, k := range supportedKeys {
+		logger.Info("Supported Keys:", zap.Any("Key", string(k)))
+	}
+
 	wg.Add(1)
 
 	go svc.StartMessaging(wg)
@@ -739,6 +743,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 			Message: "invalid credential subject: non-empty map is expected",
 		}
 	}
+
 	logger.Debug("Start Testing Context")
 	// add additional jsonld contexts only if they are different from the default
 

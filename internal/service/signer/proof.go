@@ -13,6 +13,7 @@ import (
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite/ed25519signature2020"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/suite/jsonwebsignature2020"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/verifiable"
+	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 )
 
@@ -32,6 +33,10 @@ func (s *Service) addCredentialProof(ctx context.Context, issuer string, namespa
 	}
 
 	if !slices.Contains(s.supportedKeys, string(key.KeyType)) {
+		for _, k := range s.supportedKeys {
+			s.logger.Info("Supported Keys", zap.Any("Key", string(k)))
+		}
+
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Unknown,
 			Err:     err,
