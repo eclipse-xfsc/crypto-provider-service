@@ -839,6 +839,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "Error getting key from Crypto Engine.",
+			Err:     err,
 		}
 	}
 
@@ -846,6 +847,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "Key doesnt match to signature type. Must be ed key.",
+			Err:     err,
 		}
 	}
 
@@ -855,6 +857,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "Error transforming jwk.",
+			Err:     err,
 		}
 	}
 	logger.Debug("Start Marshalling Key")
@@ -864,6 +867,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "Error getting keys.",
+			Err:     err,
 		}
 	}
 
@@ -883,6 +887,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "error during revocation appending.",
+			Err:     err,
 		}
 	}
 
@@ -893,6 +898,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "error during terms of use appending.",
+			Err:     err,
 		}
 	}
 
@@ -903,6 +909,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		return nil, &pkgErr.Error{
 			Kind:    pkgErr.Internal,
 			Message: "error during terms of use appending.",
+			Err:     err,
 		}
 	}
 
@@ -921,6 +928,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 			return nil, &pkgErr.Error{
 				Kind:    pkgErr.BadRequest,
 				Message: "invalid credential subject",
+				Err:     err,
 			}
 		}
 
@@ -931,6 +939,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 			return nil, &pkgErr.Error{
 				Kind:    pkgErr.Internal,
 				Message: "error during signing",
+				Err:     err,
 			}
 		}
 
@@ -1891,6 +1900,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 					return didConfigError, &pkgErr.Error{
 						Kind:    pkgErr.Internal,
 						Message: "Error during vc creation",
+						Err:     err,
 					}
 				}
 
@@ -1907,6 +1917,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 					return didConfigError, &pkgErr.Error{
 						Kind:    pkgErr.Internal,
 						Message: "Error during vc creation",
+						Err:     err,
 					}
 				}
 				vcArray = append(vcArray, res)
