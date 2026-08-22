@@ -66,6 +66,8 @@ github.com/eclipse-xfsc/cloud-event-provider v0.1.5 h1:UMDMsPtqyKSh2R6SYkiL602ZW
 github.com/eclipse-xfsc/cloud-event-provider v0.1.5/go.mod h1:jVuAEKC3wIzB1yQci7TvvsYFYFVxmgvpyb/ORsr3Z/4=
 github.com/eclipse-xfsc/crypto-provider-core/v2 v2.2.1 h1:qGYHk6GcUl/KoJyLhAiTXJ03MSiWjsLBZt/euHz3ydg=
 github.com/eclipse-xfsc/crypto-provider-core/v2 v2.2.1/go.mod h1:hGNyvd79fLlKlN10VsturS7zHEGyHTpYLMSvIdL8ZoQ=
+github.com/eclipse-xfsc/crypto-provider-core/v2 v2.3.0 h1:FtYtDREOzD2kkDiV2H4eP3ooKCniA9XbM/drpYfq2vM=
+github.com/eclipse-xfsc/crypto-provider-core/v2 v2.3.0/go.mod h1:hGNyvd79fLlKlN10VsturS7zHEGyHTpYLMSvIdL8ZoQ=
 github.com/eclipse-xfsc/did-core/v2 v2.1.0 h1:56fifKCHqw2WrCxBC3PERRh0Qqv+rd9gg+9QRYADnDU=
 github.com/eclipse-xfsc/did-core/v2 v2.1.0/go.mod h1:JvGH0Au3l53zPJ4ear8OOVuInjeJ/G+olYyLQAj5g/c=
 github.com/eclipse-xfsc/microservice-core-go v1.1.1 h1:G3PEu2N+/I9ije1gnPEUkOr27s8m3+18qtrVJLrBdMw=

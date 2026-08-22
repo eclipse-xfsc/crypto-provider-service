@@ -7,7 +7,7 @@ toolchain go1.24.10
 require (
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/eclipse-xfsc/cloud-event-provider v0.1.5
-	github.com/eclipse-xfsc/crypto-provider-core/v2 v2.2.1
+	github.com/eclipse-xfsc/crypto-provider-core/v2 v2.3.0
 	github.com/eclipse-xfsc/microservice-core-go v1.1.1
 	github.com/eclipse-xfsc/nats-message-library v1.3.1
 	github.com/eclipse-xfsc/ssi-jwt/v2 v2.2.0

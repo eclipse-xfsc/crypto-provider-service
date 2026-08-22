@@ -1,41 +1,285 @@
-# Crypto Core
+# Crypto Provider Core
 
-## Introduction
+The **Crypto Provider Core** is a Go library that abstracts cryptographic providers behind a common interface. It enables applications to communicate with different cryptographic backends without depending on a specific implementation.
 
-This package is a library to abstract crypto providers for go. It uses plugin system. The providers can be loaded during startup by adding the respective module in the local folder.
+The library currently supports remote gRPC-based crypto providers and provides a common API for key management, signing, verification, encryption and decryption.
 
-## Building
+## Features
 
-Here is the [README.md](https://gitlab.eclipse.org/eclipse/xfsc/dev-ops/building/go-plugin/-/blob/main/README.md#building-go-services-with-plugin-based-dependencies) describing the specifics of build process for services, where the dependency is used.
+- Common crypto provider interface
+- gRPC client implementation
+- Provider abstraction
+- Key management
+- Digital signatures
+- Signature verification
+- Encryption / Decryption
+- Standardized provider tests
+- Connection readiness verification
 
-## Usage
-
-Implement/Choose a plugin which implements the commonProvider Interface and put it in the docker container in an folder which is identified by the environment variable CRYPTO_CORE_MODULE_PATH next to your application (e.g. in Docker File)
-
-## Compilation of Modules
-
-Compilation
-
-```
-go build -buildmode=plugin
-```
-
-Plugin
+## Architecture
 
 ```
-func GetCryptoProvider() CryptoProvider {
-    return provider
+                    +----------------------+
+                    |   Your Application   |
+                    +----------+-----------+
+                               |
+                               |
+                      Crypto Provider Core
+                               |
+                     Common Provider Interface
+                               |
+                     gRPC Crypto Provider Client
+                               |
+                               |
+                 +-------------+--------------+
+                 |                            |
+      Vault / OpenBao Plugin         Local Plugin
+                 |                            |
+                 +-------------+--------------+
+                               |
+                         Cryptographic Keys
+```
+
+The core itself performs no cryptographic operations. All operations are delegated to a compatible crypto provider.
+
+---
+
+# Installation
+
+```bash
+go get github.com/eclipse-xfsc/crypto-provider-core/v2
+```
+
+---
+
+# Supported Operations
+
+The `CryptoProvider` interface exposes the following functionality:
+
+- Generate keys
+- Delete keys
+- Rotate keys
+- List keys
+- Retrieve key metadata
+- Sign data
+- Verify signatures
+- Encrypt
+- Decrypt
+- Query supported key algorithms
+- Query supported hash algorithms
+
+Supported key types include:
+
+- Ed25519
+- ECDSA P-256
+- ECDSA P-384
+- ECDSA P-512
+- RSA-2048
+- RSA-3072
+- RSA-4096
+- AES-256-GCM
+
+The exact algorithms depend on the connected provider.  [oai_citation:0‡Go-Pakete](https://pkg.go.dev/github.com/eclipse-xfsc/crypto-provider-core/v2/types?utm_source=chatgpt.com)
+
+---
+
+# Creating a Crypto Provider
+
+A crypto provider is created by establishing a connection to a remote gRPC service.
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+provider, cleanup, err := core.CreateCryptoEngine(
+    ctx,
+    "localhost:50051",
+    insecure.NewCredentials(),
+)
+if err != nil {
+    log.Fatal(err)
 }
-
-var Plugin CryptoProviderModule //export Plugin Symbol, dont change this name:) 
+defer cleanup()
 ```
 
-## Configuration
+After a successful call the returned provider is ready to use.
 
-Following environment variables are required:
+---
 
-CRYPTO_PLUGIN_PATH - path from where to fetch the compiled plugin .so file - default: /etc/plugins
+# Connection Readiness
 
-## Problem Solving
+## Why
 
-The compatibility of the plugins with this provider it's sometimes tricky, because the versions of go, each lib version etc. must match 100% otherwise it will reject it during startup.
+Previous versions created a gRPC client without verifying that the remote crypto provider was actually reachable.
+
+Because gRPC connections are established lazily, applications could start successfully although no crypto provider was available.
+
+This typically resulted in misleading runtime errors such as:
+
+```text
+unsupported key type: ecdsa-p256
+```
+
+while the real problem was an unavailable crypto provider.
+
+---
+
+## New Behavior
+
+`CreateCryptoEngine()` now verifies that the remote provider becomes available before returning.
+
+If the provider cannot be reached before the supplied context expires, an error is returned immediately.
+
+Applications therefore fail fast during startup instead of failing later during cryptographic operations.
+
+---
+
+# Example
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+provider, cleanup, err := core.CreateCryptoEngine(
+    ctx,
+    grpcAddress,
+    insecure.NewCredentials(),
+)
+if err != nil {
+    return err
+}
+defer cleanup()
+
+keys := provider.GetSupportedKeysAlgs()
+```
+
+---
+
+# Kubernetes
+
+The readiness verification is especially useful in Kubernetes environments.
+
+Instead of accepting requests before the crypto provider is available, applications can now:
+
+- fail during startup
+- implement Kubernetes readiness probes
+- avoid runtime failures caused by unavailable crypto providers
+
+Typical startup sequence:
+
+```
+Application
+      │
+      ▼
+CreateCryptoEngine()
+      │
+      ▼
+Wait until gRPC connection is READY
+      │
+      ├── READY
+      │      ▼
+      │   Application starts
+      │
+      └── timeout
+             ▼
+        Startup fails
+```
+
+---
+
+# Standardized Provider Tests
+
+The library contains reusable tests that can be used by provider implementations.
+
+Included tests cover:
+
+- RSA signing
+- Ed25519 signing
+- AES encryption
+- Key management
+
+Provider implementations are encouraged to execute these tests as part of their CI pipeline.  [oai_citation:1‡Go-Pakete](https://pkg.go.dev/github.com/eclipse-xfsc/crypto-provider-core/v2?utm_source=chatgpt.com)
+
+---
+
+# Unit Tests
+
+The connection readiness is covered by dedicated tests.
+
+The tests verify the public API instead of internal helper functions.
+
+Covered scenarios include:
+
+- successful connection to a running gRPC server
+- timeout when no provider is available
+- cancelled context
+
+This guarantees the externally visible behavior of `CreateCryptoEngine()`.
+
+---
+
+# Configuration
+
+No mandatory configuration is required when using `CreateCryptoEngine()` directly.
+
+The convenience function
+
+```go
+CryptoEngine()
+```
+
+uses the following environment variable:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CRYPTO_GRPC_ADDR` | Address of the remote crypto provider | `localhost:50051` |
+
+ [oai_citation:2‡Go-Pakete](https://pkg.go.dev/github.com/eclipse-xfsc/crypto-provider-core/v2?utm_source=chatgpt.com)
+
+---
+
+# Error Handling
+
+Typical initialization errors include:
+
+- invalid gRPC address
+- connection timeout
+- cancelled context
+- unavailable crypto provider
+
+Applications should treat initialization errors as fatal because no cryptographic operations can be executed without a provider.
+
+---
+
+# Migration Guide
+
+Previous versions:
+
+```go
+provider, cleanup := core.CreateCryptoEngine(
+    addr,
+    insecure.NewCredentials(),
+)
+```
+
+Current version:
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+provider, cleanup, err := core.CreateCryptoEngine(
+    ctx,
+    addr,
+    insecure.NewCredentials(),
+)
+if err != nil {
+    return err
+}
+```
+
+---
+
+# License
+
+Apache License 2.0

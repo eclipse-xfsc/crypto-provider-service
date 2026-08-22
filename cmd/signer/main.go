@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -39,6 +40,7 @@ import (
 )
 
 var Version = os.Getenv("VERSION")
+var engineTimeout = os.Getenv("ENGINE_TIMEOUT")
 
 func main() {
 	var wg sync.WaitGroup
@@ -54,7 +56,24 @@ func main() {
 	}
 	defer logger.Sync() //nolint:errcheck
 
-	engine, stop := core.CreateCryptoEngine(cfg.EngineAdress, insecure.NewCredentials())
+	timeout := 10
+
+	if engineTimeout != "" {
+		timeout, err = strconv.Atoi(engineTimeout)
+
+		if err != nil {
+			logger.Error("Error converting timeout from ENV ENGINE_TIMEOUT", zap.Error(err))
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	engine, stop, err := core.CreateCryptoEngine(ctx, cfg.EngineAdress, insecure.NewCredentials())
+
+	if err != nil {
+		logger.Fatal("crypto engine connect failed", zap.Error(err))
+	}
 
 	if engine == nil {
 		logger.Fatal("cannot initialize crypto engine")
