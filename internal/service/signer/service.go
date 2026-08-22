@@ -652,6 +652,7 @@ func (s *Service) appendVCStatus(vc *verifiable.Credential, namespace string, gr
 	url, typ, purpose, index, err := s.getStatusListEntry(namespace, group, origin)
 
 	if err != nil {
+		s.logger.Error("status error", zap.Error(err))
 		return err
 	}
 
@@ -679,6 +680,7 @@ func (s *Service) appendTermsOfUse(vc *verifiable.Credential, namespace string, 
 	}
 
 	if err != nil {
+		s.logger.Error("terms of use error", zap.Error(err))
 		return err
 	}
 
