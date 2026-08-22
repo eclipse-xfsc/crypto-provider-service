@@ -28,7 +28,7 @@ secretRefName: my-secret
 
 podAnnotations:
     inject.xfsc.io/enabled: "false"
-    inject.xfsc.io/needs: "nats,sdjwt"
+    inject.xfsc.io/needs: "nats,sdjwt,statuslist"
 
 resourceProvider:
   enabled: true
@@ -94,6 +94,7 @@ signer:
     enabled: true
     natsHost: nats://nats.nats.svc.cluster.local:4222
     topic: signer-topic
+    status: status.data.create
   sdjwt:
     url: http://sdjwt-service.default.svc.cluster.local:3000
   #policy:

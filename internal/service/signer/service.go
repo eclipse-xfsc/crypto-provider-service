@@ -644,7 +644,7 @@ func (s *Service) getStatusListEntry(namespace, group, origin string) (string, s
 
 		return rep.StatusUrl, rep.Type, rep.Purpose, rep.Index, err
 	}
-	return "", "", "", -1, pkgErr.New("unknown operation")
+	return "", "", "", -1, pkgErr.New("status service nats topic not set")
 }
 
 func (s *Service) appendVCStatus(vc *verifiable.Credential, namespace string, group string, origin string) error {

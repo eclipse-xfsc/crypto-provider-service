@@ -68,6 +68,8 @@ spec:
             {{- with .Values.signer.nats }}
             - name: NATS_HOST
               value: {{ .natsHost | quote }}
+            - name: STATUSLIST_CREATE_TOPIC
+              value: {{ .status | quote }}
             {{- end }}
             {{- end }}
             {{- with .Values.signer.nats }}

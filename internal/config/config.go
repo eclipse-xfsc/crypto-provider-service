@@ -30,7 +30,7 @@ type httpConfig struct {
 type natsConfig struct {
 	Host        string `envconfig:"NATS_HOST" required:"false"`
 	Topic       string `envconfig:"NATS_TOPIC" required:"false"`
-	StatusTopic string `envconfig:"NATS_STATUS_TOPIC" required:"false"`
+	StatusTopic string `envconfig:"STATUSLIST_CREATE_TOPIC" required:"false"`
 }
 
 type metricsConfig struct {
