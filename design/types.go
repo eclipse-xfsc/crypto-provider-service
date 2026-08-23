@@ -60,7 +60,27 @@ var CredentialProofRequest = Type("CredentialProofRequest", func() {
 	Field(8, "disclosureFrame", ArrayOf(String), "Disclosed Attributes", func() {
 		Example([]string{"email"})
 	})
-	Required("namespace", "key", "credential", "group")
+	Field(9, "x-tenantid", String, "tenantid", func() {
+		Example("demotenant")
+	})
+	Field(10, "x-groupid", String, "Tenant Group", func() {
+		Example("group1")
+		Default("")
+	})
+	Field(11, "holder", String, "Holder Binding", func() {
+		Example("urn:3333:ddd")
+	})
+	Field(12, "statuslisttype", String, "Statuslist. Ignored when status=false", func() {
+		Example("urn:3333:ddd")
+		Default("StatusList2021")
+	})
+	Field(13, "x-origin", String, "Origin of call", func() {
+		Example("https://test")
+	})
+	Field(14, "x-did", String, "Did", func() {
+		Example("https://test")
+	})
+	Required("namespace", "key", "credential", "x-tenantid", "x-did", "x-origin")
 })
 
 var PresentationProofRequest = Type("PresentationProofRequest", func() {
@@ -95,7 +115,7 @@ var PresentationProofRequest = Type("PresentationProofRequest", func() {
 	Field(10, "aud", String, "audience", func() {
 		Example("http://...")
 	})
-	Required("namespace", "key", "presentation", "group")
+	Required("namespace", "key", "presentation")
 })
 
 var CreatePresentationRequest = Type("CreatePresentationRequest", func() {
@@ -132,7 +152,7 @@ var CreatePresentationRequest = Type("CreatePresentationRequest", func() {
 		Enum("ed25519signature2020", "jsonwebsignature2020")
 		Default("jsonwebsignature2020")
 	})
-	Required("namespace", "key", "data", "group")
+	Required("namespace", "key", "data")
 })
 
 var CreateCredentialRequest = Type("CreateCredentialRequest", func() {
@@ -183,10 +203,21 @@ var CreateCredentialRequest = Type("CreateCredentialRequest", func() {
 	Field(13, "disclosureFrame", ArrayOf(String), "Disclosed Attributes", func() {
 		Example([]string{"email"})
 	})
-	Field(8, "holder", String, "Holder Binding", func() {
+	Field(14, "x-tenantid", String, "tenantid", func() {
+		Example("demotenant")
+	})
+	Field(15, "x-groupid", String, "Tenant Group", func() {
+		Example("group1")
+		Default("")
+	})
+	Field(16, "holder", String, "Holder Binding", func() {
 		Example("urn:3333:ddd")
 	})
-	Required("namespace", "key", "credentialSubject", "group", "x-origin")
+	Field(17, "statuslisttype", String, "Statuslist. Ignored when status=false", func() {
+		Example("urn:3333:ddd")
+		Default("StatusList2021")
+	})
+	Required("namespace", "key", "credentialSubject", "x-origin", "x-tenantid")
 })
 
 var VerifyCredentialRequest = Type("VerifyCredentialRequest", func() {
@@ -201,7 +232,13 @@ var VerifyCredentialRequest = Type("VerifyCredentialRequest", func() {
 	Field(5, "disclosureFrame", ArrayOf(String), "Disclosed Attributes", func() {
 		Example([]string{"email"})
 	})
-	Required("credential")
+	Field(6, "x-tenantid", String, "tenantid", func() {
+		Example("demotenant")
+	})
+	Field(7, "x-groupid", String, "Group", func() {
+		Example("group1")
+	})
+	Required("credential", "x-namespace")
 })
 
 var VerifyPresentationRequest = Type("VerifyPresentationRequest", func() {
@@ -433,5 +470,11 @@ var didConfigurationRequest = Type("DidConfiguration", func() {
 		Enum("ed25519signature2020", "jsonwebsignature2020")
 		Default("jsonwebsignature2020")
 	})
-	Required("x-namespace", "x-origin")
+	Field(7, "x-tenantid", String, "tenantid", func() {
+		Example("demotenant")
+	})
+	Field(8, "x-groupid", String, "Tenant Group", func() {
+		Example("group1")
+	})
+	Required("x-namespace", "x-origin", "x-tenantid")
 })

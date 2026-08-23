@@ -2,6 +2,7 @@ package expr
 
 import (
 	"fmt"
+	"slices"
 
 	"goa.design/goa/v3/eval"
 )
@@ -151,12 +152,14 @@ func (e *GRPCEndpointExpr) Validate() error {
 		verr.Add(e, "Endpoint name cannot be empty")
 	}
 
-	// error if payload, result, and error type define attribute of Any type
-	// which is unsupported.
-	verr.Merge(e.hasAnyType(e.MethodExpr.Payload, "Payload"))
-	verr.Merge(e.hasAnyType(e.MethodExpr.Result, "Result"))
+	seenUnions := make(map[*Union]struct{})
+	seenAttrs := make(map[*AttributeExpr]struct{})
+	validateGRPCUnionShapes(e.MethodExpr.Payload, e.MethodExpr, verr, seenUnions, seenAttrs)
+	validateGRPCUnionShapes(e.MethodExpr.StreamingPayload, e.MethodExpr, verr, seenUnions, seenAttrs)
+	validateGRPCUnionShapes(e.MethodExpr.Result, e.MethodExpr, verr, seenUnions, seenAttrs)
+	validateGRPCUnionShapes(e.MethodExpr.StreamingResult, e.MethodExpr, verr, seenUnions, seenAttrs)
 	for _, er := range e.MethodExpr.Errors {
-		verr.Merge(e.hasAnyType(er.AttributeExpr, fmt.Sprintf("Error %q", er.Name)))
+		validateGRPCUnionShapes(er.AttributeExpr, e.MethodExpr, verr, seenUnions, seenAttrs)
 	}
 
 	var hasMessage, hasMetadata bool
@@ -197,13 +200,7 @@ func (e *GRPCEndpointExpr) Validate() error {
 				// security attributes
 				var found bool
 				for _, nat := range *pobj {
-					found = false
-					for _, n := range secAttrs {
-						if n == nat.Name {
-							found = true
-							break
-						}
-					}
+					found = slices.Contains(secAttrs, nat.Name)
 					if !found {
 						msgFields.Set(nat.Name, nat.Attribute)
 					}
@@ -229,6 +226,51 @@ func (e *GRPCEndpointExpr) Validate() error {
 	return verr
 }
 
+func validateGRPCUnionShapes(att *AttributeExpr, parent eval.Expression, verr *eval.ValidationErrors, seenUnions map[*Union]struct{}, seenAttrs map[*AttributeExpr]struct{}) {
+	if att == nil || att.Type == nil {
+		return
+	}
+	if _, ok := seenAttrs[att]; ok {
+		return
+	}
+	seenAttrs[att] = struct{}{}
+
+	if u := AsUnion(att.Type); u != nil {
+		if _, ok := seenUnions[u]; ok {
+			return
+		}
+		seenUnions[u] = struct{}{}
+		for _, ut := range u.Values {
+			switch {
+			case IsArray(ut.Attribute.Type):
+				verr.Add(parent, "union type %s has array elements, not supported by gRPC", u.Name())
+			case IsMap(ut.Attribute.Type):
+				verr.Add(parent, "union type %s has map elements, not supported by gRPC", u.Name())
+			}
+			validateGRPCUnionShapes(ut.Attribute, parent, verr, seenUnions, seenAttrs)
+		}
+		return
+	}
+
+	if o := AsObject(att.Type); o != nil {
+		for _, nat := range *o {
+			validateGRPCUnionShapes(nat.Attribute, parent, verr, seenUnions, seenAttrs)
+		}
+		return
+	}
+
+	if ar := AsArray(att.Type); ar != nil {
+		validateGRPCUnionShapes(ar.ElemType, parent, verr, seenUnions, seenAttrs)
+		return
+	}
+
+	if m := AsMap(att.Type); m != nil {
+		validateGRPCUnionShapes(m.KeyType, parent, verr, seenUnions, seenAttrs)
+		validateGRPCUnionShapes(m.ElemType, parent, verr, seenUnions, seenAttrs)
+		return
+	}
+}
+
 // Finalize ensures the request and response attributes are initialized.
 func (e *GRPCEndpointExpr) Finalize() {
 	if pobj := AsObject(e.MethodExpr.Payload.Type); pobj != nil {
@@ -247,9 +289,10 @@ func (e *GRPCEndpointExpr) Finalize() {
 
 		// Initialize any security attributes in request metadata unless it is
 		// specified explicitly in the request message via the DSL.
-		if reqLen := len(e.MethodExpr.Requirements); reqLen > 0 {
+		requirements := EffectiveSecurityRequirements(e.MethodExpr.Requirements)
+		if reqLen := len(requirements); reqLen > 0 {
 			e.Requirements = make([]*SecurityExpr, 0, reqLen)
-			for _, req := range e.MethodExpr.Requirements {
+			for _, req := range requirements {
 				dupReq := DupRequirement(req)
 				for _, sch := range dupReq.Schemes {
 					var field string
@@ -270,6 +313,8 @@ func (e *GRPCEndpointExpr) Finalize() {
 						continue
 					case APIKeyKind:
 						field = TaggedAttribute(e.MethodExpr.Payload, "security:apikey:"+sch.SchemeName)
+					case BearerKind:
+						field = TaggedAttribute(e.MethodExpr.Payload, "security:bearer")
 					case JWTKind:
 						field = TaggedAttribute(e.MethodExpr.Payload, "security:token")
 					case OAuth2Kind:
@@ -282,14 +327,6 @@ func (e *GRPCEndpointExpr) Finalize() {
 					}
 				}
 				e.Requirements = append(e.Requirements, dupReq)
-			}
-		}
-
-		// If endpoint defines streaming payload, then add the attributes in method
-		// payload type to request metadata.
-		if e.MethodExpr.StreamingPayload.Type != Empty {
-			for _, nat := range *pobj {
-				addToMetadata(nat.Name, "")
 			}
 		}
 
@@ -345,14 +382,7 @@ func (e *GRPCEndpointExpr) Finalize() {
 		}
 	} else {
 		// method payload is not an object type.
-		if e.MethodExpr.StreamingPayload.Type != Empty {
-			// endpoint defines streaming payload. So add the method payload to
-			// request metadata under "goa-payload" field
-			e.Metadata.Type.(*Object).Set("goa_payload", e.MethodExpr.Payload)
-			e.Metadata.Validation.AddRequired("goa_payload")
-		} else {
-			initAttrFromDesign(e.Request, e.MethodExpr.Payload)
-		}
+		initAttrFromDesign(e.Request, e.MethodExpr.Payload)
 	}
 
 	// Finalize streaming payload type if defined
@@ -514,6 +544,10 @@ func getSecurityAttributes(m *MethodExpr) []string {
 				if field := TaggedAttribute(m.Payload, "security:apikey:"+sch.SchemeName); field != "" {
 					secAttrs = append(secAttrs, field)
 				}
+			case BearerKind:
+				if field := TaggedAttribute(m.Payload, "security:bearer"); field != "" {
+					secAttrs = append(secAttrs, field)
+				}
 			case JWTKind:
 				if field := TaggedAttribute(m.Payload, "security:token"); field != "" {
 					secAttrs = append(secAttrs, field)
@@ -526,62 +560,4 @@ func getSecurityAttributes(m *MethodExpr) []string {
 		}
 	}
 	return secAttrs
-}
-
-// hasAnyType recurses through the given attribute and returns validation error
-// if any attribute is of Any type.
-func (e *GRPCEndpointExpr) hasAnyType(a *AttributeExpr, typ string, seen ...map[string]struct{}) *eval.ValidationErrors {
-	verr := new(eval.ValidationErrors)
-	if a.Type == Any {
-		verr.Add(e, "%s type is Any type which is not supported in gRPC", typ)
-	}
-	switch actual := a.Type.(type) {
-	case UserType:
-		var s map[string]struct{}
-		if len(seen) > 0 {
-			s = seen[0]
-		} else {
-			s = make(map[string]struct{})
-			seen = append(seen, s)
-		}
-		if _, ok := s[actual.ID()]; ok {
-			return verr
-		}
-		s[actual.ID()] = struct{}{}
-		verr.Merge(e.hasAnyType(actual.Attribute(), typ, seen...))
-	case *Array:
-		if IsPrimitive(actual.ElemType.Type) {
-			if actual.ElemType.Type == Any {
-				verr.Add(e, "Array element type is Any type which is not supported in gRPC")
-			}
-			return verr
-		}
-		verr.Merge(e.hasAnyType(actual.ElemType, typ, seen...))
-	case *Map:
-		if IsPrimitive(actual.KeyType.Type) {
-			if actual.KeyType.Type == Any {
-				verr.Add(e, "Map key type is Any type which is not supported in gRPC")
-			}
-		} else {
-			verr.Merge(e.hasAnyType(actual.KeyType, typ, seen...))
-		}
-		if IsPrimitive(actual.ElemType.Type) {
-			if actual.ElemType.Type == Any {
-				verr.Add(e, "Map element type is Any type which is not supported in gRPC")
-			}
-			return verr
-		}
-		verr.Merge(e.hasAnyType(actual.ElemType, typ, seen...))
-	case *Object:
-		for _, nat := range *actual {
-			if IsPrimitive(nat.Attribute.Type) {
-				if nat.Attribute.Type == Any {
-					verr.Add(e, "Attribute %q is Any type which is not supported in gRPC", nat.Name)
-				}
-				continue
-			}
-			verr.Merge(e.hasAnyType(nat.Attribute, typ, seen...))
-		}
-	}
-	return verr
 }

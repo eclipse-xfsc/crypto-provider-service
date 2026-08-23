@@ -9,7 +9,7 @@ STORED_GOFLAGS=$(go env GOFLAGS)
 go env -w GOFLAGS=-mod=mod
 
 # execute goa code generation
-goa gen github.com/eclipse-xfsc/crypto-provider-service/design
+goa gen github.com/eclipse-xfsc/crypto-provider-service/v2/design
 
 # restore the value of GOFLAGS
 go env -w GOFLAGS=$STORED_GOFLAGS

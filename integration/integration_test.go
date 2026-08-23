@@ -3,12 +3,14 @@
 package integration
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	core "github.com/eclipse-xfsc/crypto-provider-core/v2"
 	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
@@ -33,14 +35,19 @@ var (
 )
 
 func initTests(t *testing.T) {
-
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	var cfg config.Config
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatalf("cannot load configuration: %v", err)
 	}
 	var engine types.CryptoProvider
 
-	engine, stop := core.CreateCryptoEngine(cfg.EngineAdress, insecure.NewCredentials())
+	engine, stop, err := core.CreateCryptoEngine(ctx, cfg.EngineAdress, insecure.NewCredentials())
+
+	if err != nil {
+		log.Fatalf("error connecting crypto engine", err)
+	}
 
 	defer stop()
 

@@ -9,16 +9,21 @@ import (
 )
 
 // UnionToObject returns an object adequate to serialize the given union type in
-// HTTP requests and responses. The object has two fields: "Type" and "Value".
-// The "Type" field is a string that indicates the name of the union type. The
-// "Value" field is a string that contains the JSON encoded union value.
+// HTTP requests and responses. The object has two fields for the discriminator
+// and value, with names determined by the union's Meta tags (defaulting to
+// "Type" and "Value"). The discriminator field indicates the name of the union
+// type, and the value field contains the JSON encoded union value.
 func UnionToObject(att *AttributeExpr) *AttributeExpr {
 	example := att.Example(Root.API.ExampleGenerator)
 	js, err := json.Marshal(example)
 	if err != nil {
 		js = []byte("null")
 	}
-	values := AsUnion(att.Type).Values
+	union := AsUnion(att.Type)
+	values := union.Values
+	typeKey := union.GetTypeKey()
+	valueKey := union.GetValueKey()
+
 	names := make([]any, len(values))
 	vals := make([]string, len(values))
 	bases := make([]DataType, len(values))
@@ -28,54 +33,55 @@ func UnionToObject(att *AttributeExpr) *AttributeExpr {
 		bases[i] = nat.Attribute.Type
 	}
 	obj := Object([]*NamedAttributeExpr{
-		{Name: "Type", Attribute: &AttributeExpr{
+		{Name: typeKey, Attribute: &AttributeExpr{
 			Type:        String,
 			Description: "Union type name, one of:\n" + strings.Join(vals, "\n"),
 			Validation:  &ValidationExpr{Values: names},
 			Meta: MetaExpr{
-				"struct:tag:form": {"Type"},
-				"struct:tag:json": {"Type"},
-				"struct:tag:xml":  {"Type"},
+				"struct:tag:form": {typeKey},
+				"struct:tag:json": {typeKey},
+				"struct:tag:xml":  {typeKey},
 			},
 		}},
-		{Name: "Value", Attribute: &AttributeExpr{
+		{Name: valueKey, Attribute: &AttributeExpr{
 			Type:         String,
 			Description:  "JSON encoded union value",
 			UserExamples: []*ExampleExpr{{Value: string(js)}},
 			Bases:        bases, // For OpenAPI generation
 			Meta: MetaExpr{
-				"struct:tag:form": {"Value"},
-				"struct:tag:json": {"Value"},
-				"struct:tag:xml":  {"Value"},
+				"struct:tag:form": {valueKey},
+				"struct:tag:json": {valueKey},
+				"struct:tag:xml":  {valueKey},
 			},
 		}},
 	})
 	return &AttributeExpr{
 		Type:        &obj,
 		Description: att.Description,
-		Validation:  &ValidationExpr{Required: []string{"Type", "Value"}},
+		Validation:  &ValidationExpr{Required: []string{typeKey, valueKey}},
 	}
 }
 
 // defaultRequestHeaderAttributes returns a map keyed by the names of the
 // payload attributes that should come from the request HTTP headers by default.
 // This includes mapping done for certain authorization schemes (basic auth,
-// JWT, OAuth). The corresponding boolean value indicates whether the value maps
-// directly to a payload attribute (true) or whether the value is used to
-// compute the payload attribute (false). The only case where the value is
+// Bearer, JWT, OAuth). The corresponding boolean value indicates whether the
+// value maps directly to a payload attribute (true) or whether the value is used
+// to compute the payload attribute (false). The only case where the value is
 // computed by the generated code at this point is for basic authorization (the
 // single "Authorization" header is used to compute both the username and
 // password attributes).
 func defaultRequestHeaderAttributes(e *HTTPEndpointExpr) map[string]bool {
 	var requirements []*SecurityExpr
-	if e.MethodExpr.Requirements != nil {
+	switch {
+	case HasNoSecurity(e.MethodExpr.Requirements):
+		return nil
+	case len(e.MethodExpr.Requirements) > 0:
 		requirements = e.MethodExpr.Requirements
-	}
-	if e.Service.ServiceExpr.Requirements != nil {
-		requirements = append(requirements, e.Service.ServiceExpr.Requirements...)
-	}
-	if Root.API.Requirements != nil {
-		requirements = append(requirements, Root.API.Requirements...)
+	case len(e.Service.ServiceExpr.Requirements) > 0:
+		requirements = e.Service.ServiceExpr.Requirements
+	case len(Root.API.Requirements) > 0:
+		requirements = Root.API.Requirements
 	}
 	if len(requirements) == 0 {
 		return nil
@@ -101,6 +107,8 @@ func defaultRequestHeaderAttributes(e *HTTPEndpointExpr) map[string]bool {
 				continue
 			case APIKeyKind:
 				field = TaggedAttribute(e.MethodExpr.Payload, "security:apikey:"+sch.SchemeName)
+			case BearerKind:
+				field = TaggedAttribute(e.MethodExpr.Payload, "security:bearer")
 			case JWTKind:
 				field = TaggedAttribute(e.MethodExpr.Payload, "security:token")
 			case OAuth2Kind:
@@ -142,14 +150,7 @@ func httpRequestBody(a *HTTPEndpointExpr) *AttributeExpr {
 		bodyOnly = headers.IsEmpty() && params.IsEmpty() && cookies.IsEmpty() && a.MapQueryParams == nil
 	)
 
-	// 1. If Payload is a union type, then the request body is a struct with
-	// two fields: the union type and its value.
-	if IsUnion(payload.Type) {
-		attr := UnionToObject(payload)
-		renameType(attr, name, suffix)
-		return attr
-	}
-
+	// 1. If Payload is not an object then check whether there are
 	// 2. If Payload is not an object then check whether there are
 	// params, cookies or headers defined and if so return empty type
 	// (payload encoded in request params or headers) otherwise return
@@ -195,12 +196,12 @@ func httpRequestBody(a *HTTPEndpointExpr) *AttributeExpr {
 	if t, ok := payload.Type.(UserType); ok {
 		// Remember openapi typename for example to generate friendly OpenAPI specs.
 		if m, ok := t.Attribute().Meta["openapi:typename"]; ok {
-			ut.AttributeExpr.AddMeta("openapi:typename", m...)
+			ut.AddMeta("openapi:typename", m...)
 		}
 
 		// Remember additionalProperties.
 		if m, ok := t.Attribute().Meta["openapi:additionalProperties"]; ok {
-			ut.AttributeExpr.AddMeta("openapi:additionalProperties", m...)
+			ut.AddMeta("openapi:additionalProperties", m...)
 		}
 	}
 
@@ -218,21 +219,18 @@ func httpStreamingBody(e *HTTPEndpointExpr) *AttributeExpr {
 		return nil
 	}
 	att := e.MethodExpr.StreamingPayload
-	if IsUnion(att.Type) {
-		attr := UnionToObject(att)
-		renameType(attr, e.Name(), "StreamingBody")
-		return attr
-	}
 	if !IsObject(att.Type) {
 		return DupAtt(att)
 	}
 	const suffix = "StreamingBody"
+	dupped := DupAtt(att)
+	RemovePkgPath(dupped)
+	appendSuffix(dupped.Type, suffix)
 	ut := &UserTypeExpr{
-		AttributeExpr: DupAtt(att),
+		AttributeExpr: dupped,
 		TypeName:      concat(e.Name(), "Streaming", "Body"),
 		UID:           e.Service.Name() + "#" + e.Name() + "StreamingBody",
 	}
-	appendSuffix(ut.Attribute().Type, suffix)
 
 	return &AttributeExpr{
 		Type:         ut,
@@ -262,7 +260,7 @@ func httpResponseBody(a *HTTPEndpointExpr, resp *HTTPResponseExpr) *AttributeExp
 // parameters.
 func httpErrorResponseBody(e *HTTPEndpointExpr, v *HTTPErrorExpr) *AttributeExpr {
 	name := e.Name() + "_" + v.ErrorExpr.Name
-	return buildHTTPResponseBody(name, v.ErrorExpr.AttributeExpr, v.Response, e.Service)
+	return buildHTTPResponseBody(name, v.AttributeExpr, v.Response, e.Service)
 }
 
 func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseExpr, svc *HTTPServiceExpr) *AttributeExpr {
@@ -277,11 +275,6 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 	// name to handle the case where the same type is used by multiple
 	// methods with potentially different result types.
 	if resp.Body != nil {
-		if IsUnion(resp.Body.Type) {
-			attr := UnionToObject(resp.Body)
-			renameType(attr, name, suffix)
-			return attr
-		}
 		if !IsObject(resp.Body.Type) {
 			return resp.Body
 		}
@@ -299,14 +292,7 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 		return att
 	}
 
-	// 2. Map unions to objects.
-	if IsUnion(attr.Type) {
-		attr = UnionToObject(attr)
-		renameType(attr, name, suffix)
-		return attr
-	}
-
-	// 3. If attribute is not an object then check whether there are headers or
+	// 2. If attribute is not an object then check whether there are headers or
 	// cookies defined and if so return empty type (attr encoded in response
 	// header or cookie) otherwise return renamed attr type (attr encoded in
 	// response body).
@@ -327,12 +313,12 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 	removeAttributes(body, resp.Headers)
 	removeAttributes(body, resp.Cookies)
 
-	// 5. Return empty type if no attribute left
+	// 4. Return empty type if no attribute left
 	if len(*AsObject(body.Type)) == 0 {
 		return &AttributeExpr{Type: Empty}
 	}
 
-	// 6. Build computed user type
+	// 5. Build computed user type
 	userType := &UserTypeExpr{
 		AttributeExpr: body.Attribute(),
 		TypeName:      name,
@@ -342,14 +328,14 @@ func buildHTTPResponseBody(name string, attr *AttributeExpr, resp *HTTPResponseE
 	if t, ok := attr.Type.(UserType); ok {
 		// Remember original type name and openapi typename for example
 		// to generate friendly OpenAPI specs.
-		userType.AttributeExpr.AddMeta("name:original", t.Name())
+		userType.AddMeta("name:original", t.Name())
 		if m, ok := t.Attribute().Meta["openapi:typename"]; ok {
-			userType.AttributeExpr.AddMeta("openapi:typename", m...)
+			userType.AddMeta("openapi:typename", m...)
 		}
 
 		// Remember additionalProperties.
 		if m, ok := t.Attribute().Meta["openapi:additionalProperties"]; ok {
-			userType.AttributeExpr.AddMeta("openapi:additionalProperties", m...)
+			userType.AddMeta("openapi:additionalProperties", m...)
 		}
 	}
 
