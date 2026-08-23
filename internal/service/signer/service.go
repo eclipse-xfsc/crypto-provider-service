@@ -643,7 +643,7 @@ func (s *Service) getStatusListEntry(tenantid, groupid, namespace, group, origin
 		return "", "", "", -1, fmt.Errorf("failed to marshal status list request: %w", err)
 	}
 
-	event, err := cloudeventprovider.NewEvent("signer-service", s.natsStatusTopic, b)
+	event, err := cloudeventprovider.NewEvent("signer-service", commonMessaging.TopicStatusData, b)
 	if err != nil {
 		return "", "", "", -1, fmt.Errorf("failed to create status list CloudEvent: %w", err)
 	}
@@ -1107,7 +1107,7 @@ func (s *Service) statusListCheckup(tenantid, namespace string, group, groupid *
 		return false, err
 	}
 
-	e, err := cloudeventprovider.NewEvent("signer-service", "verify", b)
+	e, err := cloudeventprovider.NewEvent("signer-service", commonMessaging.TopicStatusDataVerify, b)
 
 	if err != nil {
 		return false, err
