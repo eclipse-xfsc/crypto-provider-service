@@ -45,6 +45,11 @@ type (
 		Stream StreamKind
 		// StreamingPayload is the payload sent across the stream.
 		StreamingPayload *AttributeExpr
+		// StreamingResult is the result sent across the stream when using SSE.
+		// When both Result and StreamingResult are defined with different types,
+		// the method supports content negotiation between standard HTTP responses
+		// (using Result) and SSE streams (using StreamingResult).
+		StreamingResult *AttributeExpr
 	}
 )
 
@@ -97,8 +102,22 @@ func (m *MethodExpr) Prepare() {
 	if m.StreamingPayload == nil {
 		m.StreamingPayload = &AttributeExpr{Type: Empty}
 	}
+
+	// Backward compatibility: if StreamingResult is set but Result is not,
+	// copy StreamingResult to Result so existing code generation continues to work
+	if m.StreamingResult != nil && m.Result == nil {
+		m.Result = m.StreamingResult
+	}
+
+	// Initialize Result to Empty if still nil
 	if m.Result == nil {
 		m.Result = &AttributeExpr{Type: Empty}
+	}
+
+	// If this is a streaming method without explicit StreamingResult,
+	// use Result for backward compatibility
+	if m.StreamingResult == nil && m.Stream != NoStreamKind {
+		m.StreamingResult = m.Result
 	}
 }
 
@@ -109,6 +128,9 @@ func (m *MethodExpr) Validate() error {
 	verr.Merge(m.Payload.Validate("payload", m))
 	verr.Merge(m.StreamingPayload.Validate("streaming_payload", m))
 	verr.Merge(m.Result.Validate("result", m))
+	if m.StreamingResult != nil && m.StreamingResult != m.Result {
+		verr.Merge(m.StreamingResult.Validate("streaming_result", m))
+	}
 	verr.Merge(m.validateRequirements())
 	verr.Merge(m.validateErrors())
 	verr.Merge(m.validateInterceptors())
@@ -119,16 +141,18 @@ func (m *MethodExpr) Validate() error {
 func (m *MethodExpr) validateRequirements() *eval.ValidationErrors {
 	verr := new(eval.ValidationErrors)
 	var requirements []*SecurityExpr
-	if len(m.Requirements) > 0 {
+	switch {
+	case len(m.Requirements) > 0:
 		requirements = m.Requirements
-	} else if len(m.Service.Requirements) > 0 {
+	case len(m.Service.Requirements) > 0:
 		requirements = m.Service.Requirements
-	} else if len(Root.API.Requirements) > 0 {
+	case len(Root.API.Requirements) > 0:
 		requirements = Root.API.Requirements
 	}
 	var (
 		hasBasicAuth bool
 		hasAPIKey    bool
+		hasBearer    bool
 		hasJWT       bool
 		hasOAuth     bool
 	)
@@ -149,6 +173,11 @@ func (m *MethodExpr) validateRequirements() *eval.ValidationErrors {
 				if !hasTag(m.Payload, "security:apikey:"+s.SchemeName) {
 					verr.Add(m, "payload of method %q of service %q does not define an API key attribute, use APIKey to define one", m.Name, m.Service.Name)
 				}
+			case BearerKind:
+				hasBearer = true
+				if !hasTag(m.Payload, "security:bearer") {
+					verr.Add(m, "payload of method %q of service %q does not define a Bearer token attribute, use BearerToken to define one", m.Name, m.Service.Name)
+				}
 			case JWTKind:
 				hasJWT = true
 				if !hasTag(m.Payload, "security:token") {
@@ -164,7 +193,7 @@ func (m *MethodExpr) validateRequirements() *eval.ValidationErrors {
 		for _, scope := range r.Scopes {
 			found := false
 			for _, s := range r.Schemes {
-				if s.Kind == BasicAuthKind || s.Kind == APIKeyKind || s.Kind == OAuth2Kind || s.Kind == JWTKind {
+				if s.Kind == BasicAuthKind || s.Kind == APIKeyKind || s.Kind == BearerKind || s.Kind == OAuth2Kind || s.Kind == JWTKind {
 					for _, se := range s.Scopes {
 						if se.Name == scope {
 							found = true
@@ -189,6 +218,11 @@ func (m *MethodExpr) validateRequirements() *eval.ValidationErrors {
 	if !hasAPIKey {
 		if hasTagPrefix(m.Payload, "security:apikey") {
 			verr.Add(m, "payload of method %q of service %q defines an API key attribute, but no APIKey security scheme exist", m.Name, m.Service.Name)
+		}
+	}
+	if !hasBearer {
+		if hasTag(m.Payload, "security:bearer") {
+			verr.Add(m, "payload of method %q of service %q defines a Bearer token attribute, but no Bearer security scheme exist", m.Name, m.Service.Name)
 		}
 	}
 	if !hasJWT {
@@ -227,7 +261,7 @@ func (m *MethodExpr) validateErrors() *eval.ValidationErrors {
 					return nil
 				})
 				if !found {
-					verr.Add(e, "type %q is used to define multiple errors and must identify the attribute containing the error name with ErrorName", e.AttributeExpr.Type.Name())
+					verr.Add(e, "type %q is used to define multiple errors and must identify the attribute containing the error name with ErrorName", e.Type.Name())
 					break
 				}
 			}
@@ -332,6 +366,16 @@ func (m *MethodExpr) Finalize() {
 	} else {
 		m.StreamingPayload.Finalize()
 	}
+
+	// Handle StreamingResult finalization
+	if m.StreamingResult != nil {
+		m.StreamingResult.Finalize()
+		if rt, ok := m.StreamingResult.Type.(*ResultTypeExpr); ok {
+			rt.Finalize()
+		}
+	}
+
+	// Handle Result finalization (may be same as StreamingResult for backward compat)
 	if m.Result == nil {
 		m.Result = &AttributeExpr{Type: Empty}
 	} else {
@@ -357,19 +401,8 @@ func (m *MethodExpr) Finalize() {
 	}
 
 	// Inherit security requirements
-	noreq := false
-loop:
-	for _, r := range m.Requirements {
-		// Handle special case of no security
-		for _, s := range r.Schemes {
-			if s.Kind == NoKind {
-				noreq = true
-				break loop
-			}
-		}
-	}
-	if noreq {
-		m.Requirements = nil
+	if HasNoSecurity(m.Requirements) {
+		m.Requirements = []*SecurityExpr{{Schemes: []*SchemeExpr{{Kind: NoKind}}}}
 		return
 	}
 	if len(m.Requirements) == 0 {
@@ -396,27 +429,18 @@ func (m *MethodExpr) IsResultStreaming() bool {
 	return m.Stream == ServerStreamKind || m.Stream == BidirectionalStreamKind
 }
 
+// HasMixedResults returns true if the method has both Result and StreamingResult
+// defined with different types, indicating support for content negotiation.
+func (m *MethodExpr) HasMixedResults() bool {
+	return m.Result != nil && m.StreamingResult != nil && m.Result != m.StreamingResult
+}
+
 // helper function that duplicates just enough of a security expression so that
 // its scheme names can be overridden without affecting the original.
 func copyReqs(reqs []*SecurityExpr) []*SecurityExpr {
 	reqs2 := make([]*SecurityExpr, len(reqs))
 	for i, req := range reqs {
-		req2 := &SecurityExpr{Scopes: req.Scopes}
-		schs := make([]*SchemeExpr, len(req.Schemes))
-		for j, sch := range req.Schemes {
-			schs[j] = &SchemeExpr{
-				Kind:        sch.Kind,
-				SchemeName:  sch.SchemeName,
-				Description: sch.Description,
-				In:          sch.In,
-				Name:        sch.Name,
-				Scopes:      sch.Scopes,
-				Flows:       sch.Flows,
-				Meta:        sch.Meta,
-			}
-		}
-		req2.Schemes = schs
-		reqs2[i] = req2
+		reqs2[i] = DupRequirement(req)
 	}
 	return reqs2
 }

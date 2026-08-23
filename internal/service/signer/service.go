@@ -409,7 +409,7 @@ func (s *Service) JwkPublicKey(ctx context.Context, req *signer.JwkPublicKeyRequ
 	return pubKey, nil
 }
 
-func (s *Service) addProof(ctx context.Context, credential any, format string, namespace string, group string, key string, nonce *string, logger *zap.Logger, sigType string, disclosureFrame []string) (interface{}, error) {
+func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupId, format, namespace, group, key, origin, did string, nonce *string, logger *zap.Logger, sigType string, disclosureFrame []string) (interface{}, error) {
 	vcBytes, err := json.Marshal(credential)
 	if err != nil {
 		logger.Error("credential is not valid json", zap.Error(err))
@@ -427,7 +427,7 @@ func (s *Service) addProof(ctx context.Context, credential any, format string, n
 	}
 
 	if format == "vc+sd-jwt" {
-		return s.createSdJwt(vc, namespace, group, key, sigType, disclosureFrame, "", nil, nil)
+		return s.createSdJwt(vc, tenantId, groupId, namespace, group, key, sigType, disclosureFrame, origin, nil, "", did, nil)
 	}
 
 	if format == "ldp_vc" {
@@ -467,7 +467,7 @@ func (s *Service) CredentialProof(ctx context.Context, req *signer.CredentialPro
 		zap.String("key", req.Key),
 		zap.String("group", req.Group),
 	)
-	return s.addProof(ctx, req.Credential, req.Format, req.Namespace, req.Group, req.Key, req.Nonce, logger, req.SignatureType, req.DisclosureFrame)
+	return s.addProof(ctx, req.Credential, req.XTenantid, req.XGroupid, req.Format, req.Namespace, req.Group, req.Key, req.XOrigin, req.XDid, req.Nonce, logger, req.SignatureType, req.DisclosureFrame)
 }
 
 func (s *Service) convertIssuer(ctx context.Context, key, namespace, group string, iss *string) (string, error) {
@@ -603,53 +603,76 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 	return nil, pkgErr.New("unsupported format")
 }
 
-func (s *Service) getStatusListEntry(namespace, group, origin string) (string, string, string, int, error) {
-	if s.natsStatusTopic != "" {
+func (s *Service) getStatusListEntry(tenantid, groupid, namespace, group, origin, key, listtype, did string, expiration time.Time) (string, string, string, int, error) {
+	if s.natsStatusTopic == "" {
+		return "", "", "", -1, pkgErr.New("status service nats topic not set")
+	}
 
-		client, _ := cloudeventprovider.New(
-			cloudeventprovider.Config{Protocol: cloudeventprovider.ProtocolTypeNats, Settings: cloudeventprovider.NatsConfig{
+	client, err := cloudeventprovider.New(
+		cloudeventprovider.Config{
+			Protocol: cloudeventprovider.ProtocolTypeNats,
+			Settings: cloudeventprovider.NatsConfig{
 				Url:          s.natsHost,
 				TimeoutInSec: time.Minute,
-			}},
-			cloudeventprovider.ConnectionTypeReq,
-			s.natsStatusTopic,
-		)
-
-		var req = commonMessaging.CreateStatusListEntryRequest{
-			Request: common.Request{
-				TenantId:  namespace,
-				RequestId: uuid.NewString(),
-				GroupId:   group,
 			},
-			Origin: origin,
-		}
-
-		b, _ := json.Marshal(req)
-
-		testEvent, _ := cloudeventprovider.NewEvent("signer-service", "create", b)
-
-		ev, _ := client.RequestCtx(context.Background(), testEvent)
-
-		var rep commonMessaging.CreateStatusListEntryReply
-
-		err := json.Unmarshal(ev.Data(), &rep)
-
-		if err != nil {
-			return "", "", "", -1, err
-		}
-
-		if rep.Error != nil {
-			return "", "", "", -1, pkgErr.New("error on status list creation")
-		}
-
-		return rep.StatusUrl, rep.Type, rep.Purpose, rep.Index, err
+		},
+		cloudeventprovider.ConnectionTypeReq,
+		s.natsStatusTopic,
+	)
+	if err != nil {
+		return "", "", "", -1, fmt.Errorf("failed to create status list NATS client: %w", err)
 	}
-	return "", "", "", -1, pkgErr.New("status service nats topic not set")
+
+	req := commonMessaging.CreateStatusListEntryRequest{
+		Request: common.Request{
+			TenantId:  tenantid,
+			RequestId: uuid.NewString(),
+			GroupId:   groupid,
+		},
+		Origin:         origin,
+		Namespace:      namespace,
+		Group:          group,
+		Key:            key,
+		Type:           listtype,
+		DID:            did,
+		ExpirationDate: expiration,
+	}
+
+	b, err := json.Marshal(req)
+	if err != nil {
+		return "", "", "", -1, fmt.Errorf("failed to marshal status list request: %w", err)
+	}
+
+	event, err := cloudeventprovider.NewEvent("signer-service", s.natsStatusTopic, b)
+	if err != nil {
+		return "", "", "", -1, fmt.Errorf("failed to create status list CloudEvent: %w", err)
+	}
+
+	response, err := client.RequestCtx(context.Background(), event)
+	if err != nil {
+		return "", "", "", -1, fmt.Errorf("failed to request status list entry: %w", err)
+	}
+
+	if response == nil {
+		return "", "", "", -1, pkgErr.New("status list service returned nil response")
+	}
+
+	var rep commonMessaging.CreateStatusListEntryReply
+
+	if err := json.Unmarshal(response.Data(), &rep); err != nil {
+		return "", "", "", -1, fmt.Errorf("failed to unmarshal status list response: %w", err)
+	}
+
+	if rep.Error != nil {
+		return "", "", "", -1, fmt.Errorf("status list creation failed: %v", rep.Error)
+	}
+
+	return rep.StatusUrl, rep.Type, rep.Purpose, rep.Index, nil
 }
 
-func (s *Service) appendVCStatus(vc *verifiable.Credential, namespace string, group string, origin string) error {
+func (s *Service) appendVCStatus(vc *verifiable.Credential, tenantid, groupid, namespace, group, origin, key, listtype, did string, expiration time.Time) error {
 
-	url, typ, purpose, index, err := s.getStatusListEntry(namespace, group, origin)
+	url, typ, purpose, index, err := s.getStatusListEntry(tenantid, groupid, namespace, group, origin, key, listtype, did, expiration)
 
 	if err != nil {
 		s.logger.Error("status error", zap.Error(err))
@@ -805,11 +828,12 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	}
 
 	subject.CustomFields = credSubject
-
+	expiration := time.Now().Add(time.Duration(time.Now().Year()))
 	vc := &verifiable.Credential{
 		Context: jsonldContexts,
 		Types:   []string{verifiable.VCType},
 		Issued:  &util.TimeWrapper{Time: time.Now()},
+		Expired: &util.TimeWrapper{Time: expiration},
 		Subject: subject,
 	}
 
@@ -880,48 +904,48 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		vc.Issuer = verifiable.Issuer{ID: "did:jwk:" + base64.RawURLEncoding.EncodeToString(bytes)}
 	}
 
-	if req.Status != nil && *req.Status {
-		logger.Debug("Append Status")
-		err = s.appendVCStatus(vc, req.Namespace, req.Group, req.XOrigin)
-	}
-
-	if err != nil {
-		return nil, &pkgErr.Error{
-			Kind:    pkgErr.Internal,
-			Message: "error during revocation appending.",
-			Err:     err,
-		}
-	}
-
-	logger.Debug("Append Terms of Use")
-	err = s.appendTermsOfUse(vc, req.Namespace, req.Group)
-
-	if err != nil {
-		return nil, &pkgErr.Error{
-			Kind:    pkgErr.Internal,
-			Message: "error during terms of use appending.",
-			Err:     err,
-		}
-	}
-
-	logger.Debug("Append Evidence")
-	err = s.appendEvidence(vc, req.Namespace, req.Group)
-
-	if err != nil {
-		return nil, &pkgErr.Error{
-			Kind:    pkgErr.Internal,
-			Message: "error during terms of use appending.",
-			Err:     err,
-		}
-	}
-
 	if req.Format == "vc+sd-jwt" {
 		logger.Debug("Start Building sd jwt vc...")
 
-		return s.createSdJwt(vc, req.Namespace, req.Group, req.Key, getSignatureType(key.KeyType), req.DisclosureFrame, req.XOrigin, req.Status, holderJwk)
+		return s.createSdJwt(vc, req.XTenantid, req.XGroupid, req.Namespace, req.Group, req.Key, getSignatureType(key.KeyType), req.DisclosureFrame, req.XOrigin, req.Status, req.Statuslisttype, vc.Issuer.ID, holderJwk)
 	}
 
 	if req.Format == "ldp_vc" {
+
+		if req.Status != nil && *req.Status {
+			logger.Debug("Append Status")
+			err = s.appendVCStatus(vc, req.XTenantid, req.XGroupid, req.Namespace, req.Group, req.XOrigin, req.Key, req.Statuslisttype, vc.Issuer.ID, expiration)
+		}
+
+		if err != nil {
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.Internal,
+				Message: "error during revocation appending.",
+				Err:     err,
+			}
+		}
+
+		logger.Debug("Append Terms of Use")
+		err = s.appendTermsOfUse(vc, req.Namespace, req.Group)
+
+		if err != nil {
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.Internal,
+				Message: "error during terms of use appending.",
+				Err:     err,
+			}
+		}
+
+		logger.Debug("Append Evidence")
+		err = s.appendEvidence(vc, req.Namespace, req.Group)
+
+		if err != nil {
+			return nil, &pkgErr.Error{
+				Kind:    pkgErr.Internal,
+				Message: "error during terms of use appending.",
+				Err:     err,
+			}
+		}
 
 		logger.Debug("Validate Subject")
 		err = validateCredentialSubject(vc.Subject)
@@ -1046,7 +1070,7 @@ func isAllowedURIScheme(s string) bool {
 	return false
 }
 
-func (s *Service) statusListCheckup(namespace, group *string, typ, purpose, url string, index int) (bool, error) {
+func (s *Service) statusListCheckup(tenantid, namespace string, group, groupid *string, typ, purpose, url string, index int) (bool, error) {
 	client, err := cloudeventprovider.New(
 		cloudeventprovider.Config{Protocol: cloudeventprovider.ProtocolTypeNats, Settings: cloudeventprovider.NatsConfig{
 			Url:          s.natsHost,
@@ -1062,8 +1086,11 @@ func (s *Service) statusListCheckup(namespace, group *string, typ, purpose, url 
 
 	req := commonMessaging.VerifyStatusListEntryRequest{
 		Request: common.Request{
-			TenantId: *namespace,
+			TenantId: tenantid,
+			GroupId:  *groupid,
 		},
+		Namespace: namespace,
+		Group:     *group,
 		Type:      typ,
 		Purpose:   purpose,
 		Index:     index,
@@ -1101,7 +1128,7 @@ func (s *Service) statusListCheckup(namespace, group *string, typ, purpose, url 
 	return !verify.Revocated, nil
 }
 
-func (s *Service) verifyLdProof(ctx context.Context, credential []byte, namespace, group *string, logger *zap.Logger) (bool, error) {
+func (s *Service) verifyLdProof(ctx context.Context, credential []byte, tenantId, namespace string, groupid, group *string, logger *zap.Logger) (bool, error) {
 	vc, err := s.parseCredentialWithProof(credential)
 
 	if err != nil {
@@ -1135,13 +1162,13 @@ func (s *Service) verifyLdProof(ctx context.Context, credential []byte, namespac
 				return false, nil
 			}
 			if ok {
-				return s.verifyLdProof(ctx, byte, namespace, group, logger)
+				return s.verifyLdProof(ctx, byte, tenantId, namespace, groupid, group, logger)
 			}
 		}
 	}
 
-	if vc.Status != nil && namespace != nil {
-		return s.statusListCheckup(namespace, group, vc.Status.Type,
+	if vc.Status != nil && namespace != "" {
+		return s.statusListCheckup(tenantId, namespace, group, groupid, vc.Status.Type,
 			vc.Status.CustomFields["statusPurpose"].(string),
 			vc.Status.CustomFields["statusListCredential"].(string),
 			int(vc.Status.CustomFields["statusListIndex"].(float64)))
@@ -1164,7 +1191,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 	if req.XFormat == "ldp_vc" {
 		// verify credential
 
-		b, err := s.verifyLdProof(ctx, req.Credential, req.XNamespace, req.XGroup, logger)
+		b, err := s.verifyLdProof(ctx, req.Credential, *req.XTenantid, req.XNamespace, req.XGroupid, req.XGroup, logger)
 
 		return &signer.VerifyResult{Valid: b}, err
 	}
@@ -1360,14 +1387,14 @@ func (s *Service) createSdJwtPresentation(sdjwt, kid, namespace, group, keyId, s
 	return &r, nil
 }
 
-func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId, sigType string, disclosureFrame []string, origin string, status *bool, holderJwk any) (*string, error) {
+func (s *Service) createSdJwt(vc *verifiable.Credential, tenantid, groupid, namespace, group, keyId, sigType string, disclosureFrame []string, origin string, status *bool, statuslisttype string, did string, holderJwk any) (*string, error) {
 
 	para := make(map[string]interface{})
 
 	vct, ok := vc.CustomFields["vct"]
 
 	if !ok {
-		sub, ok := vc.Subject.([]verifiable.Subject)
+		sub, ok := vc.Subject.(verifiable.Subject)
 
 		if !ok {
 
@@ -1386,7 +1413,7 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 				return nil, pkgErr.New("No vct given")
 			}
 		} else {
-			vct, ok = sub[0].CustomFields["vct"]
+			vct, ok = sub.CustomFields["vct"]
 			if !ok {
 				return nil, pkgErr.New("No vct given")
 			}
@@ -1452,7 +1479,7 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, namespace, group, keyId
 	}
 
 	if status != nil && *status {
-		url, _, purpose, index, err := s.getStatusListEntry(namespace, group, origin)
+		url, _, purpose, index, err := s.getStatusListEntry(tenantid, groupid, namespace, group, origin, keyId, statuslisttype, did, vc.Expired.Time)
 
 		if err != nil {
 			return nil, err
@@ -1896,7 +1923,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				vc["issuer"] = req.XDid
 				vc["credentialSubject"].(map[string]interface{})["id"] = req.XDid
 
-				res, err := s.addProof(ctx.Context, vc, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XNonce, logger, req.XSignatureType, []string{})
+				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, *req.XDid, req.XNonce, logger, req.XSignatureType, []string{})
 
 				if err != nil {
 					return didConfigError, &pkgErr.Error{
@@ -1913,7 +1940,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				vc["issuer"] = did
 				vc["credentialSubject"].(map[string]interface{})["id"] = did
 
-				res, err := s.addProof(ctx.Context, vc, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XNonce, logger, req.XSignatureType, []string{})
+				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, did, req.XNonce, logger, req.XSignatureType, []string{})
 
 				if err != nil {
 					return didConfigError, &pkgErr.Error{
@@ -2026,8 +2053,9 @@ func (s *Service) handleSigning(event event.Event) (*event.Event, error) {
 
 	reply := messaging.CreateSigningReply{
 		Reply: common.Reply{
-			TenantId:  signerServiceEvent.Namespace,
+			TenantId:  signerServiceEvent.TenantId,
 			RequestId: signerServiceEvent.RequestId,
+			GroupId:   signerServiceEvent.GroupId,
 		},
 	}
 
@@ -2084,8 +2112,9 @@ func (s *Service) handleCreateToken(event event.Event) (*event.Event, error) {
 
 	reply := messaging.CreateTokenReply{
 		Reply: common.Reply{
-			TenantId:  signerServiceEvent.Namespace,
+			TenantId:  signerServiceEvent.TenantId,
 			RequestId: signerServiceEvent.RequestId,
+			GroupId:   signerServiceEvent.GroupId,
 		},
 	}
 
@@ -2288,7 +2317,8 @@ func (s *Service) handleCreateKey(event event.Event) (*event.Event, error) {
 	}
 
 	reply := common.Reply{
-		TenantId:  signerServiceEvent.Namespace,
+		TenantId:  signerServiceEvent.TenantId,
+		GroupId:   signerServiceEvent.GroupId,
 		RequestId: signerServiceEvent.RequestId,
 	}
 

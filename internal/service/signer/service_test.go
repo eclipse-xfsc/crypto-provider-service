@@ -63,10 +63,16 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_Namespaces(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
+
+		if err != nil {
+			t.Error(err)
+		}
 
 		defer stop()
 
@@ -103,10 +109,15 @@ func TestService_Namespaces(t *testing.T) {
 }
 
 func TestService_NamespaceKeys(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+		}
 		defer stop()
 
 		t.Run("error while fetching keys", func(t *testing.T) {
@@ -163,10 +174,15 @@ func TestService_NamespaceKeys(t *testing.T) {
 }
 
 func TestService_VerificationMethod(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+		}
 		defer stop()
 
 		t.Run("signer returns error when getting key", func(t *testing.T) {
@@ -213,10 +229,15 @@ func TestService_VerificationMethod(t *testing.T) {
 }
 
 func TestService_VerificationMethods(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+		}
 		defer stop()
 
 		t.Run("signer returns error when getting verification methods", func(t *testing.T) {
@@ -355,10 +376,15 @@ func TestService_VerificationMethods(t *testing.T) {
 }
 
 func TestService_JwkPublicKey(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+		}
 		defer stop()
 
 		t.Run("signer returns error when getting key", func(t *testing.T) {
@@ -389,19 +415,21 @@ func TestService_JwkPublicKey(t *testing.T) {
 				KeyType: types.Ecdsap256,
 			}
 
-			cryptoProvider.GenerateKey(id)
+			err = cryptoProvider.GenerateKey(id)
+
+			assert.NoError(t, err)
 
 			svc := signer.New(cryptoProvider, []signer.Verifier{}, []string{"ecdsa-p256"}, docLoader, zap.NewNop(), "", "", "", &wg, "")
 			result, err := svc.JwkPublicKey(
 				context.Background(),
 				&goasigner.JwkPublicKeyRequest{Namespace: "transit", Key: "key1"},
 			)
-			key := result.(jwk.Key)
+			key := result.([]jwk.Key)
 			assert.NotNil(t, key)
 			assert.NoError(t, err)
 
 			var rawKey interface{}
-			err = key.Raw(&rawKey)
+			err = key[0].Raw(&rawKey)
 			assert.Nil(t, err)
 			assert.IsType(t, (*ecdsa.PublicKey)(nil), rawKey)
 			cryptoProvider.DestroyCryptoContext(ctx)
@@ -413,13 +441,19 @@ func TestService_CredentialProof(t *testing.T) {
 
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+		defer cancel()
+		cryptoProvider, stop, err := core.CreateCryptoEngine(cctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
-			Context:   context.Background(),
+			Context:   cctx,
 		}
 		cryptoProvider.CreateCryptoContext(ctx)
 
@@ -497,7 +531,7 @@ func TestService_CredentialProof(t *testing.T) {
 				name:       "credential with invalid subject id",
 				credential: []byte(credentialWithInvalidSubjectID),
 				errkind:    pkgErr.BadRequest,
-				errtext:    "invalid subject id: must be URI",
+				errtext:    "invalid subject id format, uri is expected",
 			},
 			{
 				name:       "valid credential but signer cannot find key",
@@ -579,6 +613,7 @@ func TestService_CredentialProof(t *testing.T) {
 				assert.NoError(t, err)
 
 				res, err := svc.CredentialProof(context.Background(), &goasigner.CredentialProofRequest{
+					XTenantid:  "xyz",
 					Namespace:  test.namespace,
 					Key:        test.keyname,
 					Credential: cred,
@@ -616,15 +651,21 @@ func TestService_CredentialProof(t *testing.T) {
 }
 
 func TestService_PresentationProof(t *testing.T) {
+
 	for _, v := range pluginAddresses {
+		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+		defer cancel()
+		cryptoProvider, stop, err := core.CreateCryptoEngine(cctx, v, insecure.NewCredentials())
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
-
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
-			Context:   context.Background(),
+			Context:   cctx,
 		}
 		cryptoProvider.CreateCryptoContext(ctx)
 
@@ -799,15 +840,21 @@ func TestService_PresentationProof(t *testing.T) {
 }
 
 func TestService_CreateCredential(t *testing.T) {
+
 	for _, v := range pluginAddresses {
+		cctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+		defer cancel()
+		cryptoProvider, stop, err := core.CreateCryptoEngine(cctx, v, insecure.NewCredentials())
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
-
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		defer stop()
 
 		ctx := types.CryptoContext{
 			Namespace: "transit",
-			Context:   context.Background(),
+			Context:   cctx,
 		}
 		cryptoProvider.CreateCryptoContext(ctx)
 
@@ -963,10 +1010,15 @@ func TestService_CreateCredential(t *testing.T) {
 }
 
 func TestService_Sign(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+	defer cancel()
 	for _, v := range pluginAddresses {
 
-		cryptoProvider, stop := core.CreateCryptoEngine(v, insecure.NewCredentials())
+		cryptoProvider, stop, err := core.CreateCryptoEngine(ctx, v, insecure.NewCredentials())
 
+		if err != nil {
+			t.Error(err)
+		}
 		defer stop()
 
 		ctx := types.CryptoContext{

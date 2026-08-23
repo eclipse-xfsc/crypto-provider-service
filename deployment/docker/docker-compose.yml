@@ -24,6 +24,10 @@ services:
     image: curlimages/curl:latest
     depends_on:
       - openbao
+    environment:
+      VAULT_ADDR: http://openbao:8200
+      VAULT_TOKEN: test
+      PEM: /usr/local/bin/test.pem
     networks:
       - internal
     volumes:
@@ -51,33 +55,38 @@ services:
   #     - CLOUDEVENTPROVIDER_MESSAGING_NATS_URL=nats:4222
   #     - ENGINE_PATH=/opt/plugins/hashicorp-vault-provider.so
 
-  # status:
-  #   image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack/status-list-service:1.0.0
-  #   networks:
-  #     - internal
-  #   ports:
-  #     - "8081:8080"
-  #   environment:
-  #     - STATUSLIST_DATABASE_PARAMS=sslmode:disable
-  #     - STATUSLIST_DATABASE_HOST=postgres
-  #     - STATUSLIST_DATABASE_USER=postgres
-  #     - STATUSLIST_DATABASE_PASSWORD=postgres
-  #     - STATUSLIST_NATS_URL=nats://nats:4222
-  #     - STATUSLIST_SIGNER_TOPIC=signer
-  #     - STATUSLIST_SIGNER_URL=signer-service:8080
+  status:
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/ocm-wstack/status-list-service:1.1.1
+    networks:
+      - internal
+    ports:
+      - "8081:8080"
+    environment:
+      - STATUSLIST_POSTGRES_PARAMS=sslmode:disable
+      - STATUSLIST_POSTGRES_HOST=postgres
+      - STATUSLIST_POSTGRES_USER=postgres
+      - STATUSLIST_POSTGRES_PASSWORD=postgres
+      - STATUSLIST_NATS_URL=nats://nats:4222
+      - STATUSLIST_SIGNER_TOPIC=signer
+      - STATUSLIST_SIGNER_URL=signer-service:8080
 
-  # postgres:
-  #   image: postgres:14-alpine
-  #   networks:
-  #     - internal
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - ~/apps/postgres:/var/lib/postgresql/data
-  #   environment:
-  #     - POSTGRES_PASSWORD=postgres
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_DB=postgres
+  postgres:
+    image: postgres:14-alpine
+    networks:
+      - internal
+    ports:
+      - "5432:5432"
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 
   nats:
     image: nats:2.10.10
@@ -87,7 +96,7 @@ services:
       - "4222:4222"
 
   sdjwt:
-    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services/sd-jwt-service
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/common-services/sd-jwt-service:1.2.6
     ports:
       - "8082:3000"
     networks:
@@ -122,7 +131,7 @@ services:
       - NATS_ADDR=nats://nats:4222
 
   vaultPlugin:
-    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/crypto-provider-hashicorp-vault-plugin:v2.0.5
+    image: node-654e3bca7fbeeed18f81d7c7.ps-xaas.io/tsa/crypto-provider-hashicorp-vault-plugin:2.0.6
     networks:
       - internal
     ports:

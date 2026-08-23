@@ -99,6 +99,8 @@ var _ = Service("signer", func() {
 		Result(Any)
 		HTTP(func() {
 			Header("x-origin", String, func() {})
+			Header("x-tenantid", String, func() {})
+			Header("x-groupid", String, func() {})
 			POST("/v1/credential")
 			Response(StatusOK)
 		})
@@ -120,12 +122,11 @@ var _ = Service("signer", func() {
 		Result(VerifyResult)
 
 		HTTP(func() {
-			Header("x-format", String, func() {
-			})
-			Header("x-namespace", String, func() {
-			})
-			Header("x-group", String, func() {
-			})
+			Header("x-format", String, func() {})
+			Header("x-namespace", String, func() {})
+			Header("x-group", String, func() {})
+			Header("x-tenantid", String, func() {})
+			Header("x-groupid", String, func() {})
 			POST("/v1/credential/verify")
 			Response(StatusOK)
 		})
