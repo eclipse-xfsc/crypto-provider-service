@@ -1,7 +1,7 @@
 # ----------------------------------------
-# Builder: Go 1.24
+# Builder: Go 1.25
 # ----------------------------------------
-    FROM golang:1.24.5-bullseye AS builder
+    FROM 1.25.14-bookworm AS builder
 
     WORKDIR /app
     ARG APP_REPO_TAG
