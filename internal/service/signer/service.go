@@ -828,11 +828,13 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	}
 
 	subject.CustomFields = credSubject
-	expiration := time.Now().Add(time.Duration(time.Now().Year()))
+	now := time.Now()
+	expiration := now.AddDate(1, 0, 0)
+
 	vc := &verifiable.Credential{
 		Context: jsonldContexts,
 		Types:   []string{verifiable.VCType},
-		Issued:  &util.TimeWrapper{Time: time.Now()},
+		Issued:  &util.TimeWrapper{Time: now},
 		Expired: &util.TimeWrapper{Time: expiration},
 		Subject: subject,
 	}
