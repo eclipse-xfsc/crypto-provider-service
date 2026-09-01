@@ -191,7 +191,7 @@ func TestCreateAndVerifySdJwtPresentation(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, vp)
 
-			err = signer.VerifyPresentationProof(vp, &aud, &nonce, []string{}, "vc+sd-jwt")
+			err = signer.VerifyPresentationProof(vp, &aud, &nonce, []string{}, "dc+sd-jwt")
 			assert.NoError(t, err)
 		})
 	}
@@ -447,7 +447,7 @@ func TestCreateCredential(t *testing.T) {
 			req: map[string]interface{}{
 				"issuer":    "did:web:yourdomain.com:policy:policies:example:returnDID:1.0:evaluation",
 				"namespace": "transit",
-				"format":    "vc+sd-jwt",
+				"format":    "dc+sd-jwt",
 				"holder":    "eyJhbGciOiJFZERTQSIsImp3ayI6eyJhbGciOiJFZERTQSIsImNydiI6IkVkMjU1MTkiLCJraWQiOiIyZjE0NTEwMi0yMGU0LTRjYzQtYjE1OS01OWUyZTIwYzQ2NGYiLCJrdHkiOiJPS1AiLCJ4Ijoianl4VVpLQjNIUjVfLTNJa1A1VEFLeTh2SXVoX192dko4OG5CZjFDcFV1byJ9LCJraWQiOiJkaWQ6andrOmV5SmhiR2NpT2lKRlpFUlRRU0lzSW1OeWRpSTZJa1ZrTWpVMU1Ua2lMQ0pyYVdRaU9pSXlaakUwTlRFd01pMHlNR1UwTFRSall6UXRZakUxT1MwMU9XVXlaVEl3WXpRMk5HWWlMQ0pyZEhraU9pSlBTMUFpTENKNElqb2lhbmw0VlZwTFFqTklValZmTFROSmExQTFWRUZMZVRoMlNYVm9YMTkyZGtvNE9HNUNaakZEY0ZWMWJ5SjkiLCJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dCJ9.eyJhdWQiOlsiaHR0cHM6Ly9jbG91ZC13YWxsZXQueGZzYy5kZXYiXSwiaWF0IjoxNzI3MjQ4OTc2LCJub25jZSI6ImRhYzRhODFlLWUyNjItNDkzMS1hODA2LWY0NGFmMWIzMjE4NyJ9.0chMgVQ_NvPpB3VF-pjp4ib0aMpRvepx1dcW45CC1J1PAxyg_wEhD24yDQ-o6Dxp-Qp5c9RhRRe1oG1uw8w3Cg",
 				"key":       "eckey",
 				"credentialSubject": map[string]interface{}{
@@ -463,7 +463,7 @@ func TestCreateCredential(t *testing.T) {
 				"issuer":    "did:web:yourdomain.com:policy:policies:example:returnDID:1.0:evaluation",
 				"namespace": "transit",
 				"status":    true,
-				"format":    "vc+sd-jwt",
+				"format":    "dc+sd-jwt",
 				"holder":    "eyJhbGciOiJFZERTQSIsImp3ayI6eyJhbGciOiJFZERTQSIsImNydiI6IkVkMjU1MTkiLCJraWQiOiIyZjE0NTEwMi0yMGU0LTRjYzQtYjE1OS01OWUyZTIwYzQ2NGYiLCJrdHkiOiJPS1AiLCJ4Ijoianl4VVpLQjNIUjVfLTNJa1A1VEFLeTh2SXVoX192dko4OG5CZjFDcFV1byJ9LCJraWQiOiJkaWQ6andrOmV5SmhiR2NpT2lKRlpFUlRRU0lzSW1OeWRpSTZJa1ZrTWpVMU1Ua2lMQ0pyYVdRaU9pSXlaakUwTlRFd01pMHlNR1UwTFRSall6UXRZakUxT1MwMU9XVXlaVEl3WXpRMk5HWWlMQ0pyZEhraU9pSlBTMUFpTENKNElqb2lhbmw0VlZwTFFqTklValZmTFROSmExQTFWRUZMZVRoMlNYVm9YMTkyZGtvNE9HNUNaakZEY0ZWMWJ5SjkiLCJ0eXAiOiJvcGVuaWQ0dmNpLXByb29mK2p3dCJ9.eyJhdWQiOlsiaHR0cHM6Ly9jbG91ZC13YWxsZXQueGZzYy5kZXYiXSwiaWF0IjoxNzI3MjQ4OTc2LCJub25jZSI6ImRhYzRhODFlLWUyNjItNDkzMS1hODA2LWY0NGFmMWIzMjE4NyJ9.0chMgVQ_NvPpB3VF-pjp4ib0aMpRvepx1dcW45CC1J1PAxyg_wEhD24yDQ-o6Dxp-Qp5c9RhRRe1oG1uw8w3Cg",
 				"key":       "eckey",
 				"credentialSubject": map[string]interface{}{

@@ -128,7 +128,7 @@ paths:
                   default: ldp_vc
                   enum:
                     - ldp_vc
-                    - vc+sd-jwt
+                    - dc+sd-jwt
                 - name: x-namespace
                   in: header
                   description: Namespace for status check
@@ -501,7 +501,7 @@ paths:
                   default: ldp_vc
                   enum:
                     - ldp_vc
-                    - vc+sd-jwt
+                    - dc+sd-jwt
                 - name: VerifyPresentationRequestBody
                   in: body
                   required: true
@@ -659,10 +659,10 @@ definitions:
                 type: string
                 description: identifies the format of the credential.
                 default: ldp_vc
-                example: ldp_vc or vc+sd-jwt
+                example: ldp_vc or dc+sd-jwt
                 enum:
                     - ldp_vc
-                    - vc+sd-jwt
+                    - dc+sd-jwt
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -722,7 +722,7 @@ definitions:
                 hello: world
             disclosureFrame:
                 - email
-            format: ldp_vc or vc+sd-jwt
+            format: ldp_vc or dc+sd-jwt
             group: Group
             holder: urn:3333:ddd
             issuer: did:web:example.com
@@ -836,10 +836,10 @@ definitions:
                 type: string
                 description: identifies the format of the credential.
                 default: ldp_vc
-                example: ldp_vc or vc+sd-jwt
+                example: ldp_vc or dc+sd-jwt
                 enum:
                     - ldp_vc
-                    - vc+sd-jwt
+                    - dc+sd-jwt
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -906,7 +906,7 @@ definitions:
                     allow: true
             disclosureFrame:
                 - email
-            format: ldp_vc or vc+sd-jwt
+            format: ldp_vc or dc+sd-jwt
             group: Group
             holder: urn:3333:ddd
             key: key1
@@ -1192,10 +1192,10 @@ definitions:
                 type: string
                 description: identifies the format of the credential.
                 default: ldp_vc
-                example: ldp_vc or vc+sd-jwt
+                example: ldp_vc or dc+sd-jwt
                 enum:
                     - ldp_vc
-                    - vc+sd-jwt
+                    - dc+sd-jwt
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -1233,7 +1233,7 @@ definitions:
             aud: http://...
             disclosureFrame:
                 - email
-            format: ldp_vc or vc+sd-jwt
+            format: ldp_vc or dc+sd-jwt
             group: Group
             issuer: Fugit quo voluptatem aut.
             key: key1

@@ -426,7 +426,7 @@ func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupI
 		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
-	if format == "vc+sd-jwt" {
+	if format == "dc+sd-jwt" {
 		return s.createSdJwt(vc, tenantId, groupId, namespace, group, key, sigType, disclosureFrame, origin, nil, "", did, nil)
 	}
 
@@ -496,7 +496,7 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 		zap.String("key", req.Key),
 	)
 
-	if req.Format == "vc+sd-jwt" {
+	if req.Format == "dc+sd-jwt" {
 
 		if req.Presentation == nil {
 			return nil, pkgErr.New("sdjwt presentation is nil")
@@ -904,7 +904,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		vc.Issuer = verifiable.Issuer{ID: "did:jwk:" + base64.RawURLEncoding.EncodeToString(bytes)}
 	}
 
-	if req.Format == "vc+sd-jwt" {
+	if req.Format == "dc+sd-jwt" {
 		logger.Debug("Start Building sd jwt vc...")
 
 		return s.createSdJwt(vc, req.XTenantid, req.XGroupid, req.Namespace, req.Group, req.Key, getSignatureType(key.KeyType), req.DisclosureFrame, req.XOrigin, req.Status, req.Statuslisttype, vc.Issuer.ID, holderJwk)
@@ -1181,7 +1181,7 @@ func (s *Service) verifyLdProof(ctx context.Context, credential []byte, tenantId
 func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCredentialRequest) (*signer.VerifyResult, error) {
 	logger := s.logger.With(zap.String("operation", "verifyCredential"))
 
-	if req.XFormat == "vc+sd-jwt" {
+	if req.XFormat == "dc+sd-jwt" {
 		if req.DisclosureFrame == nil {
 			return &signer.VerifyResult{Valid: false}, pkgErr.New("no disclosure frame given")
 		}
@@ -1203,7 +1203,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 func (s *Service) VerifyPresentation(ctx context.Context, req *signer.VerifyPresentationRequest) (*signer.VerifyResult, error) {
 	logger := s.logger.With(zap.String("operation", "verifyPresentation"))
 
-	if req.XFormat == "vc+sd-jwt" {
+	if req.XFormat == "dc+sd-jwt" {
 		sdjwt := strings.Replace(strings.Replace(string(req.Presentation), `"`, "", -1), "\n", "", -1)
 		return s.verifySdJwt([]byte(sdjwt), req.DisclosureFrame, true, *req.Nonce, *req.Aud)
 	}

@@ -45,9 +45,9 @@ var CredentialProofRequest = Type("CredentialProofRequest", func() {
 		Default("")
 	})
 	Field(5, "format", String, "identifies the format of the credential.", func() {
-		Example("ldp_vc or vc+sd-jwt")
+		Example("ldp_vc or dc+sd-jwt")
 		Default("ldp_vc")
-		Enum("ldp_vc", "vc+sd-jwt")
+		Enum("ldp_vc", "dc+sd-jwt")
 	})
 	Field(6, "nonce", String, "Proof challenge", func() {
 		Example("3483492392vvv-fff")
@@ -105,9 +105,9 @@ var PresentationProofRequest = Type("PresentationProofRequest", func() {
 		Default("jsonwebsignature2020")
 	})
 	Field(8, "format", String, "identifies the format of the credential.", func() {
-		Example("ldp_vc or vc+sd-jwt")
+		Example("ldp_vc or dc+sd-jwt")
 		Default("ldp_vc")
-		Enum("ldp_vc", "vc+sd-jwt")
+		Enum("ldp_vc", "dc+sd-jwt")
 	})
 	Field(9, "disclosureFrame", ArrayOf(String), "Disclosed Attributes", func() {
 		Example([]string{"email"})
@@ -179,9 +179,9 @@ var CreateCredentialRequest = Type("CreateCredentialRequest", func() {
 		Default("")
 	})
 	Field(7, "format", String, "identifies the format of the credential.", func() {
-		Example("ldp_vc or vc+sd-jwt")
+		Example("ldp_vc or dc+sd-jwt")
 		Default("ldp_vc")
-		Enum("ldp_vc", "vc+sd-jwt")
+		Enum("ldp_vc", "dc+sd-jwt")
 	})
 	Field(8, "nonce", String, "Proof challenge", func() {
 		Example("3483492392vvv-fff")
@@ -223,9 +223,9 @@ var CreateCredentialRequest = Type("CreateCredentialRequest", func() {
 var VerifyCredentialRequest = Type("VerifyCredentialRequest", func() {
 	Field(1, "credential", Bytes, "Verifiable Credential in JSON format.")
 	Field(2, "x-format", String, "format", func() {
-		Example("ldp_vc or vc+sd-jwt")
+		Example("ldp_vc or dc+sd-jwt")
 		Default("ldp_vc")
-		Enum("ldp_vc", "vc+sd-jwt")
+		Enum("ldp_vc", "dc+sd-jwt")
 	})
 	Field(3, "x-namespace", String, "Namespace for status check")
 	Field(4, "x-group", String, "Group for status check")
@@ -247,9 +247,9 @@ var VerifyPresentationRequest = Type("VerifyPresentationRequest", func() {
 		Example([]string{"email"})
 	})
 	Field(3, "x-format", String, "format", func() {
-		Example("ldp_vc or vc+sd-jwt")
+		Example("ldp_vc or dc+sd-jwt")
 		Default("ldp_vc")
-		Enum("ldp_vc", "vc+sd-jwt")
+		Enum("ldp_vc", "dc+sd-jwt")
 	})
 	Field(3, "aud", String, "expected audience", func() {
 	})

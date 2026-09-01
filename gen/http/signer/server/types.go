@@ -834,8 +834,8 @@ func ValidateCredentialProofRequestBody(body *CredentialProofRequestBody) (err e
 		err = goa.MergeErrors(err, goa.MissingFieldError("x-origin", "body"))
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	if body.SignatureType != nil {
@@ -864,8 +864,8 @@ func ValidatePresentationProofRequestBody(body *PresentationProofRequestBody) (e
 		}
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	return
@@ -884,8 +884,8 @@ func ValidateCreateCredentialRequestBody(body *CreateCredentialRequestBody) (err
 		err = goa.MergeErrors(err, goa.MissingFieldError("credentialSubject", "body"))
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	if body.SignatureType != nil {

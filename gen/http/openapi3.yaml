@@ -93,7 +93,7 @@ paths:
                                 hello: world
                             disclosureFrame:
                                 - email
-                            format: ldp_vc or vc+sd-jwt
+                            format: ldp_vc or dc+sd-jwt
                             group: Group
                             holder: urn:3333:ddd
                             issuer: did:web:example.com
@@ -142,7 +142,7 @@ paths:
                                     allow: true
                             disclosureFrame:
                                 - email
-                            format: ldp_vc or vc+sd-jwt
+                            format: ldp_vc or dc+sd-jwt
                             group: Group
                             holder: urn:3333:ddd
                             key: key1
@@ -178,11 +178,11 @@ paths:
                     type: string
                     description: format
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
-                  example: ldp_vc or vc+sd-jwt
+                        - dc+sd-jwt
+                  example: ldp_vc or dc+sd-jwt
                 - name: x-namespace
                   in: header
                   description: Namespace for status check
@@ -812,7 +812,7 @@ paths:
                             aud: http://...
                             disclosureFrame:
                                 - email
-                            format: ldp_vc or vc+sd-jwt
+                            format: ldp_vc or dc+sd-jwt
                             group: Group
                             issuer: Neque blanditiis nostrum nihil consequuntur est.
                             key: key1
@@ -844,11 +844,11 @@ paths:
                     type: string
                     description: format
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
-                  example: ldp_vc or vc+sd-jwt
+                        - dc+sd-jwt
+                  example: ldp_vc or dc+sd-jwt
             requestBody:
                 required: true
                 content:
@@ -1108,10 +1108,10 @@ components:
                     type: string
                     description: identifies the format of the credential.
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
                 group:
                     type: string
                     description: Group identifies a group of keys within a namespace.
@@ -1184,7 +1184,7 @@ components:
                     hello: world
                 disclosureFrame:
                     - email
-                format: ldp_vc or vc+sd-jwt
+                format: ldp_vc or dc+sd-jwt
                 group: Group
                 holder: urn:3333:ddd
                 issuer: did:web:example.com
@@ -1234,10 +1234,10 @@ components:
                     type: string
                     description: identifies the format of the credential.
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
                 group:
                     type: string
                     description: Group identifies a group of keys within a namespace.
@@ -1297,7 +1297,7 @@ components:
                     hello: world
                 disclosureFrame:
                     - email
-                format: ldp_vc or vc+sd-jwt
+                format: ldp_vc or dc+sd-jwt
                 group: Group
                 holder: urn:3333:ddd
                 issuer: did:web:example.com
@@ -1409,10 +1409,10 @@ components:
                     type: string
                     description: identifies the format of the credential.
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
                 group:
                     type: string
                     description: Group identifies a group of keys within a namespace.
@@ -1479,7 +1479,7 @@ components:
                         allow: true
                 disclosureFrame:
                     - email
-                format: ldp_vc or vc+sd-jwt
+                format: ldp_vc or dc+sd-jwt
                 group: Group
                 holder: urn:3333:ddd
                 key: key1
@@ -1920,10 +1920,10 @@ components:
                     type: string
                     description: identifies the format of the credential.
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
                 group:
                     type: string
                     description: Group identifies a group of keys within a namespace.
@@ -1961,7 +1961,7 @@ components:
                 aud: http://...
                 disclosureFrame:
                     - email
-                format: ldp_vc or vc+sd-jwt
+                format: ldp_vc or dc+sd-jwt
                 group: Group
                 issuer: Consequatur laudantium ipsum fugiat.
                 key: key1
@@ -2193,10 +2193,10 @@ components:
                     type: string
                     description: format
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
                 x-group:
                     type: string
                     description: Group for status check
@@ -2232,7 +2232,7 @@ components:
                     - 46
                 disclosureFrame:
                     - email
-                x-format: ldp_vc or vc+sd-jwt
+                x-format: ldp_vc or dc+sd-jwt
                 x-group: Non vitae veniam totam.
                 x-groupid: group1
                 x-namespace: Inventore sed maiores voluptatem possimus natus nostrum.
@@ -2404,10 +2404,10 @@ components:
                     type: string
                     description: format
                     default: ldp_vc
-                    example: ldp_vc or vc+sd-jwt
+                    example: ldp_vc or dc+sd-jwt
                     enum:
                         - ldp_vc
-                        - vc+sd-jwt
+                        - dc+sd-jwt
             example:
                 aud: Numquam ipsum sed et quia consequatur.
                 disclosureFrame:
@@ -2470,7 +2470,7 @@ components:
                     - 117
                     - 101
                     - 46
-                x-format: ldp_vc or vc+sd-jwt
+                x-format: ldp_vc or dc+sd-jwt
             required:
                 - presentation
         VerifyPresentationRequest2:
