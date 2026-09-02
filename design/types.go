@@ -80,6 +80,7 @@ var CredentialProofRequest = Type("CredentialProofRequest", func() {
 	Field(14, "x-did", String, "Did", func() {
 		Example("https://test")
 	})
+	Field(14, "status", Boolean, "Status embedded or not", func() {})
 	Required("namespace", "key", "credential", "x-tenantid", "x-did", "x-origin")
 })
 

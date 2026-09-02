@@ -523,7 +523,7 @@ func signerCredentialProofUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer credential-proof --body '{\n      \"credential\": {\n         \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            \"https://w3id.org/security/suites/jws-2020/v1\",\n            \"https://schema.org\"\n         ],\n         \"type\": [\n            \"VerifiableCredential\"\n         ],\n         \"issuer\": \"did:web:nginx:policy:policy:example:example:1.0:evaluation\",\n         \"issuanceDate\": \"2010-01-01T19:23:24.651387237Z\",\n         \"credentialSubject\": {\n            \"name\": \"Alice\",\n            \"allow\": true\n         }\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"x-did\": \"https://test\",\n      \"x-groupid\": \"group1\",\n      \"x-origin\": \"https://test\",\n      \"x-tenantid\": \"demotenant\"\n   }'")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer credential-proof --body '{\n      \"credential\": {\n         \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            \"https://w3id.org/security/suites/jws-2020/v1\",\n            \"https://schema.org\"\n         ],\n         \"type\": [\n            \"VerifiableCredential\"\n         ],\n         \"issuer\": \"did:web:nginx:policy:policy:example:example:1.0:evaluation\",\n         \"issuanceDate\": \"2010-01-01T19:23:24.651387237Z\",\n         \"credentialSubject\": {\n            \"name\": \"Alice\",\n            \"allow\": true\n         }\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"status\": false,\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"x-did\": \"https://test\",\n      \"x-groupid\": \"group1\",\n      \"x-origin\": \"https://test\",\n      \"x-tenantid\": \"demotenant\"\n   }'")
 }
 
 func signerPresentationProofUsage() {
@@ -541,7 +541,7 @@ func signerPresentationProofUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer presentation-proof --body '{\n      \"aud\": \"http://...\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"issuer\": \"Neque blanditiis nostrum nihil consequuntur est.\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"presentation\": \"Explicabo possimus ea.\",\n      \"signatureType\": \"ed25519signature2020\"\n   }'")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer presentation-proof --body '{\n      \"aud\": \"http://...\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"issuer\": \"Sit explicabo possimus ea accusantium.\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"presentation\": \"Ut velit.\",\n      \"signatureType\": \"ed25519signature2020\"\n   }'")
 }
 
 func signerCreateCredentialUsage() {
@@ -611,7 +611,7 @@ func signerVerifyCredentialUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-credential --body '{\n      \"credential\": \"RXN0IG9jY2FlY2F0aSBuYW0u\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }' --x-format \"ldp_vc or dc+sd-jwt\" --x-namespace \"Accusamus ex nihil inventore ea qui.\" --x-group \"Sapiente error nostrum.\" --x-tenantid \"demotenant\" --x-groupid \"group1\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-credential --body '{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }' --x-format \"ldp_vc or dc+sd-jwt\" --x-namespace \"Sapiente error nostrum.\" --x-group \"Sunt incidunt et repellat cum sit quibusdam.\" --x-tenantid \"demotenant\" --x-groupid \"group1\"")
 }
 
 func signerVerifyPresentationUsage() {
@@ -631,7 +631,7 @@ func signerVerifyPresentationUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-presentation --body '{\n      \"aud\": \"Velit sit exercitationem et eligendi incidunt.\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"nonce\": \"Molestiae eveniet vero est aliquam.\",\n      \"presentation\": \"RG9sb3JlcyBxdWlzIGZ1Z2lhdCBxdWkgcXVpYS4=\"\n   }' --x-format \"ldp_vc or dc+sd-jwt\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-presentation --body '{\n      \"aud\": \"Molestiae eveniet vero est aliquam.\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"nonce\": \"Totam quam.\",\n      \"presentation\": \"U2l0IGV4ZXJjaXRhdGlvbmVtIGV0IGVsaWdlbmRpIGluY2lkdW50Lg==\"\n   }' --x-format \"ldp_vc or dc+sd-jwt\"")
 }
 
 func signerSignUsage() {
@@ -649,7 +649,7 @@ func signerSignUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer sign --body '{\n      \"data\": \"Ratione earum debitis.\",\n      \"group\": \"Group\",\n      \"key\": \"Dolorum hic aut voluptatem.\",\n      \"namespace\": \"Repellat illum repudiandae.\"\n   }'")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer sign --body '{\n      \"data\": \"Rerum veritatis delectus quis recusandae.\",\n      \"group\": \"Group\",\n      \"key\": \"Ratione earum debitis.\",\n      \"namespace\": \"Hic aut voluptatem.\"\n   }'")
 }
 
 func signerDidDocUsage() {
@@ -673,7 +673,7 @@ func signerDidDocUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-doc --x-namespace \"Est quos possimus sed sit voluptates nihil.\" --x-group \"Group\" --x-did \"exampl:com\" --x-engine \"transit\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-doc --x-namespace \"Ducimus eum facere enim accusantium.\" --x-group \"Group\" --x-did \"exampl:com\" --x-engine \"transit\"")
 }
 
 func signerDidListUsage() {
@@ -695,7 +695,7 @@ func signerDidListUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-list --x-namespace \"Voluptatibus asperiores.\" --x-group \"Group\" --x-engine \"transit\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-list --x-namespace \"Inventore necessitatibus unde facilis ut.\" --x-group \"Group\" --x-engine \"transit\"")
 }
 
 func signerDidConfigurationUsage() {
@@ -723,7 +723,7 @@ func signerDidConfigurationUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-configuration --body '{\n      \"x-groupid\": \"group1\",\n      \"x-signatureType\": \"ed25519signature2020\",\n      \"x-tenantid\": \"demotenant\"\n   }' --x-namespace \"Est asperiores velit eum perferendis.\" --x-group \"Group\" --x-origin \"Rerum quaerat sit.\" --x-did \"Omnis est aspernatur voluptas in.\" --x-nonce \"3483492392vvv-fff\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer did-configuration --body '{\n      \"x-groupid\": \"group1\",\n      \"x-signatureType\": \"ed25519signature2020\",\n      \"x-tenantid\": \"demotenant\"\n   }' --x-namespace \"Velit eum perferendis rerum rerum quaerat.\" --x-group \"Group\" --x-origin \"Dicta omnis.\" --x-did \"Aspernatur voluptas in aut unde.\" --x-nonce \"3483492392vvv-fff\"")
 }
 
 func signerJwksUsage() {
@@ -745,5 +745,5 @@ func signerJwksUsage() {
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer jwks --x-namespace \"Reiciendis aut nobis qui debitis enim quaerat.\" --x-group \"Aut illum minus quasi sequi molestiae assumenda.\" --x-engine \"transit\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer jwks --x-namespace \"Enim quaerat consectetur aut illum minus quasi.\" --x-group \"Molestiae assumenda ducimus occaecati.\" --x-engine \"transit\"")
 }

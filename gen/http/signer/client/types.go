@@ -70,6 +70,8 @@ type CredentialProofRequestBody struct {
 	XOrigin string `form:"x-origin" json:"x-origin" xml:"x-origin"`
 	// Did
 	XDid string `form:"x-did" json:"x-did" xml:"x-did"`
+	// Status embedded or not
+	Status *bool `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
 }
 
 // PresentationProofRequestBody is the type of the "signer" service
@@ -454,6 +456,7 @@ func NewCredentialProofRequestBody(p *signer.CredentialProofRequest) *Credential
 		Statuslisttype: p.Statuslisttype,
 		XOrigin:        p.XOrigin,
 		XDid:           p.XDid,
+		Status:         p.Status,
 	}
 	{
 		var zero string

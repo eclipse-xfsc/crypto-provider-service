@@ -160,6 +160,8 @@ type CredentialProofRequest struct {
 	XOrigin string
 	// Did
 	XDid string
+	// Status embedded or not
+	Status *bool
 }
 
 // Public Key represented as DID Verification Method.

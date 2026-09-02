@@ -638,7 +638,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Consequatur odit ut.
+                    example: Ipsum laudantium voluptatibus ipsam autem eligendi nostrum.
                 description: Additional JSONLD contexts to be specified in the VC.
                 example:
                     - https://w3id.org/security/suites/jws-2020/v1
@@ -651,7 +651,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Laudantium voluptatibus ipsam autem eligendi.
+                    example: Ut ducimus autem non.
                 description: Disclosed Attributes
                 example:
                     - email
@@ -709,7 +709,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Iste nostrum numquam quaerat natus temporibus maxime.
+                    example: Et autem voluptas eos sed vero.
                 description: Type(s) of the credential. Just first one for sd-jwt used.
                 example:
                     - VerifiableCredential
@@ -747,7 +747,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Voluptas eos sed vero qui.
+                    example: Consequatur voluptatibus dignissimos autem rerum tempora.
                 description: Additional JSONLD contexts to be specified in the VP.
                 example:
                     - https://w3id.org/security/suites/jws-2020/v1
@@ -755,7 +755,7 @@ definitions:
             data:
                 type: array
                 items:
-                    example: Eveniet et.
+                    example: Quisquam sunt hic.
                 description: Raw JSON to be included inside the VP as Verifiable Credential.
                 example:
                     - hello: world
@@ -869,6 +869,10 @@ definitions:
                 enum:
                     - ed25519signature2020
                     - jsonwebsignature2020
+            status:
+                type: boolean
+                description: Status embedded or not
+                example: false
             statuslisttype:
                 type: string
                 description: Statuslist. Ignored when status=false
@@ -913,6 +917,7 @@ definitions:
             namespace: transit
             nonce: 3483492392vvv-fff
             signatureType: ed25519signature2020
+            status: false
             statuslisttype: urn:3333:ddd
             x-did: https://test
             x-groupid: group1
@@ -991,24 +996,18 @@ definitions:
                     $ref: '#/definitions/DidListResponseItem'
                 description: did jwk list of keys
                 example:
-                    - did: Unde facilis ut similique molestias aperiam quia.
-                      name: Tempora et non aut inventore.
-                    - did: Unde facilis ut similique molestias aperiam quia.
-                      name: Tempora et non aut inventore.
-                    - did: Unde facilis ut similique molestias aperiam quia.
-                      name: Tempora et non aut inventore.
-                    - did: Unde facilis ut similique molestias aperiam quia.
-                      name: Tempora et non aut inventore.
+                    - did: Et non.
+                      name: Molestias aperiam.
+                    - did: Et non.
+                      name: Molestias aperiam.
+                    - did: Et non.
+                      name: Molestias aperiam.
         example:
             list:
-                - did: Unde facilis ut similique molestias aperiam quia.
-                  name: Tempora et non aut inventore.
-                - did: Unde facilis ut similique molestias aperiam quia.
-                  name: Tempora et non aut inventore.
-                - did: Unde facilis ut similique molestias aperiam quia.
-                  name: Tempora et non aut inventore.
-                - did: Unde facilis ut similique molestias aperiam quia.
-                  name: Tempora et non aut inventore.
+                - did: Et non.
+                  name: Molestias aperiam.
+                - did: Et non.
+                  name: Molestias aperiam.
         required:
             - list
     DidListResponseItem:
@@ -1018,14 +1017,14 @@ definitions:
             did:
                 type: string
                 description: DID JWK of key
-                example: Ullam rerum ea.
+                example: Praesentium est at esse laudantium ex aut.
             name:
                 type: string
                 description: name of the key.
-                example: Expedita nam nostrum fuga est dicta.
+                example: Libero debitis tempore culpa illo autem accusantium.
         example:
-            did: Labore eum libero debitis tempore culpa illo.
-            name: Placeat reprehenderit aperiam.
+            did: Aut nihil.
+            name: Laboriosam rem architecto aspernatur quod.
         required:
             - name
             - did
@@ -1037,33 +1036,36 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Quis soluta nihil expedita numquam.
+                    example: Id eum quis placeat laudantium.
                 description: JSON-LD @context
                 example:
                     - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Maxime harum omnis qui laborum.
+                example: Dolorem quibusdam cum nostrum aut qui recusandae.
             id:
                 type: string
                 description: did of the document
-                example: In aliquid sint numquam facere sequi.
+                example: Maiores accusamus.
             service:
                 type: array
                 items:
                     $ref: '#/definitions/ServiceEndpoint'
                 description: serviceendpoints
                 example:
-                    - id: Ducimus eum facere enim accusantium.
-                      serviceEndpoint: Suscipit expedita quos eligendi.
-                      type: Sint laudantium rerum neque.
-                    - id: Ducimus eum facere enim accusantium.
-                      serviceEndpoint: Suscipit expedita quos eligendi.
-                      type: Sint laudantium rerum neque.
-                    - id: Ducimus eum facere enim accusantium.
-                      serviceEndpoint: Suscipit expedita quos eligendi.
-                      type: Sint laudantium rerum neque.
+                    - id: Sint laudantium rerum neque.
+                      serviceEndpoint: Qui rerum.
+                      type: Suscipit expedita quos eligendi.
+                    - id: Sint laudantium rerum neque.
+                      serviceEndpoint: Qui rerum.
+                      type: Suscipit expedita quos eligendi.
+                    - id: Sint laudantium rerum neque.
+                      serviceEndpoint: Qui rerum.
+                      type: Suscipit expedita quos eligendi.
+                    - id: Sint laudantium rerum neque.
+                      serviceEndpoint: Qui rerum.
+                      type: Suscipit expedita quos eligendi.
             verificationMethod:
                 type: array
                 items:
@@ -1081,20 +1083,22 @@ definitions:
         example:
             context:
                 - https://www.w3.org/ns/did/v1
-            controller: Ut at dolores omnis voluptas.
-            id: Facilis ratione cumque in facilis.
+            controller: Reprehenderit aperiam.
+            id: Quo ullam rerum ea nihil.
             service:
-                - id: Ducimus eum facere enim accusantium.
-                  serviceEndpoint: Suscipit expedita quos eligendi.
-                  type: Sint laudantium rerum neque.
-                - id: Ducimus eum facere enim accusantium.
-                  serviceEndpoint: Suscipit expedita quos eligendi.
-                  type: Sint laudantium rerum neque.
+                - id: Sint laudantium rerum neque.
+                  serviceEndpoint: Qui rerum.
+                  type: Suscipit expedita quos eligendi.
+                - id: Sint laudantium rerum neque.
+                  serviceEndpoint: Qui rerum.
+                  type: Suscipit expedita quos eligendi.
+                - id: Sint laudantium rerum neque.
+                  serviceEndpoint: Qui rerum.
+                  type: Suscipit expedita quos eligendi.
+                - id: Sint laudantium rerum neque.
+                  serviceEndpoint: Qui rerum.
+                  type: Suscipit expedita quos eligendi.
             verificationMethod:
-                - controller: did:web:example.com
-                  id: key1
-                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
-                  type: JsonWebKey2020
                 - controller: did:web:example.com
                   id: key1
                   publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
@@ -1160,16 +1164,16 @@ definitions:
             keys:
                 type: array
                 items:
-                    example: Praesentium est at esse laudantium ex aut.
+                    example: Et sint aut aspernatur.
                 description: List of jwk
                 example:
-                    - Rem architecto.
-                    - Quod et.
-                    - Nihil nihil dicta non.
+                    - Ut error voluptatum.
+                    - Id ducimus aliquid aliquid excepturi explicabo quos.
         example:
             keys:
-                - Aut aspernatur corrupti esse ut.
-                - Voluptatum labore id ducimus.
+                - Et ut eum maiores quam pariatur.
+                - Voluptatibus ipsum ea totam quam aperiam.
+                - Reiciendis consequatur possimus cupiditate temporibus.
         required:
             - keys
     PresentationProofRequest:
@@ -1184,7 +1188,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Fugit voluptatem maxime dolor et.
+                    example: Voluptatem aut quisquam.
                 description: Disclosed Attributes
                 example:
                     - email
@@ -1204,7 +1208,7 @@ definitions:
             issuer:
                 type: string
                 description: Issuer DID used to specify proof verification info.
-                example: Nihil numquam doloremque.
+                example: Doloremque ea saepe quidem dolores fugiat aliquam.
             key:
                 type: string
                 description: Key to use for the proof signature.
@@ -1219,7 +1223,7 @@ definitions:
                 example: 3483492392vvv-fff
             presentation:
                 description: Verifiable Presentation in JSON format.
-                example: Saepe quidem dolores fugiat.
+                example: Voluptatem maxime dolor et sed fugit.
             signatureType:
                 type: string
                 description: Type of signature.For sd-jwt is it automatically selected.
@@ -1235,11 +1239,11 @@ definitions:
                 - email
             format: ldp_vc or dc+sd-jwt
             group: Group
-            issuer: Fugit quo voluptatem aut.
+            issuer: Blanditiis ea recusandae unde consequatur odit.
             key: key1
             namespace: transit
             nonce: 3483492392vvv-fff
-            presentation: Unde blanditiis ea recusandae.
+            presentation: At iste nostrum numquam quaerat natus temporibus.
             signatureType: ed25519signature2020
         required:
             - namespace
@@ -1252,19 +1256,19 @@ definitions:
             id:
                 type: string
                 description: did of the document
-                example: Eum quis.
+                example: Assumenda omnis aut soluta quaerat.
             serviceEndpoint:
                 type: string
                 description: Endpoint URL
-                example: Accusamus quisquam dolorem quibusdam cum nostrum aut.
+                example: Voluptates rerum.
             type:
                 type: string
                 description: type of endpoint
-                example: Laudantium autem.
+                example: Cupiditate a suscipit molestiae a.
         example:
-            id: Recusandae fugit ducimus assumenda omnis aut.
-            serviceEndpoint: Suscipit molestiae a nihil voluptates rerum.
-            type: Quaerat est cupiditate.
+            id: Praesentium facilis ratione cumque in facilis nostrum.
+            serviceEndpoint: Nam nostrum fuga.
+            type: At dolores omnis voluptas necessitatibus vero et.
         required:
             - id
             - type
@@ -1276,7 +1280,7 @@ definitions:
             data:
                 type: string
                 description: Data that must be signed, encoded as base64 string.
-                example: Qui laboriosam.
+                example: Facere doloribus quo eos.
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -1285,16 +1289,16 @@ definitions:
             key:
                 type: string
                 description: Key to be used for signing.
-                example: Eius corporis et.
+                example: Maxime corrupti.
             namespace:
                 type: string
                 description: Key namespace to be used for signing.
-                example: Et sunt culpa est et accusantium sit.
+                example: Hic alias consectetur excepturi esse tenetur repellat.
         example:
-            data: Facere doloribus quo eos.
+            data: Maxime harum omnis qui laborum.
             group: Group
-            key: Maxime corrupti.
-            namespace: Hic alias consectetur excepturi esse tenetur repellat.
+            key: In aliquid sint numquam facere sequi.
+            namespace: Quis soluta nihil expedita numquam.
         required:
             - namespace
             - key
@@ -1307,9 +1311,9 @@ definitions:
             signature:
                 type: string
                 description: Signature encoded as base64 string.
-                example: Similique fuga iste aliquid quam.
+                example: Eius corporis et.
         example:
-            signature: Omnis quas perferendis id ipsum quis recusandae.
+            signature: Qui laboriosam.
         required:
             - signature
     VerificationMethodRequest:
@@ -1354,63 +1358,61 @@ definitions:
                 type: string
                 description: Verifiable Credential in JSON format.
                 example:
-                    - 86
-                    - 101
+                    - 73
+                    - 110
+                    - 32
+                    - 100
+                    - 105
+                    - 103
                     - 110
                     - 105
-                    - 97
+                    - 115
+                    - 115
+                    - 105
                     - 109
-                    - 32
-                    - 118
                     - 111
-                    - 108
-                    - 117
-                    - 112
-                    - 116
-                    - 97
-                    - 116
-                    - 101
-                    - 109
-                    - 32
-                    - 113
-                    - 117
-                    - 105
-                    - 32
-                    - 102
-                    - 117
-                    - 103
-                    - 105
-                    - 116
+                    - 115
                     - 46
                 format: byte
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Ab doloremque.
+                    example: Reiciendis ut et.
                 description: Disclosed Attributes
                 example:
                     - email
         example:
             credential:
-                - 65
-                - 117
-                - 116
-                - 101
+                - 79
                 - 109
+                - 110
+                - 105
+                - 115
                 - 32
+                - 101
+                - 115
+                - 116
+                - 32
+                - 105
+                - 100
+                - 32
+                - 115
+                - 105
+                - 116
+                - 32
+                - 100
+                - 101
+                - 108
+                - 101
                 - 99
-                - 117
-                - 109
-                - 113
-                - 117
-                - 101
-                - 32
-                - 98
-                - 101
-                - 97
                 - 116
-                - 97
+                - 117
+                - 115
+                - 32
+                - 101
+                - 115
+                - 115
                 - 101
                 - 46
             disclosureFrame:
@@ -1424,92 +1426,101 @@ definitions:
             aud:
                 type: string
                 description: expected audience
-                example: Omnis est id sit delectus esse.
+                example: Voluptatem et quo vel eaque molestiae.
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Reiciendis ut et.
+                    example: Ratione eum.
                 description: Disclosed Attributes
                 example:
                     - email
             nonce:
                 type: string
                 description: expected nonce
-                example: Sapiente provident quo quis consectetur.
+                example: Sed quia aspernatur consequuntur ducimus eos consequuntur.
             presentation:
                 type: string
                 description: Verifiable Presentation in JSON or sdjwt format.
                 example:
-                    - 68
-                    - 111
-                    - 108
-                    - 111
-                    - 114
-                    - 32
-                    - 101
-                    - 120
+                    - 83
+                    - 97
                     - 112
-                    - 101
-                    - 100
                     - 105
+                    - 101
+                    - 110
                     - 116
-                    - 97
+                    - 101
                     - 32
-                    - 100
-                    - 111
-                    - 108
-                    - 111
+                    - 112
                     - 114
-                    - 32
-                    - 109
                     - 111
-                    - 108
-                    - 101
-                    - 115
-                    - 116
+                    - 118
                     - 105
-                    - 97
+                    - 100
+                    - 101
+                    - 110
+                    - 116
+                    - 32
+                    - 113
+                    - 117
+                    - 111
+                    - 32
+                    - 113
+                    - 117
+                    - 105
                     - 115
                     - 32
-                    - 100
-                    - 105
+                    - 99
+                    - 111
+                    - 110
+                    - 115
+                    - 101
                     - 99
                     - 116
-                    - 97
-                    - 32
-                    - 105
-                    - 110
-                    - 32
-                    - 100
-                    - 105
-                    - 103
-                    - 110
-                    - 105
-                    - 115
-                    - 115
-                    - 105
-                    - 109
-                    - 111
-                    - 115
+                    - 101
+                    - 116
+                    - 117
+                    - 114
                     - 46
                 format: byte
         example:
-            aud: Voluptatem et quo vel eaque molestiae.
+            aud: Omnis quas perferendis id ipsum quis recusandae.
             disclosureFrame:
                 - email
-            nonce: Sed quia aspernatur consequuntur ducimus eos consequuntur.
+            nonce: Et sunt culpa est et accusantium sit.
             presentation:
-                - 82
-                - 97
-                - 116
+                - 83
                 - 105
-                - 111
-                - 110
+                - 109
+                - 105
+                - 108
+                - 105
+                - 113
+                - 117
                 - 101
                 - 32
-                - 101
+                - 102
                 - 117
+                - 103
+                - 97
+                - 32
+                - 105
+                - 115
+                - 116
+                - 101
+                - 32
+                - 97
+                - 108
+                - 105
+                - 113
+                - 117
+                - 105
+                - 100
+                - 32
+                - 113
+                - 117
+                - 97
                 - 109
                 - 46
         required:
@@ -1520,13 +1531,13 @@ definitions:
         properties:
             disclosedCredential:
                 description: Disclosed Credential
-                example: Autem non aut quisquam sunt.
+                example: Voluptatem qui fugit cumque ab doloremque.
             valid:
                 type: boolean
                 description: Valid specifies if the proof is successfully verified.
-                example: true
+                example: false
         example:
-            disclosedCredential: Consequatur voluptatibus dignissimos autem rerum tempora.
+            disclosedCredential: Cumque beatae quis dolor expedita dolor molestias.
             valid: false
         required:
             - valid
