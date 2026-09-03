@@ -421,6 +421,13 @@ var didResponse = Type("DidResponse", func() {
 	Field(2, "controller", String, "controler of the document")
 	Field(3, "verificationMethod", ArrayOf(DIDVerificationMethod), "methods of the document")
 	Field(4, "service", ArrayOf(serviceEndpoint), "serviceendpoints")
+	Field(5, "assertionMethod", ArrayOf(String), "Verification methods authorized for assertion purposes.", func() {
+
+		Example([]string{
+			"did:web:example.com#key1",
+		})
+
+	})
 	Required("id", "controller")
 })
 

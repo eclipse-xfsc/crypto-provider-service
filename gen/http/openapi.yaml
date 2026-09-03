@@ -1017,14 +1017,14 @@ definitions:
             did:
                 type: string
                 description: DID JWK of key
-                example: Praesentium est at esse laudantium ex aut.
+                example: Laboriosam rem architecto aspernatur quod.
             name:
                 type: string
                 description: name of the key.
-                example: Libero debitis tempore culpa illo autem accusantium.
+                example: Praesentium est at esse laudantium ex aut.
         example:
-            did: Aut nihil.
-            name: Laboriosam rem architecto aspernatur quod.
+            did: Dicta non et sint aut.
+            name: Aut nihil.
         required:
             - name
             - did
@@ -1032,6 +1032,14 @@ definitions:
         title: DidResponse
         type: object
         properties:
+            assertionMethod:
+                type: array
+                items:
+                    type: string
+                    example: Quo ullam rerum ea nihil.
+                description: Verification methods authorized for assertion purposes.
+                example:
+                    - did:web:example.com#key1
             context:
                 type: array
                 items:
@@ -1081,10 +1089,12 @@ definitions:
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
         example:
+            assertionMethod:
+                - did:web:example.com#key1
             context:
                 - https://www.w3.org/ns/did/v1
-            controller: Reprehenderit aperiam.
-            id: Quo ullam rerum ea nihil.
+            controller: Labore eum libero debitis tempore culpa illo.
+            id: Reprehenderit aperiam.
             service:
                 - id: Sint laudantium rerum neque.
                   serviceEndpoint: Qui rerum.
@@ -1099,6 +1109,10 @@ definitions:
                   serviceEndpoint: Qui rerum.
                   type: Suscipit expedita quos eligendi.
             verificationMethod:
+                - controller: did:web:example.com
+                  id: key1
+                  publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+                  type: JsonWebKey2020
                 - controller: did:web:example.com
                   id: key1
                   publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
@@ -1164,16 +1178,17 @@ definitions:
             keys:
                 type: array
                 items:
-                    example: Et sint aut aspernatur.
+                    example: Ut error voluptatum.
                 description: List of jwk
                 example:
-                    - Ut error voluptatum.
-                    - Id ducimus aliquid aliquid excepturi explicabo quos.
+                    - Ducimus aliquid aliquid excepturi explicabo.
+                    - Veritatis libero et ut.
+                    - Maiores quam pariatur sit.
+                    - Ipsum ea totam quam aperiam earum.
         example:
             keys:
-                - Et ut eum maiores quam pariatur.
-                - Voluptatibus ipsum ea totam quam aperiam.
-                - Reiciendis consequatur possimus cupiditate temporibus.
+                - Possimus cupiditate temporibus dolor consequatur.
+                - Ipsum fugiat dignissimos tempora et ipsa.
         required:
             - keys
     PresentationProofRequest:

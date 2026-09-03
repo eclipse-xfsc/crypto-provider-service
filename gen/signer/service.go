@@ -234,24 +234,18 @@ type DidRequest struct {
 
 // DidResponse is the result type of the signer service didDoc method.
 type DidResponse struct {
-	// JSON-LD @context.
+	// JSON-LD @context
 	Context []string `json:"@context,omitempty"`
-
-	// DID of the document.
-	ID string `json:"id"`
-
-	// Controller of the document.
-	Controller string `json:"controller,omitempty"`
-
-	// Verification methods contained in the DID document.
-	VerificationMethod []*DIDVerificationMethod `json:"verificationMethod,omitempty"`
-
-	// Verification methods authorized for assertion purposes,
-	// e.g. signing Verifiable Credentials.
-	AssertionMethod []string `json:"assertionMethod,omitempty"`
-
-	// Service endpoints.
-	Service []*ServiceEndpoint `json:"service,omitempty"`
+	// did of the document
+	ID string
+	// controler of the document
+	Controller string
+	// methods of the document
+	VerificationMethod []*DIDVerificationMethod
+	// serviceendpoints
+	Service []*ServiceEndpoint
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string
 }
 
 // JwkPublicKeyRequest is the payload type of the signer service JwkPublicKey
