@@ -409,7 +409,7 @@ func (s *Service) JwkPublicKey(ctx context.Context, req *signer.JwkPublicKeyRequ
 	return pubKey, nil
 }
 
-func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupId, format, namespace, group, key, origin, did string, nonce *string, logger *zap.Logger, sigType string, disclosureFrame []string) (interface{}, error) {
+func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupId, format, namespace, group, key, origin, did string, nonce *string, logger *zap.Logger, sigType string, disclosureFrame []string, statuslistype string, status *bool) (interface{}, error) {
 	vcBytes, err := json.Marshal(credential)
 	if err != nil {
 		logger.Error("credential is not valid json", zap.Error(err))
@@ -426,8 +426,8 @@ func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupI
 		return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 	}
 
-	if format == "vc+sd-jwt" {
-		return s.createSdJwt(vc, tenantId, groupId, namespace, group, key, sigType, disclosureFrame, origin, nil, "", did, nil)
+	if format == "dc+sd-jwt" {
+		return s.createSdJwt(vc, tenantId, groupId, namespace, group, key, sigType, disclosureFrame, origin, status, statuslistype, did, nil)
 	}
 
 	if format == "ldp_vc" {
@@ -445,7 +445,7 @@ func (s *Service) addProof(ctx context.Context, credential any, tenantId, groupI
 			return nil, pkgErr.New(pkgErr.BadRequest, err.Error())
 		}
 
-		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, namespace, group, key, vc, nonce, sigType)
+		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, tenantId, groupId, namespace, group, key, vc, nonce, sigType, statuslistype, status, origin)
 		if err != nil {
 			logger.Error("error making credential proof", zap.Error(err))
 			return nil, pkgErr.New(err)
@@ -467,7 +467,7 @@ func (s *Service) CredentialProof(ctx context.Context, req *signer.CredentialPro
 		zap.String("key", req.Key),
 		zap.String("group", req.Group),
 	)
-	return s.addProof(ctx, req.Credential, req.XTenantid, req.XGroupid, req.Format, req.Namespace, req.Group, req.Key, req.XOrigin, req.XDid, req.Nonce, logger, req.SignatureType, req.DisclosureFrame)
+	return s.addProof(ctx, req.Credential, req.XTenantid, req.XGroupid, req.Format, req.Namespace, req.Group, req.Key, req.XOrigin, req.XDid, req.Nonce, logger, req.SignatureType, req.DisclosureFrame, req.Statuslisttype, req.Status)
 }
 
 func (s *Service) convertIssuer(ctx context.Context, key, namespace, group string, iss *string) (string, error) {
@@ -496,7 +496,7 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 		zap.String("key", req.Key),
 	)
 
-	if req.Format == "vc+sd-jwt" {
+	if req.Format == "dc+sd-jwt" {
 
 		if req.Presentation == nil {
 			return nil, pkgErr.New("sdjwt presentation is nil")
@@ -828,11 +828,13 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 	}
 
 	subject.CustomFields = credSubject
-	expiration := time.Now().Add(time.Duration(time.Now().Year()))
+	now := time.Now()
+	expiration := now.AddDate(1, 0, 0)
+
 	vc := &verifiable.Credential{
 		Context: jsonldContexts,
 		Types:   []string{verifiable.VCType},
-		Issued:  &util.TimeWrapper{Time: time.Now()},
+		Issued:  &util.TimeWrapper{Time: now},
 		Expired: &util.TimeWrapper{Time: expiration},
 		Subject: subject,
 	}
@@ -904,7 +906,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		vc.Issuer = verifiable.Issuer{ID: "did:jwk:" + base64.RawURLEncoding.EncodeToString(bytes)}
 	}
 
-	if req.Format == "vc+sd-jwt" {
+	if req.Format == "dc+sd-jwt" {
 		logger.Debug("Start Building sd jwt vc...")
 
 		return s.createSdJwt(vc, req.XTenantid, req.XGroupid, req.Namespace, req.Group, req.Key, getSignatureType(key.KeyType), req.DisclosureFrame, req.XOrigin, req.Status, req.Statuslisttype, vc.Issuer.ID, holderJwk)
@@ -959,7 +961,7 @@ func (s *Service) CreateCredential(ctx context.Context, req *signer.CreateCreden
 		}
 
 		logger.Debug("Start building ldp vc...")
-		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, req.Namespace, req.Group, req.Key, vc, req.Nonce, req.SignatureType)
+		vcWithProof, err := s.addCredentialProof(ctx, vc.Issuer.ID, req.XTenantid, req.XGroupid, req.Namespace, req.Group, req.Key, vc, req.Nonce, req.SignatureType, req.Statuslisttype, req.Status, req.XOrigin)
 		if err != nil {
 			logger.Error("error making credential proof", zap.Error(err))
 			return nil, &pkgErr.Error{
@@ -1181,7 +1183,7 @@ func (s *Service) verifyLdProof(ctx context.Context, credential []byte, tenantId
 func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCredentialRequest) (*signer.VerifyResult, error) {
 	logger := s.logger.With(zap.String("operation", "verifyCredential"))
 
-	if req.XFormat == "vc+sd-jwt" {
+	if req.XFormat == "dc+sd-jwt" {
 		if req.DisclosureFrame == nil {
 			return &signer.VerifyResult{Valid: false}, pkgErr.New("no disclosure frame given")
 		}
@@ -1203,7 +1205,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 func (s *Service) VerifyPresentation(ctx context.Context, req *signer.VerifyPresentationRequest) (*signer.VerifyResult, error) {
 	logger := s.logger.With(zap.String("operation", "verifyPresentation"))
 
-	if req.XFormat == "vc+sd-jwt" {
+	if req.XFormat == "dc+sd-jwt" {
 		sdjwt := strings.Replace(strings.Replace(string(req.Presentation), `"`, "", -1), "\n", "", -1)
 		return s.verifySdJwt([]byte(sdjwt), req.DisclosureFrame, true, *req.Nonce, *req.Aud)
 	}
@@ -1479,17 +1481,30 @@ func (s *Service) createSdJwt(vc *verifiable.Credential, tenantid, groupid, name
 	}
 
 	if status != nil && *status {
-		url, _, purpose, index, err := s.getStatusListEntry(tenantid, groupid, namespace, group, origin, keyId, statuslisttype, did, vc.Expired.Time)
+		url, _, _, index, err := s.getStatusListEntry(
+			tenantid,
+			groupid,
+			namespace,
+			group,
+			origin,
+			keyId,
+			statuslisttype,
+			did,
+			vc.Expired.Time,
+		)
 
 		if err != nil {
 			return nil, err
 		}
 
-		st := make(map[string]interface{})
-		st["statusPurpose"] = purpose
-		st["statusListCredential"] = url
-		st["statusListIndex"] = index
-		m.CustomFields["status"] = st
+		statusList := map[string]interface{}{
+			"idx": index,
+			"uri": url,
+		}
+
+		m.CustomFields["status"] = map[string]interface{}{
+			"status_list": statusList,
+		}
 	}
 
 	subject["claims"] = m.CustomFields
@@ -1719,6 +1734,7 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 		Controller:         req.XDid,
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
+		AssertionMethod:    make([]string, 0),
 	}
 
 	var didresponse = &signer.DidResponse{
@@ -1730,6 +1746,7 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 		},
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
+		AssertionMethod:    make([]string, 0),
 	}
 
 	for _, e := range engines {
@@ -1774,6 +1791,10 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 						ServiceEndpoint: result["serviceEndpoint"].(string),
 					})
 				}
+			}
+
+			for _, m := range mthds {
+				didresponse.AssertionMethod = append(didresponse.AssertionMethod, m.ID)
 			}
 
 			didresponse.VerificationMethod = append(didresponse.VerificationMethod, mthds...)
@@ -1923,7 +1944,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				vc["issuer"] = req.XDid
 				vc["credentialSubject"].(map[string]interface{})["id"] = req.XDid
 
-				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, *req.XDid, req.XNonce, logger, req.XSignatureType, []string{})
+				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, *req.XDid, req.XNonce, logger, req.XSignatureType, []string{}, "", nil)
 
 				if err != nil {
 					return didConfigError, &pkgErr.Error{
@@ -1940,7 +1961,7 @@ func (s *Service) DidConfiguration(c context.Context, req *signer.DidConfigurati
 				vc["issuer"] = did
 				vc["credentialSubject"].(map[string]interface{})["id"] = did
 
-				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, did, req.XNonce, logger, req.XSignatureType, []string{})
+				res, err := s.addProof(ctx.Context, vc, req.XTenantid, *req.XGroupid, "ldp_vc", req.XNamespace, req.XGroup, k.Identifier.KeyId, req.XOrigin, did, req.XNonce, logger, req.XSignatureType, []string{}, "", nil)
 
 				if err != nil {
 					return didConfigError, &pkgErr.Error{

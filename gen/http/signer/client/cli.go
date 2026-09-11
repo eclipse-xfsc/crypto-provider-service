@@ -165,13 +165,13 @@ func BuildCredentialProofPayload(signerCredentialProofBody string) (*signer.Cred
 	{
 		err = json.Unmarshal([]byte(signerCredentialProofBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": {\n         \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            \"https://w3id.org/security/suites/jws-2020/v1\",\n            \"https://schema.org\"\n         ],\n         \"type\": [\n            \"VerifiableCredential\"\n         ],\n         \"issuer\": \"did:web:nginx:policy:policy:example:example:1.0:evaluation\",\n         \"issuanceDate\": \"2010-01-01T19:23:24.651387237Z\",\n         \"credentialSubject\": {\n            \"name\": \"Alice\",\n            \"allow\": true\n         }\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or vc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"x-did\": \"https://test\",\n      \"x-groupid\": \"group1\",\n      \"x-origin\": \"https://test\",\n      \"x-tenantid\": \"demotenant\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": {\n         \"@context\": [\n            \"https://www.w3.org/2018/credentials/v1\",\n            \"https://w3id.org/security/suites/jws-2020/v1\",\n            \"https://schema.org\"\n         ],\n         \"type\": [\n            \"VerifiableCredential\"\n         ],\n         \"issuer\": \"did:web:nginx:policy:policy:example:example:1.0:evaluation\",\n         \"issuanceDate\": \"2010-01-01T19:23:24.651387237Z\",\n         \"credentialSubject\": {\n            \"name\": \"Alice\",\n            \"allow\": true\n         }\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"status\": false,\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"x-did\": \"https://test\",\n      \"x-groupid\": \"group1\",\n      \"x-origin\": \"https://test\",\n      \"x-tenantid\": \"demotenant\"\n   }'")
 		}
 		if body.Credential == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("credential", "body"))
 		}
-		if !(body.Format == "ldp_vc" || body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(body.Format == "ldp_vc" || body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 		if !(body.SignatureType == "ed25519signature2020" || body.SignatureType == "jsonwebsignature2020") {
 			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.signatureType", body.SignatureType, []any{"ed25519signature2020", "jsonwebsignature2020"}))
@@ -194,6 +194,7 @@ func BuildCredentialProofPayload(signerCredentialProofBody string) (*signer.Cred
 		Statuslisttype: body.Statuslisttype,
 		XOrigin:        body.XOrigin,
 		XDid:           body.XDid,
+		Status:         body.Status,
 	}
 	{
 		var zero string
@@ -243,7 +244,7 @@ func BuildPresentationProofPayload(signerPresentationProofBody string) (*signer.
 	{
 		err = json.Unmarshal([]byte(signerPresentationProofBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"aud\": \"http://...\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or vc+sd-jwt\",\n      \"group\": \"Group\",\n      \"issuer\": \"Neque blanditiis nostrum nihil consequuntur est.\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"presentation\": \"Explicabo possimus ea.\",\n      \"signatureType\": \"ed25519signature2020\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"aud\": \"http://...\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"issuer\": \"Sit explicabo possimus ea accusantium.\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"presentation\": \"Ut velit.\",\n      \"signatureType\": \"ed25519signature2020\"\n   }'")
 		}
 		if body.Presentation == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("presentation", "body"))
@@ -251,8 +252,8 @@ func BuildPresentationProofPayload(signerPresentationProofBody string) (*signer.
 		if !(body.SignatureType == "ed25519signature2020" || body.SignatureType == "jsonwebsignature2020" || body.SignatureType == "sdjwt") {
 			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.signatureType", body.SignatureType, []any{"ed25519signature2020", "jsonwebsignature2020", "sdjwt"}))
 		}
-		if !(body.Format == "ldp_vc" || body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(body.Format == "ldp_vc" || body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 		if err != nil {
 			return nil, err
@@ -305,13 +306,13 @@ func BuildCreateCredentialPayload(signerCreateCredentialBody string, signerCreat
 	{
 		err = json.Unmarshal([]byte(signerCreateCredentialBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"context\": [\n         \"https://w3id.org/security/suites/jws-2020/v1\",\n         \"https://schema.org\"\n      ],\n      \"credentialSubject\": {\n         \"hello\": \"world\"\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or vc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"issuer\": \"did:web:example.com\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"status\": true,\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"type\": [\n         \"VerifiableCredential\",\n         \"TestCredential]\"\n      ]\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"context\": [\n         \"https://w3id.org/security/suites/jws-2020/v1\",\n         \"https://schema.org\"\n      ],\n      \"credentialSubject\": {\n         \"hello\": \"world\"\n      },\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"format\": \"ldp_vc or dc+sd-jwt\",\n      \"group\": \"Group\",\n      \"holder\": \"urn:3333:ddd\",\n      \"issuer\": \"did:web:example.com\",\n      \"key\": \"key1\",\n      \"namespace\": \"transit\",\n      \"nonce\": \"3483492392vvv-fff\",\n      \"signatureType\": \"ed25519signature2020\",\n      \"status\": true,\n      \"statuslisttype\": \"urn:3333:ddd\",\n      \"type\": [\n         \"VerifiableCredential\",\n         \"TestCredential]\"\n      ]\n   }'")
 		}
 		if body.CredentialSubject == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("credentialSubject", "body"))
 		}
-		if !(body.Format == "ldp_vc" || body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(body.Format == "ldp_vc" || body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 		if !(body.SignatureType == "ed25519signature2020" || body.SignatureType == "jsonwebsignature2020") {
 			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.signatureType", body.SignatureType, []any{"ed25519signature2020", "jsonwebsignature2020"}))
@@ -462,7 +463,7 @@ func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerif
 	{
 		err = json.Unmarshal([]byte(signerVerifyCredentialBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": \"RXN0IG9jY2FlY2F0aSBuYW0u\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }'")
 		}
 		if body.Credential == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("credential", "body"))
@@ -475,8 +476,8 @@ func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerif
 	{
 		if signerVerifyCredentialXFormat != "" {
 			xFormat = signerVerifyCredentialXFormat
-			if !(xFormat == "ldp_vc" || xFormat == "vc+sd-jwt") {
-				err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "vc+sd-jwt"}))
+			if !(xFormat == "ldp_vc" || xFormat == "dc+sd-jwt") {
+				err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "dc+sd-jwt"}))
 			}
 			if err != nil {
 				return nil, err
@@ -531,7 +532,7 @@ func BuildVerifyPresentationPayload(signerVerifyPresentationBody string, signerV
 	{
 		err = json.Unmarshal([]byte(signerVerifyPresentationBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"aud\": \"Velit sit exercitationem et eligendi incidunt.\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"nonce\": \"Molestiae eveniet vero est aliquam.\",\n      \"presentation\": \"RG9sb3JlcyBxdWlzIGZ1Z2lhdCBxdWkgcXVpYS4=\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"aud\": \"Molestiae eveniet vero est aliquam.\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"nonce\": \"Totam quam.\",\n      \"presentation\": \"U2l0IGV4ZXJjaXRhdGlvbmVtIGV0IGVsaWdlbmRpIGluY2lkdW50Lg==\"\n   }'")
 		}
 		if body.Presentation == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("presentation", "body"))
@@ -544,8 +545,8 @@ func BuildVerifyPresentationPayload(signerVerifyPresentationBody string, signerV
 	{
 		if signerVerifyPresentationXFormat != "" {
 			xFormat = signerVerifyPresentationXFormat
-			if !(xFormat == "ldp_vc" || xFormat == "vc+sd-jwt") {
-				err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "vc+sd-jwt"}))
+			if !(xFormat == "ldp_vc" || xFormat == "dc+sd-jwt") {
+				err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "dc+sd-jwt"}))
 			}
 			if err != nil {
 				return nil, err
@@ -576,7 +577,7 @@ func BuildSignPayload(signerSignBody string) (*signer.SignRequest, error) {
 	{
 		err = json.Unmarshal([]byte(signerSignBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"data\": \"Ratione earum debitis.\",\n      \"group\": \"Group\",\n      \"key\": \"Dolorum hic aut voluptatem.\",\n      \"namespace\": \"Repellat illum repudiandae.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"data\": \"Rerum veritatis delectus quis recusandae.\",\n      \"group\": \"Group\",\n      \"key\": \"Ratione earum debitis.\",\n      \"namespace\": \"Hic aut voluptatem.\"\n   }'")
 		}
 	}
 	v := &signer.SignRequest{

@@ -97,7 +97,7 @@ can be created by the following structure.DisclosureFrame describes what to be d
     "namespace" :"xyz",
     "group" : "xyz",
     "key":"test",
-    "format":"vc+sd-jwt",
+    "format":"dc+sd-jwt",
     "credential":{
   "@context": [
 	"https://www.w3.org/2018/credentials/v1",

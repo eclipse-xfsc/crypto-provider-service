@@ -98,7 +98,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"namespace\" :\"transit\",\n    \"group\" : \"\",\n    \"key\":\"eckey\",\n    \"status\":false,\n    \"format\":\"vc+sd-jwt\",\n  \"credentialSubject\": {\n\t\"!disclose:testdata\": {\"!disclose:hello\":\"world\", \"testXY\":\"1234\"}\n  },\n  \"issuanceDate\": \"2022-06-02T17:24:05.032533+03:00\",\n  \"type\": \"VerifiableCredential\"\n}",
+					"raw": "{\n    \"namespace\" :\"transit\",\n    \"group\" : \"\",\n    \"key\":\"eckey\",\n    \"status\":false,\n    \"format\":\"dc+sd-jwt\",\n  \"credentialSubject\": {\n\t\"!disclose:testdata\": {\"!disclose:hello\":\"world\", \"testXY\":\"1234\"}\n  },\n  \"issuanceDate\": \"2022-06-02T17:24:05.032533+03:00\",\n  \"type\": \"VerifiableCredential\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -126,7 +126,7 @@
 				"header": [
 					{
 						"key": "x-format",
-						"value": "vc+sd-jwt",
+						"value": "dc+sd-jwt",
 						"type": "default",
 						"disabled": true
 					}

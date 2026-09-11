@@ -160,6 +160,8 @@ type CredentialProofRequest struct {
 	XOrigin string
 	// Did
 	XDid string
+	// Status embedded or not
+	Status *bool
 }
 
 // Public Key represented as DID Verification Method.
@@ -242,6 +244,8 @@ type DidResponse struct {
 	VerificationMethod []*DIDVerificationMethod
 	// serviceendpoints
 	Service []*ServiceEndpoint
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string
 }
 
 // JwkPublicKeyRequest is the payload type of the signer service JwkPublicKey

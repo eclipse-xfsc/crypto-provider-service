@@ -70,6 +70,8 @@ type CredentialProofRequestBody struct {
 	XOrigin *string `form:"x-origin,omitempty" json:"x-origin,omitempty" xml:"x-origin,omitempty"`
 	// Did
 	XDid *string `form:"x-did,omitempty" json:"x-did,omitempty" xml:"x-did,omitempty"`
+	// Status embedded or not
+	Status *bool `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
 }
 
 // PresentationProofRequestBody is the type of the "signer" service
@@ -252,6 +254,8 @@ type DidDocOKResponseBody struct {
 	VerificationMethod []*DIDVerificationMethodResponseBody `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
 	// serviceendpoints
 	Service []*ServiceEndpointResponseBody `form:"service,omitempty" json:"service,omitempty" xml:"service,omitempty"`
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string `form:"assertionMethod,omitempty" json:"assertionMethod,omitempty" xml:"assertionMethod,omitempty"`
 }
 
 // DidListOKResponseBody is the type of the "signer" service "didList" endpoint
@@ -401,6 +405,12 @@ func NewDidDocOKResponseBody(res *signer.DidResponse) *DidDocOKResponseBody {
 			body.Service[i] = marshalSignerServiceEndpointToServiceEndpointResponseBody(val)
 		}
 	}
+	if res.AssertionMethod != nil {
+		body.AssertionMethod = make([]string, len(res.AssertionMethod))
+		for i, val := range res.AssertionMethod {
+			body.AssertionMethod[i] = val
+		}
+	}
 	return body
 }
 
@@ -522,6 +532,7 @@ func NewCredentialProofRequest(body *CredentialProofRequestBody) *signer.Credent
 		Holder:     body.Holder,
 		XOrigin:    *body.XOrigin,
 		XDid:       *body.XDid,
+		Status:     body.Status,
 	}
 	if body.Group != nil {
 		v.Group = *body.Group
@@ -834,8 +845,8 @@ func ValidateCredentialProofRequestBody(body *CredentialProofRequestBody) (err e
 		err = goa.MergeErrors(err, goa.MissingFieldError("x-origin", "body"))
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	if body.SignatureType != nil {
@@ -864,8 +875,8 @@ func ValidatePresentationProofRequestBody(body *PresentationProofRequestBody) (e
 		}
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	return
@@ -884,8 +895,8 @@ func ValidateCreateCredentialRequestBody(body *CreateCredentialRequestBody) (err
 		err = goa.MergeErrors(err, goa.MissingFieldError("credentialSubject", "body"))
 	}
 	if body.Format != nil {
-		if !(*body.Format == "ldp_vc" || *body.Format == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(*body.Format == "ldp_vc" || *body.Format == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.format", *body.Format, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 	}
 	if body.SignatureType != nil {

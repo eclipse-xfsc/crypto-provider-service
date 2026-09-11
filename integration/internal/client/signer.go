@@ -188,7 +188,7 @@ func (s *Signer) VerifyCredentialSdJwtProof(vc []byte, disclosureFrame []string)
 
 		body, err := io.ReadAll(r.Body)
 		p.Credential = []byte(strings.Replace(strings.Replace(string(body), `"`, "", -1), "\n", "", -1))
-		p.XFormat = "vc+sd-jwt"
+		p.XFormat = "dc+sd-jwt"
 		p.DisclosureFrame = disclosureFrame
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -274,7 +274,7 @@ func (s *Signer) CreateCredentialSdJwtProof(key string, vc []byte) ([]byte, erro
 		"group":           "",
 		"key":             key,
 		"credential":      cred,
-		"format":          "vc+sd-jwt",
+		"format":          "dc+sd-jwt",
 		"signatureType":   "ES256",
 		"disclosureFrame": []string{"allow"},
 	}
@@ -336,7 +336,7 @@ func (s *Signer) CreateCredentialSdJwtPresentation(key, aud, group, sdjwt, nonce
 		"nonce":          nonce,
 		"aud":            aud,
 		"discloureFrame": disclosureFrame,
-		"format":         "vc+sd-jwt",
+		"format":         "dc+sd-jwt",
 	}
 
 	payloadJSON, err := json.Marshal(payload)

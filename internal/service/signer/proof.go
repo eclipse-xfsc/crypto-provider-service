@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bytedance/gopkg/util/logger"
 	"github.com/eclipse-xfsc/crypto-provider-core/v2/types"
 	pkgErr "github.com/eclipse-xfsc/microservice-core-go/pkg/err"
 	"github.com/hyperledger/aries-framework-go/pkg/doc/signature/jsonld"
@@ -21,7 +22,7 @@ const (
 	EdSignature = "ed25519signature2020"
 )
 
-func (s *Service) addCredentialProof(ctx context.Context, issuer string, namespace, group, keyname string, vc *verifiable.Credential, nonce *string, sigType string) (*verifiable.Credential, error) {
+func (s *Service) addCredentialProof(ctx context.Context, issuer string, tenantId, groupid, namespace, group, keyname string, vc *verifiable.Credential, nonce *string, sigType, statuslisttype string, status *bool, origin string) (*verifiable.Credential, error) {
 	key, err := s.getKey(ctx, namespace, group, keyname, sigType)
 
 	if err != nil {
@@ -42,6 +43,11 @@ func (s *Service) addCredentialProof(ctx context.Context, issuer string, namespa
 			Err:     err,
 			Message: fmt.Sprintf("unsupported key type: %s", key.KeyType),
 		}
+	}
+
+	if status != nil && *status {
+		logger.Debug("Append Status")
+		err = s.appendVCStatus(vc, tenantId, groupid, namespace, group, origin, keyname, statuslisttype, vc.Issuer.ID, vc.Expired.Time)
 	}
 
 	proofContext, err := s.proofContext(ctx, issuer, namespace, group, key.Identifier.KeyId, nonce, sigType)

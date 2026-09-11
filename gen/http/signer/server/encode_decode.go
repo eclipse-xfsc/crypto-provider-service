@@ -450,8 +450,8 @@ func DecodeVerifyCredentialRequest(mux goahttp.Muxer, decoder func(*http.Request
 		} else {
 			xFormat = "ldp_vc"
 		}
-		if !(xFormat == "ldp_vc" || xFormat == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(xFormat == "ldp_vc" || xFormat == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 		xNamespace = r.Header.Get("x-namespace")
 		if xNamespace == "" {
@@ -524,8 +524,8 @@ func DecodeVerifyPresentationRequest(mux goahttp.Muxer, decoder func(*http.Reque
 		} else {
 			xFormat = "ldp_vc"
 		}
-		if !(xFormat == "ldp_vc" || xFormat == "vc+sd-jwt") {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "vc+sd-jwt"}))
+		if !(xFormat == "ldp_vc" || xFormat == "dc+sd-jwt") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
 		if err != nil {
 			return payload, err

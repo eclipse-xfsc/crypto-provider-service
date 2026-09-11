@@ -70,6 +70,8 @@ type CredentialProofRequestBody struct {
 	XOrigin string `form:"x-origin" json:"x-origin" xml:"x-origin"`
 	// Did
 	XDid string `form:"x-did" json:"x-did" xml:"x-did"`
+	// Status embedded or not
+	Status *bool `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
 }
 
 // PresentationProofRequestBody is the type of the "signer" service
@@ -248,6 +250,8 @@ type DidDocOKResponseBody struct {
 	VerificationMethod []*DIDVerificationMethodResponseBody `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
 	// serviceendpoints
 	Service []*ServiceEndpointResponseBody `form:"service,omitempty" json:"service,omitempty" xml:"service,omitempty"`
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string `form:"assertionMethod,omitempty" json:"assertionMethod,omitempty" xml:"assertionMethod,omitempty"`
 }
 
 // DidListOKResponseBody is the type of the "signer" service "didList" endpoint
@@ -325,6 +329,8 @@ type DidDocNotFoundResponseBody struct {
 	VerificationMethod []*DIDVerificationMethodResponseBody `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
 	// serviceendpoints
 	Service []*ServiceEndpointResponseBody `form:"service,omitempty" json:"service,omitempty" xml:"service,omitempty"`
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string `form:"assertionMethod,omitempty" json:"assertionMethod,omitempty" xml:"assertionMethod,omitempty"`
 }
 
 // DidDocInternalServerErrorResponseBody is used to define fields on response
@@ -340,6 +346,8 @@ type DidDocInternalServerErrorResponseBody struct {
 	VerificationMethod []*DIDVerificationMethodResponseBody `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
 	// serviceendpoints
 	Service []*ServiceEndpointResponseBody `form:"service,omitempty" json:"service,omitempty" xml:"service,omitempty"`
+	// Verification methods authorized for assertion purposes.
+	AssertionMethod []string `form:"assertionMethod,omitempty" json:"assertionMethod,omitempty" xml:"assertionMethod,omitempty"`
 }
 
 // DidListResponseItemResponseBody is used to define fields on response body
@@ -454,6 +462,7 @@ func NewCredentialProofRequestBody(p *signer.CredentialProofRequest) *Credential
 		Statuslisttype: p.Statuslisttype,
 		XOrigin:        p.XOrigin,
 		XDid:           p.XDid,
+		Status:         p.Status,
 	}
 	{
 		var zero string
@@ -788,6 +797,12 @@ func NewDidDocDidResponseOK(body *DidDocOKResponseBody) *signer.DidResponse {
 				continue
 			}
 			v.Service[i] = unmarshalServiceEndpointResponseBodyToSignerServiceEndpoint(val)
+		}
+	}
+	if body.AssertionMethod != nil {
+		v.AssertionMethod = make([]string, len(body.AssertionMethod))
+		for i, val := range body.AssertionMethod {
+			v.AssertionMethod[i] = val
 		}
 	}
 
