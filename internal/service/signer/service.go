@@ -2131,6 +2131,16 @@ func (s *Service) handleCreateToken(event event.Event) (*event.Event, error) {
 	var signerServiceEvent messaging.CreateTokenRequest
 	err := json.Unmarshal(event.Data(), &signerServiceEvent)
 
+	logger := s.logger.With(
+		zap.String("operation", "createToken"),
+		zap.String("namespace", signerServiceEvent.Namespace),
+		zap.String("groupid", signerServiceEvent.GroupId),
+		zap.String("request", signerServiceEvent.RequestId),
+		zap.String("group", signerServiceEvent.Group),
+	)
+
+	logger.Info("incoming token request")
+
 	reply := messaging.CreateTokenReply{
 		Reply: common.Reply{
 			TenantId:  signerServiceEvent.TenantId,
