@@ -13,7 +13,6 @@ jobs:
       dockerfile: "deployment/docker/Dockerfile"
       harbor_config: "deployment/harbor.config"
       repo_name: signer
-      platforms: linux/amd64
   helm:
     uses: eclipse-xfsc/dev-ops/.github/workflows/helm.yml@main
     secrets: inherit
