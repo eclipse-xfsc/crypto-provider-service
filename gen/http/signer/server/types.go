@@ -158,8 +158,16 @@ type CreatePresentationRequestBody struct {
 type VerifyCredentialRequestBody struct {
 	// Verifiable Credential in JSON format.
 	Credential []byte `form:"credential,omitempty" json:"credential,omitempty" xml:"credential,omitempty"`
+	// Namespace for status check
+	XNamespace *string `form:"x-namespace,omitempty" json:"x-namespace,omitempty" xml:"x-namespace,omitempty"`
+	// Group for status check
+	XGroup *string `form:"x-group,omitempty" json:"x-group,omitempty" xml:"x-group,omitempty"`
 	// Disclosed Attributes
 	DisclosureFrame []string `form:"disclosureFrame,omitempty" json:"disclosureFrame,omitempty" xml:"disclosureFrame,omitempty"`
+	// tenantid
+	XTenantid *string `form:"x-tenantid,omitempty" json:"x-tenantid,omitempty" xml:"x-tenantid,omitempty"`
+	// Group
+	XGroupid *string `form:"x-groupid,omitempty" json:"x-groupid,omitempty" xml:"x-groupid,omitempty"`
 }
 
 // VerifyPresentationRequestBody is the type of the "signer" service
@@ -711,9 +719,13 @@ func NewCreatePresentationRequest(body *CreatePresentationRequestBody) *signer.C
 
 // NewVerifyCredentialRequest builds a signer service VerifyCredential endpoint
 // payload.
-func NewVerifyCredentialRequest(body *VerifyCredentialRequestBody, xFormat string, xNamespace string, xGroup *string, xTenantid *string, xGroupid *string) *signer.VerifyCredentialRequest {
+func NewVerifyCredentialRequest(body *VerifyCredentialRequestBody, xFormat string) *signer.VerifyCredentialRequest {
 	v := &signer.VerifyCredentialRequest{
 		Credential: body.Credential,
+		XNamespace: body.XNamespace,
+		XGroup:     body.XGroup,
+		XTenantid:  body.XTenantid,
+		XGroupid:   body.XGroupid,
 	}
 	if body.DisclosureFrame != nil {
 		v.DisclosureFrame = make([]string, len(body.DisclosureFrame))
@@ -722,10 +734,6 @@ func NewVerifyCredentialRequest(body *VerifyCredentialRequestBody, xFormat strin
 		}
 	}
 	v.XFormat = xFormat
-	v.XNamespace = xNamespace
-	v.XGroup = xGroup
-	v.XTenantid = xTenantid
-	v.XGroupid = xGroupid
 
 	return v
 }

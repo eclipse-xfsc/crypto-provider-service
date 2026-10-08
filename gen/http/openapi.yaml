@@ -129,26 +129,6 @@ paths:
                   enum:
                     - ldp_vc
                     - dc+sd-jwt
-                - name: x-namespace
-                  in: header
-                  description: Namespace for status check
-                  required: true
-                  type: string
-                - name: x-group
-                  in: header
-                  description: Group for status check
-                  required: false
-                  type: string
-                - name: x-tenantid
-                  in: header
-                  description: tenantid
-                  required: false
-                  type: string
-                - name: x-groupid
-                  in: header
-                  description: Group
-                  required: false
-                  type: string
                 - name: VerifyCredentialRequestBody
                   in: body
                   required: true
@@ -1008,6 +988,8 @@ definitions:
                   name: Molestias aperiam.
                 - did: Et non.
                   name: Molestias aperiam.
+                - did: Et non.
+                  name: Molestias aperiam.
         required:
             - list
     DidListResponseItem:
@@ -1017,14 +999,14 @@ definitions:
             did:
                 type: string
                 description: DID JWK of key
-                example: Laboriosam rem architecto aspernatur quod.
+                example: Dicta non et sint aut.
             name:
                 type: string
                 description: name of the key.
-                example: Praesentium est at esse laudantium ex aut.
+                example: Aut nihil.
         example:
-            did: Dicta non et sint aut.
-            name: Aut nihil.
+            did: Error voluptatum labore.
+            name: Corrupti esse.
         required:
             - name
             - did
@@ -1036,7 +1018,7 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Quo ullam rerum ea nihil.
+                    example: At praesentium est at esse.
                 description: Verification methods authorized for assertion purposes.
                 example:
                     - did:web:example.com#key1
@@ -1044,18 +1026,18 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Id eum quis placeat laudantium.
+                    example: Soluta quaerat.
                 description: JSON-LD @context
                 example:
                     - https://www.w3.org/ns/did/v1
             controller:
                 type: string
                 description: controler of the document
-                example: Dolorem quibusdam cum nostrum aut qui recusandae.
+                example: Voluptates rerum.
             id:
                 type: string
                 description: did of the document
-                example: Maiores accusamus.
+                example: Cupiditate a suscipit molestiae a.
             service:
                 type: array
                 items:
@@ -1088,17 +1070,18 @@ definitions:
                       id: key1
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
+                    - controller: did:web:example.com
+                      id: key1
+                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+                      type: JsonWebKey2020
         example:
             assertionMethod:
                 - did:web:example.com#key1
             context:
                 - https://www.w3.org/ns/did/v1
-            controller: Labore eum libero debitis tempore culpa illo.
-            id: Reprehenderit aperiam.
+            controller: Rem architecto.
+            id: Ex aut cum.
             service:
-                - id: Sint laudantium rerum neque.
-                  serviceEndpoint: Qui rerum.
-                  type: Suscipit expedita quos eligendi.
                 - id: Sint laudantium rerum neque.
                   serviceEndpoint: Qui rerum.
                   type: Suscipit expedita quos eligendi.
@@ -1178,17 +1161,19 @@ definitions:
             keys:
                 type: array
                 items:
-                    example: Ut error voluptatum.
+                    example: Aliquid excepturi explicabo quos veritatis.
                 description: List of jwk
                 example:
-                    - Ducimus aliquid aliquid excepturi explicabo.
-                    - Veritatis libero et ut.
-                    - Maiores quam pariatur sit.
-                    - Ipsum ea totam quam aperiam earum.
+                    - Ut eum.
+                    - Quam pariatur sit voluptatibus ipsum ea totam.
+                    - Aperiam earum reiciendis consequatur.
+                    - Cupiditate temporibus dolor consequatur laudantium ipsum fugiat.
         example:
             keys:
-                - Possimus cupiditate temporibus dolor consequatur.
-                - Ipsum fugiat dignissimos tempora et ipsa.
+                - Et ipsa omnis hic.
+                - Molestiae reiciendis aut quam.
+                - Cupiditate sunt ipsam sed.
+                - Quae earum.
         required:
             - keys
     PresentationProofRequest:
@@ -1271,19 +1256,19 @@ definitions:
             id:
                 type: string
                 description: did of the document
-                example: Assumenda omnis aut soluta quaerat.
+                example: Facilis ratione cumque in facilis.
             serviceEndpoint:
                 type: string
                 description: Endpoint URL
-                example: Voluptates rerum.
+                example: Vero et expedita nam nostrum fuga est.
             type:
                 type: string
                 description: type of endpoint
-                example: Cupiditate a suscipit molestiae a.
+                example: Ut at dolores omnis voluptas.
         example:
-            id: Praesentium facilis ratione cumque in facilis nostrum.
-            serviceEndpoint: Nam nostrum fuga.
-            type: At dolores omnis voluptas necessitatibus vero et.
+            id: Quo ullam rerum ea nihil.
+            serviceEndpoint: Labore eum libero debitis tempore culpa illo.
+            type: Reprehenderit aperiam.
         required:
             - id
             - type
@@ -1295,7 +1280,7 @@ definitions:
             data:
                 type: string
                 description: Data that must be signed, encoded as base64 string.
-                example: Facere doloribus quo eos.
+                example: Id eum quis placeat laudantium.
             group:
                 type: string
                 description: Group identifies a group of keys within a namespace.
@@ -1304,16 +1289,16 @@ definitions:
             key:
                 type: string
                 description: Key to be used for signing.
-                example: Maxime corrupti.
+                example: Maxime harum omnis qui laborum.
             namespace:
                 type: string
                 description: Key namespace to be used for signing.
-                example: Hic alias consectetur excepturi esse tenetur repellat.
+                example: In aliquid sint numquam facere sequi.
         example:
-            data: Maxime harum omnis qui laborum.
+            data: Ducimus assumenda omnis.
             group: Group
-            key: In aliquid sint numquam facere sequi.
-            namespace: Quis soluta nihil expedita numquam.
+            key: Dolorem quibusdam cum nostrum aut qui recusandae.
+            namespace: Maiores accusamus.
         required:
             - namespace
             - key
@@ -1326,9 +1311,9 @@ definitions:
             signature:
                 type: string
                 description: Signature encoded as base64 string.
-                example: Eius corporis et.
+                example: Facere doloribus quo eos.
         example:
-            signature: Qui laboriosam.
+            signature: Quis soluta nihil expedita numquam.
         required:
             - signature
     VerificationMethodRequest:
@@ -1393,45 +1378,46 @@ definitions:
                 type: array
                 items:
                     type: string
-                    example: Reiciendis ut et.
+                    example: Sapiente provident quo quis consectetur.
                 description: Disclosed Attributes
                 example:
                     - email
+            x-group:
+                type: string
+                description: Group for status check
+                example: Omnis est id sit delectus esse.
+            x-groupid:
+                type: string
+                description: Group
+                example: group1
+            x-namespace:
+                type: string
+                description: Namespace for status check
+                example: Reiciendis ut et.
+            x-tenantid:
+                type: string
+                description: tenantid
+                example: demotenant
         example:
             credential:
-                - 79
-                - 109
+                - 82
+                - 97
+                - 116
+                - 105
+                - 111
                 - 110
-                - 105
-                - 115
+                - 101
                 - 32
                 - 101
-                - 115
-                - 116
-                - 32
-                - 105
-                - 100
-                - 32
-                - 115
-                - 105
-                - 116
-                - 32
-                - 100
-                - 101
-                - 108
-                - 101
-                - 99
-                - 116
                 - 117
-                - 115
-                - 32
-                - 101
-                - 115
-                - 115
-                - 101
+                - 109
                 - 46
             disclosureFrame:
                 - email
+            x-group: Sed quia aspernatur consequuntur ducimus eos consequuntur.
+            x-groupid: group1
+            x-namespace: Voluptatem et quo vel eaque molestiae.
+            x-tenantid: demotenant
         required:
             - credential
     VerifyPresentationRequest:
@@ -1441,100 +1427,75 @@ definitions:
             aud:
                 type: string
                 description: expected audience
-                example: Voluptatem et quo vel eaque molestiae.
+                example: Et sunt culpa est et accusantium sit.
             disclosureFrame:
                 type: array
                 items:
                     type: string
-                    example: Ratione eum.
+                    example: Omnis quas perferendis id ipsum quis recusandae.
                 description: Disclosed Attributes
                 example:
                     - email
             nonce:
                 type: string
                 description: expected nonce
-                example: Sed quia aspernatur consequuntur ducimus eos consequuntur.
+                example: Eius corporis et.
             presentation:
                 type: string
                 description: Verifiable Presentation in JSON or sdjwt format.
                 example:
                     - 83
-                    - 97
-                    - 112
                     - 105
+                    - 109
+                    - 105
+                    - 108
+                    - 105
+                    - 113
+                    - 117
                     - 101
-                    - 110
+                    - 32
+                    - 102
+                    - 117
+                    - 103
+                    - 97
+                    - 32
+                    - 105
+                    - 115
                     - 116
                     - 101
                     - 32
-                    - 112
-                    - 114
-                    - 111
-                    - 118
+                    - 97
+                    - 108
+                    - 105
+                    - 113
+                    - 117
                     - 105
                     - 100
-                    - 101
-                    - 110
-                    - 116
                     - 32
                     - 113
                     - 117
-                    - 111
-                    - 32
-                    - 113
-                    - 117
-                    - 105
-                    - 115
-                    - 32
-                    - 99
-                    - 111
-                    - 110
-                    - 115
-                    - 101
-                    - 99
-                    - 116
-                    - 101
-                    - 116
-                    - 117
-                    - 114
+                    - 97
+                    - 109
                     - 46
                 format: byte
         example:
-            aud: Omnis quas perferendis id ipsum quis recusandae.
+            aud: Hic alias consectetur excepturi esse tenetur repellat.
             disclosureFrame:
                 - email
-            nonce: Et sunt culpa est et accusantium sit.
+            nonce: Maxime corrupti.
             presentation:
-                - 83
+                - 81
+                - 117
                 - 105
-                - 109
-                - 105
+                - 32
                 - 108
-                - 105
-                - 113
-                - 117
-                - 101
-                - 32
-                - 102
-                - 117
-                - 103
                 - 97
-                - 32
+                - 98
+                - 111
+                - 114
                 - 105
+                - 111
                 - 115
-                - 116
-                - 101
-                - 32
-                - 97
-                - 108
-                - 105
-                - 113
-                - 117
-                - 105
-                - 100
-                - 32
-                - 113
-                - 117
                 - 97
                 - 109
                 - 46

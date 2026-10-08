@@ -1072,65 +1072,7 @@ func isAllowedURIScheme(s string) bool {
 	return false
 }
 
-func (s *Service) statusListCheckup(tenantid, namespace string, group, groupid *string, typ, purpose, url string, index int) (bool, error) {
-	client, err := cloudeventprovider.New(
-		cloudeventprovider.Config{Protocol: cloudeventprovider.ProtocolTypeNats, Settings: cloudeventprovider.NatsConfig{
-			Url:          s.natsHost,
-			TimeoutInSec: time.Minute,
-		}},
-		cloudeventprovider.ConnectionTypeReq,
-		s.natsStatusTopic,
-	)
-
-	if err != nil {
-		return false, err
-	}
-
-	req := commonMessaging.VerifyStatusListEntryRequest{
-		Request: common.Request{
-			TenantId: tenantid,
-			GroupId:  *groupid,
-		},
-		Namespace: namespace,
-		Group:     *group,
-		Type:      typ,
-		Purpose:   purpose,
-		Index:     index,
-		StatusUrl: url,
-	}
-
-	if group != nil {
-		req.GroupId = ""
-	}
-
-	b, err := json.Marshal(req)
-
-	if err != nil {
-		return false, err
-	}
-
-	e, err := cloudeventprovider.NewEvent("signer-service", commonMessaging.TopicStatusDataVerify, b)
-
-	if err != nil {
-		return false, err
-	}
-
-	rep, err := client.RequestCtx(context.Background(), e)
-
-	if err != nil {
-		return false, err
-	}
-
-	var verify commonMessaging.VerifyStatusListEntryReply
-
-	err = json.Unmarshal(rep.Data(), &verify)
-	if err != nil {
-		return false, err
-	}
-	return !verify.Revocated, nil
-}
-
-func (s *Service) verifyLdProof(ctx context.Context, credential []byte, tenantId, namespace string, groupid, group *string, logger *zap.Logger) (bool, error) {
+func (s *Service) verifyLdProof(ctx context.Context, credential []byte, logger *zap.Logger) (bool, error) {
 	vc, err := s.parseCredentialWithProof(credential)
 
 	if err != nil {
@@ -1159,21 +1101,14 @@ func (s *Service) verifyLdProof(ctx context.Context, credential []byte, tenantId
 	if ok {
 		for _, subject := range arr {
 			pproof, ok := subject.CustomFields["provenanceProof"]
-			byte, err := json.Marshal(pproof)
+			b, err := json.Marshal(pproof)
 			if err != nil {
 				return false, nil
 			}
 			if ok {
-				return s.verifyLdProof(ctx, byte, tenantId, namespace, groupid, group, logger)
+				return s.verifyLdProof(ctx, b, logger)
 			}
 		}
-	}
-
-	if vc.Status != nil && namespace != "" {
-		return s.statusListCheckup(tenantId, namespace, group, groupid, vc.Status.Type,
-			vc.Status.CustomFields["statusPurpose"].(string),
-			vc.Status.CustomFields["statusListCredential"].(string),
-			int(vc.Status.CustomFields["statusListIndex"].(float64)))
 	}
 
 	return true, nil
@@ -1193,7 +1128,7 @@ func (s *Service) VerifyCredential(ctx context.Context, req *signer.VerifyCreden
 	if req.XFormat == "ldp_vc" {
 		// verify credential
 
-		b, err := s.verifyLdProof(ctx, req.Credential, *req.XTenantid, req.XNamespace, req.XGroupid, req.XGroup, logger)
+		b, err := s.verifyLdProof(ctx, req.Credential, logger)
 
 		return &signer.VerifyResult{Valid: b}, err
 	}

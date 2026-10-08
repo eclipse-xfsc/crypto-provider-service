@@ -20,7 +20,7 @@
                 "CLOUDEVENTPROVIDER_MESSAGING_PROTOCOL":"nats",
                 "CLOUDEVENTPROVIDER_MESSAGING_NATS_URL":"localhost:4222",
                 "PROFILE":"DEBUG:VAULT",
-                "SDJWT_SERVICE_URL":"http://localhost:8082",
+                "SDJWT_SERVICE_URL":"http://localhost:3000",
                 "VERSION": "0.26.0",
                 "CRYPTO_GRPC_ADDR":"127.0.0.1:50051"
             }

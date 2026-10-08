@@ -374,7 +374,7 @@ type VerifyCredentialRequest struct {
 	// format
 	XFormat string
 	// Namespace for status check
-	XNamespace string
+	XNamespace *string
 	// Group for status check
 	XGroup *string
 	// Disclosed Attributes

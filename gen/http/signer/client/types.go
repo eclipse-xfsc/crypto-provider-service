@@ -158,8 +158,16 @@ type CreatePresentationRequestBody struct {
 type VerifyCredentialRequestBody struct {
 	// Verifiable Credential in JSON format.
 	Credential []byte `form:"credential" json:"credential" xml:"credential"`
+	// Namespace for status check
+	XNamespace *string `form:"x-namespace,omitempty" json:"x-namespace,omitempty" xml:"x-namespace,omitempty"`
+	// Group for status check
+	XGroup *string `form:"x-group,omitempty" json:"x-group,omitempty" xml:"x-group,omitempty"`
 	// Disclosed Attributes
 	DisclosureFrame []string `form:"disclosureFrame,omitempty" json:"disclosureFrame,omitempty" xml:"disclosureFrame,omitempty"`
+	// tenantid
+	XTenantid *string `form:"x-tenantid,omitempty" json:"x-tenantid,omitempty" xml:"x-tenantid,omitempty"`
+	// Group
+	XGroupid *string `form:"x-groupid,omitempty" json:"x-groupid,omitempty" xml:"x-groupid,omitempty"`
 }
 
 // VerifyPresentationRequestBody is the type of the "signer" service
@@ -650,6 +658,10 @@ func NewCreatePresentationRequestBody(p *signer.CreatePresentationRequest) *Crea
 func NewVerifyCredentialRequestBody(p *signer.VerifyCredentialRequest) *VerifyCredentialRequestBody {
 	body := &VerifyCredentialRequestBody{
 		Credential: p.Credential,
+		XNamespace: p.XNamespace,
+		XGroup:     p.XGroup,
+		XTenantid:  p.XTenantid,
+		XGroupid:   p.XGroupid,
 	}
 	if p.DisclosureFrame != nil {
 		body.DisclosureFrame = make([]string, len(p.DisclosureFrame))

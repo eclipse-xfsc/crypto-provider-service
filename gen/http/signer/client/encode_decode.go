@@ -703,22 +703,6 @@ func EncodeVerifyCredentialRequest(encoder func(*http.Request) goahttp.Encoder) 
 			head := p.XFormat
 			req.Header.Set("x-format", head)
 		}
-		{
-			head := p.XNamespace
-			req.Header.Set("x-namespace", head)
-		}
-		if p.XGroup != nil {
-			head := *p.XGroup
-			req.Header.Set("x-group", head)
-		}
-		if p.XTenantid != nil {
-			head := *p.XTenantid
-			req.Header.Set("x-tenantid", head)
-		}
-		if p.XGroupid != nil {
-			head := *p.XGroupid
-			req.Header.Set("x-groupid", head)
-		}
 		body := NewVerifyCredentialRequestBody(p)
 		if err := encoder(req).Encode(&body); err != nil {
 			return goahttp.ErrEncodingError("signer", "VerifyCredential", err)

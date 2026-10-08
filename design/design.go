@@ -123,10 +123,6 @@ var _ = Service("signer", func() {
 
 		HTTP(func() {
 			Header("x-format", String, func() {})
-			Header("x-namespace", String, func() {})
-			Header("x-group", String, func() {})
-			Header("x-tenantid", String, func() {})
-			Header("x-groupid", String, func() {})
 			POST("/v1/credential/verify")
 			Response(StatusOK)
 		})

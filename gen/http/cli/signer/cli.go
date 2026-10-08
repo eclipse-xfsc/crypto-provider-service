@@ -91,13 +91,9 @@ func ParseEndpoint(
 		signerCreatePresentationFlags    = flag.NewFlagSet("create-presentation", flag.ExitOnError)
 		signerCreatePresentationBodyFlag = signerCreatePresentationFlags.String("body", "REQUIRED", "")
 
-		signerVerifyCredentialFlags          = flag.NewFlagSet("verify-credential", flag.ExitOnError)
-		signerVerifyCredentialBodyFlag       = signerVerifyCredentialFlags.String("body", "REQUIRED", "")
-		signerVerifyCredentialXFormatFlag    = signerVerifyCredentialFlags.String("x-format", "ldp_vc", "")
-		signerVerifyCredentialXNamespaceFlag = signerVerifyCredentialFlags.String("x-namespace", "REQUIRED", "")
-		signerVerifyCredentialXGroupFlag     = signerVerifyCredentialFlags.String("x-group", "", "")
-		signerVerifyCredentialXTenantidFlag  = signerVerifyCredentialFlags.String("x-tenantid", "", "")
-		signerVerifyCredentialXGroupidFlag   = signerVerifyCredentialFlags.String("x-groupid", "", "")
+		signerVerifyCredentialFlags       = flag.NewFlagSet("verify-credential", flag.ExitOnError)
+		signerVerifyCredentialBodyFlag    = signerVerifyCredentialFlags.String("body", "REQUIRED", "")
+		signerVerifyCredentialXFormatFlag = signerVerifyCredentialFlags.String("x-format", "ldp_vc", "")
 
 		signerVerifyPresentationFlags       = flag.NewFlagSet("verify-presentation", flag.ExitOnError)
 		signerVerifyPresentationBodyFlag    = signerVerifyPresentationFlags.String("body", "REQUIRED", "")
@@ -307,7 +303,7 @@ func ParseEndpoint(
 				data, err = signerc.BuildCreatePresentationPayload(*signerCreatePresentationBodyFlag)
 			case "verify-credential":
 				endpoint = c.VerifyCredential()
-				data, err = signerc.BuildVerifyCredentialPayload(*signerVerifyCredentialBodyFlag, *signerVerifyCredentialXFormatFlag, *signerVerifyCredentialXNamespaceFlag, *signerVerifyCredentialXGroupFlag, *signerVerifyCredentialXTenantidFlag, *signerVerifyCredentialXGroupidFlag)
+				data, err = signerc.BuildVerifyCredentialPayload(*signerVerifyCredentialBodyFlag, *signerVerifyCredentialXFormatFlag)
 			case "verify-presentation":
 				endpoint = c.VerifyPresentation()
 				data, err = signerc.BuildVerifyPresentationPayload(*signerVerifyPresentationBodyFlag, *signerVerifyPresentationXFormatFlag)
@@ -591,10 +587,6 @@ func signerVerifyCredentialUsage() {
 	fmt.Fprintf(os.Stderr, "%s [flags] signer verify-credential", os.Args[0])
 	fmt.Fprint(os.Stderr, " -body JSON")
 	fmt.Fprint(os.Stderr, " -x-format STRING")
-	fmt.Fprint(os.Stderr, " -x-namespace STRING")
-	fmt.Fprint(os.Stderr, " -x-group STRING")
-	fmt.Fprint(os.Stderr, " -x-tenantid STRING")
-	fmt.Fprint(os.Stderr, " -x-groupid STRING")
 	fmt.Fprintln(os.Stderr)
 
 	// Description
@@ -604,14 +596,10 @@ func signerVerifyCredentialUsage() {
 	// Flags list
 	fmt.Fprintln(os.Stderr, `    -body JSON: `)
 	fmt.Fprintln(os.Stderr, `    -x-format STRING: `)
-	fmt.Fprintln(os.Stderr, `    -x-namespace STRING: `)
-	fmt.Fprintln(os.Stderr, `    -x-group STRING: `)
-	fmt.Fprintln(os.Stderr, `    -x-tenantid STRING: `)
-	fmt.Fprintln(os.Stderr, `    -x-groupid STRING: `)
 
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "Example:")
-	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-credential --body '{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }' --x-format \"ldp_vc or dc+sd-jwt\" --x-namespace \"Sapiente error nostrum.\" --x-group \"Sunt incidunt et repellat cum sit quibusdam.\" --x-tenantid \"demotenant\" --x-groupid \"group1\"")
+	fmt.Fprintf(os.Stderr, "    %s %s\n", os.Args[0], "signer verify-credential --body '{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"x-group\": \"Sunt incidunt et repellat cum sit quibusdam.\",\n      \"x-groupid\": \"group1\",\n      \"x-namespace\": \"Sapiente error nostrum.\",\n      \"x-tenantid\": \"demotenant\"\n   }' --x-format \"ldp_vc or dc+sd-jwt\"")
 }
 
 func signerVerifyPresentationUsage() {

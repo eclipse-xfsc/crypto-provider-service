@@ -438,11 +438,7 @@ func DecodeVerifyCredentialRequest(mux goahttp.Muxer, decoder func(*http.Request
 		}
 
 		var (
-			xFormat    string
-			xNamespace string
-			xGroup     *string
-			xTenantid  *string
-			xGroupid   *string
+			xFormat string
 		)
 		xFormatRaw := r.Header.Get("x-format")
 		if xFormatRaw != "" {
@@ -453,26 +449,10 @@ func DecodeVerifyCredentialRequest(mux goahttp.Muxer, decoder func(*http.Request
 		if !(xFormat == "ldp_vc" || xFormat == "dc+sd-jwt") {
 			err = goa.MergeErrors(err, goa.InvalidEnumValueError("x-format", xFormat, []any{"ldp_vc", "dc+sd-jwt"}))
 		}
-		xNamespace = r.Header.Get("x-namespace")
-		if xNamespace == "" {
-			err = goa.MergeErrors(err, goa.MissingFieldError("x-namespace", "header"))
-		}
-		xGroupRaw := r.Header.Get("x-group")
-		if xGroupRaw != "" {
-			xGroup = &xGroupRaw
-		}
-		xTenantidRaw := r.Header.Get("x-tenantid")
-		if xTenantidRaw != "" {
-			xTenantid = &xTenantidRaw
-		}
-		xGroupidRaw := r.Header.Get("x-groupid")
-		if xGroupidRaw != "" {
-			xGroupid = &xGroupidRaw
-		}
 		if err != nil {
 			return payload, err
 		}
-		payload = NewVerifyCredentialRequest(&body, xFormat, xNamespace, xGroup, xTenantid, xGroupid)
+		payload = NewVerifyCredentialRequest(&body, xFormat)
 
 		return payload, nil
 	}

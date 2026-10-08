@@ -457,13 +457,13 @@ func BuildCreatePresentationPayload(signerCreatePresentationBody string) (*signe
 
 // BuildVerifyCredentialPayload builds the payload for the signer
 // VerifyCredential endpoint from CLI flags.
-func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerifyCredentialXFormat string, signerVerifyCredentialXNamespace string, signerVerifyCredentialXGroup string, signerVerifyCredentialXTenantid string, signerVerifyCredentialXGroupid string) (*signer.VerifyCredentialRequest, error) {
+func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerifyCredentialXFormat string) (*signer.VerifyCredentialRequest, error) {
 	var err error
 	var body VerifyCredentialRequestBody
 	{
 		err = json.Unmarshal([]byte(signerVerifyCredentialBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ]\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"credential\": \"QWNjdXNhbXVzIGV4IG5paGlsIGludmVudG9yZSBlYSBxdWku\",\n      \"disclosureFrame\": [\n         \"email\"\n      ],\n      \"x-group\": \"Sunt incidunt et repellat cum sit quibusdam.\",\n      \"x-groupid\": \"group1\",\n      \"x-namespace\": \"Sapiente error nostrum.\",\n      \"x-tenantid\": \"demotenant\"\n   }'")
 		}
 		if body.Credential == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("credential", "body"))
@@ -484,30 +484,12 @@ func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerif
 			}
 		}
 	}
-	var xNamespace string
-	{
-		xNamespace = signerVerifyCredentialXNamespace
-	}
-	var xGroup *string
-	{
-		if signerVerifyCredentialXGroup != "" {
-			xGroup = &signerVerifyCredentialXGroup
-		}
-	}
-	var xTenantid *string
-	{
-		if signerVerifyCredentialXTenantid != "" {
-			xTenantid = &signerVerifyCredentialXTenantid
-		}
-	}
-	var xGroupid *string
-	{
-		if signerVerifyCredentialXGroupid != "" {
-			xGroupid = &signerVerifyCredentialXGroupid
-		}
-	}
 	v := &signer.VerifyCredentialRequest{
 		Credential: body.Credential,
+		XNamespace: body.XNamespace,
+		XGroup:     body.XGroup,
+		XTenantid:  body.XTenantid,
+		XGroupid:   body.XGroupid,
 	}
 	if body.DisclosureFrame != nil {
 		v.DisclosureFrame = make([]string, len(body.DisclosureFrame))
@@ -516,10 +498,6 @@ func BuildVerifyCredentialPayload(signerVerifyCredentialBody string, signerVerif
 		}
 	}
 	v.XFormat = xFormat
-	v.XNamespace = xNamespace
-	v.XGroup = xGroup
-	v.XTenantid = xTenantid
-	v.XGroupid = xGroupid
 
 	return v, nil
 }
