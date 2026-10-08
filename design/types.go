@@ -239,7 +239,7 @@ var VerifyCredentialRequest = Type("VerifyCredentialRequest", func() {
 	Field(7, "x-groupid", String, "Group", func() {
 		Example("group1")
 	})
-	Required("credential", "x-namespace")
+	Required("credential")
 })
 
 var VerifyPresentationRequest = Type("VerifyPresentationRequest", func() {
