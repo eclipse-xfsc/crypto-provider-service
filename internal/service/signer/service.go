@@ -528,6 +528,9 @@ func (s *Service) PresentationProof(ctx context.Context, req *signer.Presentatio
 			kid = *req.Issuer
 		}
 
+		if req.Aud == nil || *req.Aud == "" || req.Nonce == nil || *req.Nonce == "" {
+			return nil, pkgErr.New(pkgErr.BadRequest, "aud and nonce are required")
+		}
 		return s.createSdJwtPresentation(p, kid, req.Namespace, req.Group, req.Key, getSignatureType(holderKey.KeyType), *req.Aud, *req.Nonce, req.DisclosureFrame)
 	}
 
@@ -1141,7 +1144,13 @@ func (s *Service) VerifyPresentation(ctx context.Context, req *signer.VerifyPres
 	logger := s.logger.With(zap.String("operation", "verifyPresentation"))
 
 	if req.XFormat == "dc+sd-jwt" {
-		sdjwt := strings.Replace(strings.Replace(string(req.Presentation), `"`, "", -1), "\n", "", -1)
+		if req.Aud == nil || *req.Aud == "" || req.Nonce == nil || *req.Nonce == "" {
+			return nil, pkgErr.New(pkgErr.BadRequest, "aud and nonce are required")
+		}
+		sdjwt, err := normalizeSDJWT(string(req.Presentation))
+		if err != nil {
+			return nil, err
+		}
 		return s.verifySdJwt([]byte(sdjwt), req.DisclosureFrame, true, *req.Nonce, *req.Aud)
 	}
 
@@ -1263,65 +1272,74 @@ func (s *Service) Sign(ctx context.Context, req *signer.SignRequest) (res *signe
 	return &signer.SignResult{Signature: encodedSignature}, nil
 }
 
+// normalizeSDJWT accepts a compact SD-JWT or a JSON-quoted compact string.
+func normalizeSDJWT(raw string) (string, error) {
+	token := strings.TrimSpace(raw)
+	if strings.HasPrefix(token, `"`) {
+		if err := json.Unmarshal([]byte(token), &token); err != nil {
+			return "", fmt.Errorf("invalid JSON-encoded SD-JWT: %w", err)
+		}
+	}
+	if token == "" || strings.ContainsAny(token, " \r\n\t") {
+		return "", fmt.Errorf("invalid compact SD-JWT")
+	}
+	return token, nil
+}
+
 func (s *Service) createSdJwtPresentation(sdjwt, kid, namespace, group, keyId, sigType, aud, nonce string, presentationFrame []string) (*string, error) {
-	p := make(map[string]bool)
-	for _, s := range presentationFrame {
-		p[s] = true
+	token, err := normalizeSDJWT(sdjwt)
+	if err != nil {
+		return nil, err
+	}
+	if nonce == "" || aud == "" {
+		return nil, fmt.Errorf("nonce and aud are required")
 	}
 
+	frame := make(map[string]bool, len(presentationFrame))
+	for _, claim := range presentationFrame {
+		if strings.TrimSpace(claim) == "" {
+			return nil, fmt.Errorf("disclosure claim must not be empty")
+		}
+		frame[claim] = true
+	}
 	para := map[string]interface{}{
-		"sdjwt":             strings.Replace(strings.Replace(sdjwt, `"`, "", -1), "\n", "", -1),
-		"presentationFrame": p,
+		"sdjwt":             token,
+		"presentationFrame": frame,
 		"holder": map[string]interface{}{
 			"signer": map[string]string{
-				"alg":       sigType,
-				"namespace": namespace,
-				"group":     group,
-				"key":       keyId,
-				"kid":       kid,
+				"alg": sigType, "namespace": namespace, "group": group,
+				"key": keyId, "kid": kid,
 			},
 		},
-		"nonce": nonce,
-		"aud":   aud,
+		"nonce": nonce, "aud": aud,
 	}
-
 	b, err := json.Marshal(para)
-
 	if err != nil {
 		return nil, err
 	}
-
-	res, err := http.Post(s.sdjwtServiceUrl+"/present", "application/json", bytes.NewBuffer(b))
-
+	client := &http.Client{Timeout: 30 * time.Second}
+	res, err := client.Post(s.sdjwtServiceUrl+"/present", "application/json", bytes.NewReader(b))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("SD-JWT presentation request: %w", err)
 	}
-
-	bodyBytes, err := io.ReadAll(res.Body)
 	defer res.Body.Close()
-
-	if res.StatusCode != 200 {
-		return nil, pkgErr.New(string(bodyBytes))
-	}
-
+	bodyBytes, err := io.ReadAll(io.LimitReader(res.Body, 2<<20))
 	if err != nil {
+		return nil, fmt.Errorf("read SD-JWT presentation response: %w", err)
+	}
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("SD-JWT presentation service returned %d: %s", res.StatusCode, string(bodyBytes))
+	}
+	var result struct {
+		SDJWT string `json:"sdjwt"`
+	}
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return nil, err
 	}
-	var result map[string]string
-
-	err = json.Unmarshal(bodyBytes, &result)
-
-	if err != nil {
-		return nil, err
+	if result.SDJWT == "" {
+		return nil, fmt.Errorf("SD-JWT presentation response missing sdjwt")
 	}
-
-	r, ok := result["sdjwt"]
-
-	if !ok {
-		return nil, pkgErr.New("no result")
-	}
-
-	return &r, nil
+	return &result.SDJWT, nil
 }
 
 func (s *Service) createSdJwt(vc *verifiable.Credential, tenantid, groupid, namespace, group, keyId, sigType string, disclosureFrame []string, origin string, status *bool, statuslisttype string, did string, holderJwk any) (*string, error) {
