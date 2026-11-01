@@ -244,8 +244,10 @@ type DidResponse struct {
 	VerificationMethod []*DIDVerificationMethod
 	// serviceendpoints
 	Service []*ServiceEndpoint
-	// Verification methods authorized for assertion purposes.
+	// Assertion methods authorized for assertion purposes.
 	AssertionMethod []string
+	// Authentication methods authorized for authentication purposes.
+	Authentication []string
 }
 
 // JwkPublicKeyRequest is the payload type of the signer service JwkPublicKey

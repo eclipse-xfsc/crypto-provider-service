@@ -1688,6 +1688,7 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
 		AssertionMethod:    make([]string, 0),
+		Authentication:     make([]string, 0),
 	}
 
 	var didresponse = &signer.DidResponse{
@@ -1700,6 +1701,7 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 		VerificationMethod: make([]*signer.DIDVerificationMethod, 0),
 		Service:            make([]*signer.ServiceEndpoint, 0),
 		AssertionMethod:    make([]string, 0),
+		Authentication:     make([]string, 0),
 	}
 
 	for _, e := range engines {
@@ -1748,6 +1750,7 @@ func (s *Service) DidDoc(c context.Context, req *signer.DidRequest) (*signer.Did
 
 			for _, m := range mthds {
 				didresponse.AssertionMethod = append(didresponse.AssertionMethod, m.ID)
+				didresponse.Authentication = append(didresponse.Authentication, m.ID)
 			}
 
 			didresponse.VerificationMethod = append(didresponse.VerificationMethod, mthds...)

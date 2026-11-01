@@ -375,6 +375,8 @@ paths:
                             example:
                                 assertionMethod:
                                     - did:web:example.com#key1
+                                authentication:
+                                    - did:web:example.com#key1
                                 context:
                                     - https://www.w3.org/ns/did/v1
                                 controller: Rerum ratione voluptatibus asperiores rem tempora.
@@ -410,6 +412,8 @@ paths:
                             example:
                                 assertionMethod:
                                     - did:web:example.com#key1
+                                authentication:
+                                    - did:web:example.com#key1
                                 context:
                                     - https://www.w3.org/ns/did/v1
                                 controller: Aperiam odit illo natus.
@@ -444,6 +448,8 @@ paths:
                                 $ref: '#/components/schemas/DidResponse'
                             example:
                                 assertionMethod:
+                                    - did:web:example.com#key1
+                                authentication:
                                     - did:web:example.com#key1
                                 context:
                                     - https://www.w3.org/ns/did/v1
@@ -702,10 +708,10 @@ paths:
                                 type: array
                                 items:
                                     type: string
-                                    example: Corporis nobis fugiat aperiam soluta necessitatibus illo.
+                                    example: Expedita blanditiis dolores.
                                 description: List of available keys namespaces.
                                 example:
-                                    - Blanditiis dolores aut saepe sit sed.
+                                    - Sit sed.
                                     - Beatae ab architecto quos.
                             example:
                                 - Ut porro.
@@ -1088,7 +1094,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Inventore sed maiores voluptatem possimus natus nostrum.
+                        example: Molestiae quia.
                     description: Additional JSONLD contexts to be specified in the VC.
                     example:
                         - https://w3id.org/security/suites/jws-2020/v1
@@ -1101,7 +1107,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Doloremque officia voluptatem aut deserunt quibusdam.
+                        example: Non vitae veniam totam.
                     description: Disclosed Attributes
                     example:
                         - email
@@ -1159,7 +1165,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Non vitae veniam totam.
+                        example: Inventore sed maiores voluptatem possimus natus nostrum.
                     description: Type(s) of the credential. Just first one for sd-jwt used.
                     example:
                         - VerifiableCredential
@@ -1322,7 +1328,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Molestiae quia.
+                        example: Quia libero error.
                     description: Additional JSONLD contexts to be specified in the VP.
                     example:
                         - https://w3id.org/security/suites/jws-2020/v1
@@ -1330,7 +1336,7 @@ components:
                 data:
                     type: array
                     items:
-                        example: Quia libero error.
+                        example: Hic necessitatibus sequi.
                     description: Raw JSON to be included inside the VP as Verifiable Credential.
                     example:
                         - hello: world
@@ -1402,7 +1408,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Dolorum cum asperiores.
+                        example: Cupiditate sunt ipsam sed.
                     description: Disclosed Attributes
                     example:
                         - email
@@ -1491,7 +1497,7 @@ components:
                 namespace: transit
                 nonce: 3483492392vvv-fff
                 signatureType: ed25519signature2020
-                status: true
+                status: false
                 statuslisttype: urn:3333:ddd
                 x-did: https://test
                 x-groupid: group1
@@ -1538,7 +1544,7 @@ components:
                 x-did:
                     type: string
                     description: did for the Configuration
-                    example: Delectus quis facilis.
+                    example: Magnam quidem veniam asperiores.
                 x-group:
                     type: string
                     description: Group.
@@ -1551,7 +1557,7 @@ components:
                 x-namespace:
                     type: string
                     description: Namespace.
-                    example: Nam nesciunt accusantium facilis ut est labore.
+                    example: Facilis delectus quis facilis.
                 x-nonce:
                     type: string
                     description: Proof challenge
@@ -1559,7 +1565,7 @@ components:
                 x-origin:
                     type: string
                     description: origin for the configuration.
-                    example: Magnam quidem veniam asperiores.
+                    example: Qui quis in laborum.
                 x-signatureType:
                     type: string
                     description: Type of signature
@@ -1573,12 +1579,12 @@ components:
                     description: tenantid
                     example: demotenant
             example:
-                x-did: Esse ab temporibus.
+                x-did: Aut est aut harum sed eius nisi.
                 x-group: Group
                 x-groupid: group1
-                x-namespace: Qui quis in laborum.
+                x-namespace: Esse ab temporibus.
                 x-nonce: 3483492392vvv-fff
-                x-origin: Aut est aut harum sed eius nisi.
+                x-origin: Corporis nobis fugiat aperiam soluta necessitatibus illo.
                 x-signatureType: ed25519signature2020
                 x-tenantid: demotenant
             required:
@@ -1697,12 +1703,12 @@ components:
                     type: string
                     description: Namespace.
                     default: transit
-                    example: Facere occaecati nulla perspiciatis dolores molestiae quos.
+                    example: Omnis voluptatem illo dicta neque in.
             example:
                 x-did: exampl:com
                 x-engine: transit
                 x-group: Group
-                x-namespace: Aut minus omnis quidem.
+                x-namespace: Facere occaecati nulla perspiciatis dolores molestiae quos.
         DidResponse:
             type: object
             properties:
@@ -1711,7 +1717,15 @@ components:
                     items:
                         type: string
                         example: Eligendi nisi voluptatibus voluptatum voluptas vel.
-                    description: Verification methods authorized for assertion purposes.
+                    description: Assertion methods authorized for assertion purposes.
+                    example:
+                        - did:web:example.com#key1
+                authentication:
+                    type: array
+                    items:
+                        type: string
+                        example: Sapiente consequatur ut architecto qui quis.
+                    description: Authentication methods authorized for authentication purposes.
                     example:
                         - did:web:example.com#key1
                 context:
@@ -1767,11 +1781,16 @@ components:
             example:
                 assertionMethod:
                     - did:web:example.com#key1
+                authentication:
+                    - did:web:example.com#key1
                 context:
                     - https://www.w3.org/ns/did/v1
-                controller: Rerum est aut a aut asperiores sequi.
-                id: Sapiente consequatur ut architecto qui quis.
+                controller: Aut odit nam nesciunt accusantium facilis.
+                id: Rerum est aut a aut asperiores sequi.
                 service:
+                    - id: Minus ut.
+                      serviceEndpoint: Iure maxime quasi exercitationem.
+                      type: Eveniet dolor minima nemo modi placeat.
                     - id: Minus ut.
                       serviceEndpoint: Iure maxime quasi exercitationem.
                       type: Eveniet dolor minima nemo modi placeat.
@@ -1790,6 +1809,10 @@ components:
                       id: key1
                       publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
                       type: JsonWebKey2020
+                    - controller: did:web:example.com
+                      id: key1
+                      publicKeyJwk: https://openid.net/specs/draft-jones-json-web-key-03.html#ExampleJWK
+                      type: JsonWebKey2020
             required:
                 - id
                 - controller
@@ -1799,19 +1822,19 @@ components:
                 service:
                     type: string
                     description: Service name.
-                    example: Sint qui repudiandae laudantium.
+                    example: Id voluptatem consectetur dolorem et saepe.
                 status:
                     type: string
                     description: Status message.
-                    example: Assumenda consectetur officia.
+                    example: Sint qui repudiandae laudantium.
                 version:
                     type: string
                     description: Service runtime version.
-                    example: Odit sequi commodi odit unde consequatur.
+                    example: Assumenda consectetur officia.
             example:
-                service: Voluptatem cumque cum id provident.
-                status: Quia ratione qui.
-                version: Omnis voluptatem illo dicta neque in.
+                service: Odit sequi commodi odit unde consequatur.
+                status: Voluptatem cumque cum id provident.
+                version: Quia ratione qui.
             required:
                 - service
                 - status
@@ -1875,15 +1898,15 @@ components:
                 x-group:
                     type: string
                     description: Group.
-                    example: Tenetur quia qui.
+                    example: Expedita et.
                 x-namespace:
                     type: string
                     description: Namespace.
-                    example: Expedita et.
+                    example: Aut minus omnis quidem.
             example:
                 x-engine: transit
-                x-group: Pariatur dicta.
-                x-namespace: Illo molestias nihil ex.
+                x-group: Illo molestias nihil ex.
+                x-namespace: Tenetur quia qui.
             required:
                 - x-namespace
         JwksResponse:
@@ -1892,15 +1915,15 @@ components:
                 keys:
                     type: array
                     items:
-                        example: Quis magnam aut quod.
+                        example: Pariatur dicta.
                     description: List of jwk
                     example:
-                        - Nam quo aut neque dolorum praesentium voluptatum.
-                        - Tempore quia voluptatem aliquid.
+                        - Magnam aut quod similique assumenda nam quo.
+                        - Neque dolorum praesentium voluptatum suscipit tempore quia.
+                        - Aliquid itaque quaerat.
             example:
                 keys:
-                    - Officia magni recusandae aut autem nesciunt.
-                    - Ut omnis.
+                    - Recusandae aut autem nesciunt eaque ut omnis.
                     - Repudiandae voluptatem possimus nisi dolorum.
                     - Nulla amet.
             required:
@@ -1933,7 +1956,7 @@ components:
                     type: array
                     items:
                         type: string
-                        example: Non consequatur sunt.
+                        example: Mollitia in iusto placeat fuga.
                     description: Disclosed Attributes
                     example:
                         - email
@@ -1953,7 +1976,7 @@ components:
                 issuer:
                     type: string
                     description: Issuer DID used to specify proof verification info.
-                    example: Id aliquid mollitia in.
+                    example: Sunt dolorum.
                 key:
                     type: string
                     description: Key to use for the proof signature.
@@ -1968,7 +1991,7 @@ components:
                     example: 3483492392vvv-fff
                 presentation:
                     description: Verifiable Presentation in JSON format.
-                    example: Placeat fuga.
+                    example: Asperiores sapiente velit dolor id.
                 signatureType:
                     type: string
                     description: Type of signature.For sd-jwt is it automatically selected.
@@ -1984,11 +2007,11 @@ components:
                     - email
                 format: ldp_vc or dc+sd-jwt
                 group: Group
-                issuer: Ut neque quia.
+                issuer: Non consequatur sunt.
                 key: key1
                 namespace: transit
                 nonce: 3483492392vvv-fff
-                presentation: Hic necessitatibus sequi.
+                presentation: Ut neque quia.
                 signatureType: ed25519signature2020
             required:
                 - namespace
@@ -2023,7 +2046,7 @@ components:
                 data:
                     type: string
                     description: Data that must be signed, encoded as base64 string.
-                    example: Reiciendis sunt accusamus hic.
+                    example: Quas magnam dolorem quia.
                 group:
                     type: string
                     description: Group identifies a group of keys within a namespace.
@@ -2032,16 +2055,16 @@ components:
                 key:
                     type: string
                     description: Key to be used for signing.
-                    example: Quas magnam dolorem quia.
+                    example: Sint mollitia.
                 namespace:
                     type: string
                     description: Key namespace to be used for signing.
-                    example: Sint mollitia.
+                    example: Voluptatem neque aut repudiandae praesentium eligendi repellat.
             example:
-                data: Autem inventore exercitationem provident.
+                data: Facilis numquam adipisci et laudantium.
                 group: Group
-                key: Facilis numquam adipisci et laudantium.
-                namespace: Animi non quidem eum veniam.
+                key: Animi non quidem eum veniam.
+                namespace: Reiciendis sunt accusamus hic.
             required:
                 - namespace
                 - key
@@ -2053,9 +2076,9 @@ components:
                 signature:
                     type: string
                     description: Signature encoded as base64 string.
-                    example: Quidem veritatis.
+                    example: Autem inventore exercitationem provident.
             example:
-                signature: Id voluptatem consectetur dolorem et saepe.
+                signature: Quidem veritatis.
             required:
                 - signature
         VerificationMethodRequest:
@@ -2161,9 +2184,24 @@ components:
                     type: string
                     description: Verifiable Credential in JSON format.
                     example:
-                        - 81
+                        - 68
+                        - 111
+                        - 108
+                        - 111
+                        - 114
+                        - 101
+                        - 109
+                        - 113
                         - 117
+                        - 101
+                        - 32
+                        - 111
+                        - 102
+                        - 102
                         - 105
+                        - 99
+                        - 105
+                        - 97
                         - 32
                         - 118
                         - 111
@@ -2173,18 +2211,38 @@ components:
                         - 116
                         - 97
                         - 116
-                        - 117
+                        - 101
                         - 109
                         - 32
-                        - 101
+                        - 97
+                        - 117
                         - 116
+                        - 32
+                        - 100
+                        - 101
+                        - 115
+                        - 101
+                        - 114
+                        - 117
+                        - 110
+                        - 116
+                        - 32
+                        - 113
+                        - 117
+                        - 105
+                        - 98
+                        - 117
+                        - 115
+                        - 100
+                        - 97
+                        - 109
                         - 46
                     format: binary
                 disclosureFrame:
                     type: array
                     items:
                         type: string
-                        example: Animi ducimus porro qui necessitatibus voluptatum neque.
+                        example: Quia illum est velit quam.
                     description: Disclosed Attributes
                     example:
                         - email
@@ -2199,7 +2257,7 @@ components:
                 x-group:
                     type: string
                     description: Group for status check
-                    example: Quia illum est velit quam.
+                    example: Repudiandae deleniti ea consequatur voluptatem minima pariatur.
                 x-groupid:
                     type: string
                     description: Group
@@ -2207,57 +2265,75 @@ components:
                 x-namespace:
                     type: string
                     description: Namespace for status check
-                    example: Repudiandae deleniti ea consequatur voluptatem minima pariatur.
+                    example: Qui voluptatum et.
                 x-tenantid:
                     type: string
                     description: tenantid
                     example: demotenant
             example:
                 credential:
-                    - 78
-                    - 117
-                    - 109
-                    - 113
-                    - 117
-                    - 97
-                    - 109
-                    - 32
-                    - 105
-                    - 112
-                    - 115
-                    - 117
-                    - 109
-                    - 32
-                    - 115
-                    - 101
-                    - 100
-                    - 32
-                    - 101
-                    - 116
-                    - 32
-                    - 113
-                    - 117
-                    - 105
-                    - 97
-                    - 32
-                    - 99
-                    - 111
+                    - 65
                     - 110
+                    - 105
+                    - 109
+                    - 105
+                    - 32
+                    - 100
+                    - 117
+                    - 99
+                    - 105
+                    - 109
+                    - 117
                     - 115
-                    - 101
+                    - 32
+                    - 112
+                    - 111
+                    - 114
+                    - 114
+                    - 111
+                    - 32
                     - 113
                     - 117
+                    - 105
+                    - 32
+                    - 110
+                    - 101
+                    - 99
+                    - 101
+                    - 115
+                    - 115
+                    - 105
+                    - 116
+                    - 97
+                    - 116
+                    - 105
+                    - 98
+                    - 117
+                    - 115
+                    - 32
+                    - 118
+                    - 111
+                    - 108
+                    - 117
+                    - 112
+                    - 116
                     - 97
                     - 116
                     - 117
-                    - 114
+                    - 109
+                    - 32
+                    - 110
+                    - 101
+                    - 113
+                    - 117
+                    - 101
                     - 46
                 disclosureFrame:
                     - email
                 x-format: ldp_vc or dc+sd-jwt
-                x-group: Voluptas sapiente nisi et est.
+                x-group: Ut sed sed architecto voluptate.
                 x-groupid: group1
-                x-namespace: Ut sed sed architecto voluptate.
+                x-namespace: Numquam ipsum sed et quia consequatur.
                 x-tenantid: demotenant
             required:
                 - credential
@@ -2363,67 +2439,52 @@ components:
                 aud:
                     type: string
                     description: expected audience
-                    example: Officia omnis est.
+                    example: Ipsum sit.
                 disclosureFrame:
                     type: array
                     items:
                         type: string
-                        example: Ipsum sit.
+                        example: Sint est dolor culpa ut voluptatem explicabo.
                     description: Disclosed Attributes
                     example:
                         - email
                 nonce:
                     type: string
                     description: expected nonce
-                    example: Eum fuga nihil non sapiente.
+                    example: Officia omnis est.
                 presentation:
                     type: string
                     description: Verifiable Presentation in JSON or sdjwt format.
                     example:
-                        - 83
+                        - 86
+                        - 111
+                        - 108
+                        - 117
+                        - 112
+                        - 116
+                        - 97
+                        - 115
+                        - 32
+                        - 115
+                        - 97
+                        - 112
                         - 105
+                        - 101
                         - 110
+                        - 116
+                        - 101
+                        - 32
+                        - 110
+                        - 105
+                        - 115
+                        - 105
+                        - 32
+                        - 101
                         - 116
                         - 32
                         - 101
                         - 115
                         - 116
-                        - 32
-                        - 100
-                        - 111
-                        - 108
-                        - 111
-                        - 114
-                        - 32
-                        - 99
-                        - 117
-                        - 108
-                        - 112
-                        - 97
-                        - 32
-                        - 117
-                        - 116
-                        - 32
-                        - 118
-                        - 111
-                        - 108
-                        - 117
-                        - 112
-                        - 116
-                        - 97
-                        - 116
-                        - 101
-                        - 109
-                        - 32
-                        - 101
-                        - 120
-                        - 112
-                        - 108
-                        - 105
-                        - 99
-                        - 97
-                        - 98
-                        - 111
                         - 46
                     format: binary
                 x-format:
@@ -2435,47 +2496,38 @@ components:
                         - ldp_vc
                         - dc+sd-jwt
             example:
-                aud: Enim aperiam similique.
+                aud: Nobis velit cumque voluptas et nobis.
                 disclosureFrame:
                     - email
-                nonce: Omnis atque.
+                nonce: Enim aperiam similique.
                 presentation:
-                    - 78
-                    - 111
-                    - 98
-                    - 105
-                    - 115
-                    - 32
-                    - 118
-                    - 101
-                    - 108
-                    - 105
-                    - 116
-                    - 32
-                    - 99
+                    - 69
                     - 117
                     - 109
-                    - 113
-                    - 117
-                    - 101
                     - 32
-                    - 118
-                    - 111
-                    - 108
+                    - 102
                     - 117
-                    - 112
-                    - 116
+                    - 103
                     - 97
-                    - 115
                     - 32
-                    - 101
-                    - 116
+                    - 110
+                    - 105
+                    - 104
+                    - 105
+                    - 108
                     - 32
                     - 110
                     - 111
-                    - 98
-                    - 105
+                    - 110
+                    - 32
                     - 115
+                    - 97
+                    - 112
+                    - 105
+                    - 101
+                    - 110
+                    - 116
+                    - 101
                     - 46
                 x-format: ldp_vc or dc+sd-jwt
             required:
@@ -2550,13 +2602,13 @@ components:
             properties:
                 disclosedCredential:
                     description: Disclosed Credential
-                    example: Culpa exercitationem molestias id nemo quibusdam quia.
+                    example: Atque nulla voluptatem culpa.
                 valid:
                     type: boolean
                     description: Valid specifies if the proof is successfully verified.
                     example: false
             example:
-                disclosedCredential: Voluptatem neque aut repudiandae praesentium eligendi repellat.
+                disclosedCredential: Id nemo quibusdam quia et.
                 valid: true
             required:
                 - valid

@@ -999,14 +999,14 @@ definitions:
             did:
                 type: string
                 description: DID JWK of key
-                example: Dicta non et sint aut.
+                example: Corrupti esse.
             name:
                 type: string
                 description: name of the key.
-                example: Aut nihil.
+                example: Dicta non et sint aut.
         example:
-            did: Error voluptatum labore.
-            name: Corrupti esse.
+            did: Ducimus aliquid aliquid excepturi explicabo.
+            name: Error voluptatum labore.
         required:
             - name
             - did
@@ -1019,7 +1019,15 @@ definitions:
                 items:
                     type: string
                     example: At praesentium est at esse.
-                description: Verification methods authorized for assertion purposes.
+                description: Assertion methods authorized for assertion purposes.
+                example:
+                    - did:web:example.com#key1
+            authentication:
+                type: array
+                items:
+                    type: string
+                    example: Ex aut cum.
+                description: Authentication methods authorized for authentication purposes.
                 example:
                     - did:web:example.com#key1
             context:
@@ -1077,14 +1085,13 @@ definitions:
         example:
             assertionMethod:
                 - did:web:example.com#key1
+            authentication:
+                - did:web:example.com#key1
             context:
                 - https://www.w3.org/ns/did/v1
-            controller: Rem architecto.
-            id: Ex aut cum.
+            controller: Quod et.
+            id: Rem architecto.
             service:
-                - id: Sint laudantium rerum neque.
-                  serviceEndpoint: Qui rerum.
-                  type: Suscipit expedita quos eligendi.
                 - id: Sint laudantium rerum neque.
                   serviceEndpoint: Qui rerum.
                   type: Suscipit expedita quos eligendi.
@@ -1161,19 +1168,16 @@ definitions:
             keys:
                 type: array
                 items:
-                    example: Aliquid excepturi explicabo quos veritatis.
+                    example: Et ut eum maiores quam pariatur.
                 description: List of jwk
                 example:
-                    - Ut eum.
-                    - Quam pariatur sit voluptatibus ipsum ea totam.
-                    - Aperiam earum reiciendis consequatur.
-                    - Cupiditate temporibus dolor consequatur laudantium ipsum fugiat.
+                    - Ipsum ea totam quam aperiam earum.
+                    - Consequatur possimus cupiditate temporibus dolor.
+                    - Laudantium ipsum.
         example:
             keys:
-                - Et ipsa omnis hic.
-                - Molestiae reiciendis aut quam.
-                - Cupiditate sunt ipsam sed.
-                - Quae earum.
+                - Tempora et ipsa omnis hic quasi molestiae.
+                - Aut quam.
         required:
             - keys
     PresentationProofRequest:

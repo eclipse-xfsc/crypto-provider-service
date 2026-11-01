@@ -262,8 +262,10 @@ type DidDocOKResponseBody struct {
 	VerificationMethod []*DIDVerificationMethodResponseBody `form:"verificationMethod,omitempty" json:"verificationMethod,omitempty" xml:"verificationMethod,omitempty"`
 	// serviceendpoints
 	Service []*ServiceEndpointResponseBody `form:"service,omitempty" json:"service,omitempty" xml:"service,omitempty"`
-	// Verification methods authorized for assertion purposes.
+	// Assertion methods authorized for assertion purposes.
 	AssertionMethod []string `form:"assertionMethod,omitempty" json:"assertionMethod,omitempty" xml:"assertionMethod,omitempty"`
+	// Authentication methods authorized for authentication purposes.
+	Authentication []string `form:"authentication,omitempty" json:"authentication,omitempty" xml:"authentication,omitempty"`
 }
 
 // DidListOKResponseBody is the type of the "signer" service "didList" endpoint
@@ -417,6 +419,12 @@ func NewDidDocOKResponseBody(res *signer.DidResponse) *DidDocOKResponseBody {
 		body.AssertionMethod = make([]string, len(res.AssertionMethod))
 		for i, val := range res.AssertionMethod {
 			body.AssertionMethod[i] = val
+		}
+	}
+	if res.Authentication != nil {
+		body.Authentication = make([]string, len(res.Authentication))
+		for i, val := range res.Authentication {
+			body.Authentication[i] = val
 		}
 	}
 	return body
